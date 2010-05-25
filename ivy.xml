@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ivy-module version="2.0">
+    <info organisation="cdl" module="tika-indexer"/>
+    <dependencies>
+      <dependency org="commons-io" name="commons-io" rev="1.4"/>
+      <dependency org="commons-cli" name="commons-cli" rev="1.0"/>
+      <dependency org="commons-logging" name="commons-logging" rev="1.1"/>
+      <dependency org="org.apache.commons" name="commons-compress" rev="1.0"/>
+      <dependency org="org.apache.tika" name="tika-parsers" rev="0.7"/>
+      <dependency org="org.apache.lucene" name="lucene-core" rev="3.0.1"/>
+      <dependency org="com.shorrockin" name="cascal" rev="1.1"/>
+    </dependencies>
+</ivy-module>
