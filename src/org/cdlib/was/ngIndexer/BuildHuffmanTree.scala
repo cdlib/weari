@@ -9,11 +9,6 @@ import org.apache.commons.httpclient.URIException;
 object BuildHuffmanTree {
   class NodeElement (val node : DecoderNode, val prob : Double)
     extends Ordered[NodeElement] {
-    
-      // override def <  (that : NodeElement) = that.prob <  this.prob;
-      // override def <= (that : NodeElement) = that.prob <= this.prob;
-      // override def >  (that : NodeElement) = that.prob >  this.prob;
-      // override def >= (that : NodeElement) = that.prob >= this.prob;
       def compare (that : NodeElement) =
         -1 * this.prob.compare(that.prob);
       override def toString = "%s (%f)".format(node, prob);
@@ -70,7 +65,8 @@ object BuildHuffmanTree {
   val longStrings = List[List[Byte]]("http://".getBytes.toList,
                                      ".com/".getBytes.toList,
                                      ".org/".getBytes.toList,
-                                     ".net/".getBytes.toList);
+                                     ".net/".getBytes.toList,
+                                     ".html".getBytes.toList);
   
   def buildFreqTable(path : String) : Pair[Int,Map[List[Byte], Int]] = {
     var freqTable = new HashMap[List[Byte], Int]();
