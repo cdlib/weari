@@ -5,7 +5,6 @@ import scala.collection.Map;
 import scala.io.Source;
 import org.archive.net.UURIFactory;
 import org.apache.commons.httpclient.URIException;
-import java.util.regex._;
 
 object BuildHuffmanTree {
   class NodeElement (val node : DecoderNode, val prob : Double)
@@ -68,10 +67,10 @@ object BuildHuffmanTree {
     0x7c  /* | */
   );
   
-  val longStrings = Set[String]("http://",
-                                ".com/",
-                                ".org/",
-                                ".net/");
+  val longStrings = List[List[Byte]]("http://".getBytes.toList,
+                                     ".com/".getBytes.toList,
+                                     ".org/".getBytes.toList,
+                                     ".net/".getBytes.toList);
   
   def buildFreqTable(path : String) : Pair[Int,Map[List[Byte], Int]] = {
     var freqTable = new HashMap[List[Byte], Int]();
@@ -91,22 +90,22 @@ object BuildHuffmanTree {
       occur = occur + 1;
       try {
         val uuri = UURIFactory.getInstance(l);
-        var s = uuri.toString;
-        for (longString <- longStrings) {
-          val matcher = Pattern.compile(longString).matcher(s);
-          while (matcher.find) {
-            s = matcher.replaceFirst("");
-            occur = occur + longString.size;
-            val b = longString.getBytes.toList;
-            freqTable.update(b, longString.size + freqTable.get(b).getOrElse(0));
+        var bytes = uuri.getEscapedURI.getBytes.toList;
+        while (bytes.size > 0) {
+          for (longString <- longStrings) {
+            if (bytes.take(longString.size) == longString) {
+              occur = occur + longString.size;
+              freqTable.update(longString, longString.size + freqTable.get(longString).getOrElse(0));
+            }
           }
-        }
-        val bytes = s.getBytes("UTF-8");
-        for (b <- bytes) {
-          occur = occur + 1;
-          freqTable.get(List(b)) match {
-            case None          => System.err.println(b);
-            case Some(i : Int) => freqTable.update(List(b), i + 1);
+          if (bytes.size > 0) {
+            val b = bytes.first;
+            occur = occur + 1;
+            bytes = bytes.tail;
+            freqTable.get(List(b)) match {
+              case None          => System.err.println(b);
+              case Some(i : Int) => freqTable.update(List(b), i + 1);
+            }
           }
         }
       } catch {

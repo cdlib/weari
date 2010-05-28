@@ -4,6 +4,7 @@ import scala.collection.mutable.ListBuffer;
 import scala.io.Source;
 import java.io.EOFException;
 import scala.collection.mutable.HashMap;
+import org.archive.net.UURIFactory;
 
 abstract class DecoderNode;
 
@@ -51,7 +52,7 @@ object HuffmanEncoder {
 
   def encode (s : Seq[Byte]) : Seq[Boolean] = this.encodeList(s.toList);
   
-  def encode (s : String) : Seq[Boolean] = this.encode(s.getBytes("UTF-8"));
+  def encode (s : String) : Seq[Boolean] = this.encode(s.getBytes("UTF-8").toList);
   
   def boolSeq2byteSeq (s : Seq[Boolean]) : Seq[Byte] = {
     var size = s.size/8;
@@ -100,7 +101,7 @@ object HuffmanEncoder {
     for (l <- Source.fromFile(trainFile).getLines) {     
       try {
         n = n + 1;
-        val chomped = l.take(l.size-1);
+        val chomped = UURIFactory.getInstance(l.take(l.size-1)).getEscapedURI;
         val encoded = encode(chomped);
         s += chomped.size;
         sc += encoded.size / 8;
@@ -110,9 +111,9 @@ object HuffmanEncoder {
                                                    decoded));
         }
       } catch {
-        case ex : EOFException => {
+        case ex : EOFException => ex.printStackTrace(System.err);
+        case ex : org.apache.commons.httpclient.URIException =>
           ex.printStackTrace(System.err);
-        }
       }
     }
     System.out.println("compressed %d small strings with a ratio of %f".format(n, sc/s));
