@@ -3,6 +3,8 @@ package org.cdlib.was.ngIndexer;
 import org.xml.sax._;
 import scala.collection.mutable._;
 import java.io._;
+import org.archive.util.ArchiveUtils;
+import org.archive.net.UURIFactory;
 
 class WebGraphContentHandler (url : String, date : String)
   extends ContentHandler {
@@ -23,7 +25,10 @@ class WebGraphContentHandler (url : String, date : String)
   
   def endAElement {
     if (inAnchorText) {
-      outlinks += new Outlink(url, outlinkTo, date, outlinkText.toString);
+      outlinks += new Outlink(UURIFactory.getInstance(url), 
+                              UURIFactory.getInstance(outlinkTo),
+                              ArchiveUtils.getDate(date),
+                              outlinkText.toString);
       inAnchorText = false;
     }
   }

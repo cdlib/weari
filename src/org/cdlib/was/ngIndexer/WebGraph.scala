@@ -1,8 +1,11 @@
 package org.cdlib.was.ngIndexer;
 
-class Outlink (val from : String,
-               val to : String,
-               val date : String,
+import java.util.Date;
+import org.archive.net.UURI;
+
+class Outlink (val from : UURI,
+               val to : UURI,
+               val date : Date,
                val text : String) {}
 
 trait WebGraph {
