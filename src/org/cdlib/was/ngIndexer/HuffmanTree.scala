@@ -3,16 +3,17 @@ package org.cdlib.was.ngIndexer;
 import scala.collection.mutable.ListBuffer;
 import scala.io.Source;
 import java.io.EOFException;
+import scala.collection.mutable.HashMap;
 
-abstract class HuffmanNode;
+abstract class DecoderNode;
 
-sealed case class LeafNode (val byte : Byte) extends HuffmanNode {
-  override def toString = "(->%c)".format(byte);
+sealed case class LeafNode (val bytes : Seq[Byte]) extends DecoderNode {
+  override def toString = "(->%c)".format(bytes);
 }
 
-sealed case class InternalNode (val left : HuffmanNode, 
-                         val right : HuffmanNode)
-  extends HuffmanNode {
+sealed case class InternalNode (val left : DecoderNode, 
+                                val right : DecoderNode)
+  extends DecoderNode {
     override def toString = "(0->%s, 1->%s)".format(left, right);
 }
 
@@ -21,20 +22,36 @@ sealed case class InternalNode (val left : HuffmanNode,
 object HuffmanEncoder {
   val trainFile = "/home/egh/w/ng-indexer/url_deflate_train";
   val freqTable = BuildHuffmanTree.buildFreqTable(trainFile);
-  val tree = BuildHuffmanTree.buildTree(freqTable._1, freqTable._2);
-  val printTable = BuildHuffmanTree.buildPrintTable(tree);
+  val tree = BuildHuffmanTree.buildDecoderTree(freqTable._1, freqTable._2);
+  val encoderList = BuildHuffmanTree.buildEncoderList(tree);
+  val encoderMap = BuildHuffmanTree.buildEncoderMap(tree);
   
   val zeroByteList = List[Byte](0);
   val emptyBooleanList = List[Boolean]();
+  val nullTerm = LeafNode(zeroByteList);
 
-  def encode (s : Seq[Byte]) : Seq[Boolean] = {
-    var b = new ListBuffer[Boolean]();
-    val nullTermS = s ++ zeroByteList;
-    return nullTermS.flatMap(printTable.get(_).getOrElse(emptyBooleanList));
+  def encodeList (bytes : List[Byte]) : List[Boolean] = {
+    var toEncode = bytes;
+    var acc = emptyBooleanList;
+    while (toEncode.size > 0) {
+      for (p <- encoderList) {
+        val toMatch = p._1;
+        if (toMatch == toEncode.take(toMatch.size)) {
+          toEncode = toEncode.drop(toMatch.size);
+          acc = acc ++ p._2;
+        }
+      }
+      if (toEncode.size > 0) {
+        acc = acc ++ encoderMap.get(toEncode.first).getOrElse(emptyBooleanList);
+        toEncode = toEncode.tail;
+      }
+    }
+    return acc;
   }
+
+  def encode (s : Seq[Byte]) : Seq[Boolean] = this.encodeList(s.toList);
   
-  def encode (s : String) : Seq[Boolean] =
-    this.encode(s.getBytes("UTF-8"));
+  def encode (s : String) : Seq[Boolean] = this.encode(s.getBytes("UTF-8"));
   
   def boolSeq2byteSeq (s : Seq[Boolean]) : Seq[Byte] = {
     var size = s.size/8;
@@ -50,8 +67,6 @@ object HuffmanEncoder {
     return a;
   }
   
-//  def byteSeq2boolSeq (s : Seq[Byte])
-  
   def decode (s : Seq[Boolean]) : Seq[Byte] =
     decodeList (s.toList);
 
@@ -63,14 +78,17 @@ object HuffmanEncoder {
     case _   => return decodeList(s.toList, tree);
   }
   
-  def decodeList (s : List[Boolean], sofar : HuffmanNode) : List[Byte] = {
-    sofar match {
-      case LeafNode(0)      => Nil; /* NULL terminated */
-      case l : LeafNode     => l.byte :: decodeList(s);
-      case i : InternalNode => s match {
-        case false :: xs => decodeList(xs, i.left);
-        case true  :: xs => decodeList(xs, i.right);
-        case Nil         => throw new RuntimeException("Bad sequence!");
+  def decodeList (s : List[Boolean], sofar : DecoderNode) : List[Byte] = {
+    if (sofar == nullTerm) {
+      Nil;
+    } else {
+      sofar match {
+        case l : LeafNode     => l.bytes.toList ++ decodeList(s);
+        case i : InternalNode => s match {
+          case false :: xs => decodeList(xs, i.left);
+          case true  :: xs => decodeList(xs, i.right);
+          case Nil         => throw new RuntimeException("Bad sequence!");
+        }
       }
     }
   }
