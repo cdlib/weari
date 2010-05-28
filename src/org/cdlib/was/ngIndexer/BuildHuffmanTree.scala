@@ -159,7 +159,8 @@ object BuildHuffmanTree {
                                                  dumpTree(n.right));
       }
       case n : LeafNode => {
-        return "new LeafNode(%d)".format(n.bytes);
+        var bs = "List[Byte](%s)".format(n.bytes.toList.map(_.toString).mkString("",",",""))
+        return "new LeafNode(%s)".format(bs);
       }
     }
   }
@@ -200,7 +201,6 @@ object BuildHuffmanTree {
   def main (args : Array[String]) {
     val t = buildFreqTable(args(0));
     val tree = buildDecoderTree(t._1, t._2);
-    val encoderTree = buildEncoderList(tree);
-    val encoderMap = buildEncoderMap(tree);
+    System.out.println(dumpTree (tree));
   }
 }
