@@ -2,6 +2,7 @@ package org.cdlib.was.ngIndexer;
 
 import com.shorrockin.cascal.session._;
 import com.shorrockin.cascal.utils.Conversions._;
+import com.shorrockin.cascal.model;
 import org.apache.thrift.transport.TTransportException;
 import org.apache.thrift.TApplicationException;
 import it.unimi.dsi.webgraph._;
@@ -9,14 +10,45 @@ import java.lang.UnsupportedOperationException;
 import org.archive.net.UURI;
 import org.archive.util.ArchiveUtils;
 import java.util.Date;
+import scala.collection.mutable.HashMap;
 
-class CassandraWebGraph extends WebGraph { // with ImmutableSequentialGraph {
+class CassandraWebGraph extends ImmutableSequentialGraph with WebGraph {
   val hosts  = Host("localhost", 9160, 250) :: Nil
-  val params = new PoolParams(10, ExhaustionPolicy.Fail, 500L, 6, 2)
+  val params = new PoolParams(10, ExhaustionPolicy.Fail, 1000L, 6, 2)
   val pool   = new SessionPool(hosts, params, Consistency.One)  
 
+  val leastFp    = UriUtils.long2bytearray(0);
+  val greatestFp = UriUtils.long2bytearray(0xffffffffffffffffL);
+
+  override def toString = "WebGraph";
+  
   def addLink (link : Outlink) {
     this.addLinks(List(link));
+  }
+
+  var numNodesFinished = false;
+  var n = 0;
+  var knownUrls = new HashMap[Long, Int]();
+
+  def fp2id (l : Long) : Int = {
+    knownUrls.get(l) match {
+      case Some(i) => return i;
+      case None    => {
+        knownUrls.update(l, n);
+        n = n + 1;
+        return n - 1;
+      }
+    }
+  }
+  
+  val columnFamily = "WebGraph" \\ "Outlinks";
+
+  def numNodes : Int = {
+    if (numNodesFinished) {
+      return n;
+    } else {
+      throw new UnsupportedOperationException();
+    }
   }
 
   /* adds a URL to our collection, if necessary, returns its fingerprint */
@@ -47,7 +79,6 @@ class CassandraWebGraph extends WebGraph { // with ImmutableSequentialGraph {
 
     while (!done) {
       try {
-        val columnFamily = "WebGraph" \\ "Outlinks";
         val inserts = links.map((l)=>{
           val fromfp = addUrl(l.from);
           val tofp = addUrl(l.to);
@@ -74,42 +105,74 @@ class CassandraWebGraph extends WebGraph { // with ImmutableSequentialGraph {
     }
   }
 
-  // def numNodes : Int = {
-  //   pool.borrow { session =>
-  //     session.count(ColumnContainer("WebGraph" \\ "Outlinks"));
-  //   }
-  //}
+  override def nodeIterator = new MyNodeIterator();
 
-  // val leastFp    = UriUtils.long2bytearray(0);
-  // val greatestFp = UriUtils.long2bytearray(0xffffffffffffffffL);
-
-  // def list {
-  //   val family = "WebGraph" \ "Outlinks";
-  //   pool.borrow { session => 
-  //     for (l <- session.list(family, Range(leastFp, greatestFp, 100))) {
-  //       System.out.println(l);
-  //     }
-  //   }
-  // }
-
-  // //def copy : ImmutableSequentialGraph = {
-  // //return new CassandraWebGraph();
-  // //}
-
-  // class MyNodeIterator (var i)
-  //   extends ArcLabelledNodeIterator {
-    
-  //   def hasNext : Boolean = {
-  //   }
-    
-  //   def nextInt {
-  //     if (!this.hasNext) throw new NoSuchElementException();
+  class MyNodeIterator
+    extends NodeIterator {
+      var position = 0L;
+      var currentKey : Option[model.Key[model.SuperColumn, Map[model.SuperColumn, Seq[model.Column[model.SuperColumn]]]]] = None;
+      var currentVal : Option[Map[model.SuperColumn,Seq[model.Column[model.SuperColumn]]]] = None;
+      var nextKey : Option[model.Key[model.SuperColumn, Map[model.SuperColumn, Seq[model.Column[model.SuperColumn]]]]] = None;
+      var nextVal : Option[Map[model.SuperColumn,Seq[model.Column[model.SuperColumn]]]] = None;
       
-  //     def outdegree : int = {
-  //     return 0;
-  //   }
+      override def outdegree = {
+        currentVal match {
+          case None    => -1;
+          case Some(v) => v.size;
+        }
+      }
+      
+      def fillNext {
+        if (nextKey.isEmpty) {
+          pool.borrow { session =>
+            val res = session.list(columnFamily, KeyRange(UriUtils.encodeFp(position+1), greatestFp, 1));
+            res.keys.find(a=>true) match { /* find the first one */
+              case None => System.err.println("Could not get key");
+              case Some(key) => {
+                if (UriUtils.decodeFp(key.value) == position) {
+                  /* we have reached the end */
+                  nextKey = None;
+                  nextVal = None;
+                } else {
+                  nextKey = Some(key);
+                  nextVal = res.get(key);
+                }
+              }
+            }
+          }
+        }
+      }
     
-  //   override def successors :  = {
-  // def nodeIterator : NodeIterator = {
-    
+      override def hasNext : Boolean = {
+        fillNext;
+        if (nextKey.isEmpty) {
+          numNodesFinished = true;
+          return false;
+        } else { return true; }
+      }
+      
+      override def successorArray : Array[Int] = currentVal match {
+        case None    => return new Array[Int](0);
+        case Some(v) => {
+          val ids = for (k <- v.keySet)
+                    yield fp2id(UriUtils.decodeFp(k.value.take(8)));
+          return ids.toList.toArray[Int];
+        }
+      }
+      
+      override def nextInt : Int = next.asInstanceOf[Int];
+      
+      override def next : java.lang.Integer = {
+        if (!hasNext) {
+          throw new NoSuchElementException();
+        } else {
+          currentKey = nextKey;
+          currentVal = nextVal;
+          nextKey = None;
+          nextVal = None;
+          position = UriUtils.decodeFp(currentKey.getOrElse(null).key.value.getBytes);
+          return fp2id(position);
+        }
+      }
+    }
 }
