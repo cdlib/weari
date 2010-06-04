@@ -11,4 +11,6 @@ class Outlink (val from : UURI,
 trait WebGraph {
   def addLink (link : Outlink);
   def addLinks (links : Seq[Outlink]);
+  def nodeIterator : it.unimi.dsi.webgraph.NodeIterator;
+  def numNodes : Int;
 }

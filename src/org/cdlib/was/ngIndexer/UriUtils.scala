@@ -4,6 +4,7 @@ import java.util.Date;
 import org.archive.net.UURI;
 import org.archive.net.UURIFactory;
 import org.cdlib.rabinpoly.RabinPoly;
+import org.apache.commons.codec.binary.Base64;
 
 object UriUtils {
     
@@ -45,10 +46,19 @@ object UriUtils {
     return fp;
   }
 
+  def fp2string (fp : Long) : String =
+    new String(Base64.encodeBase64(this.encodeFp(fp)));
+
+  def string2fp (s : String) : Long =
+    this.decodeFp(Base64.decodeBase64(s.getBytes("UTF-8")));
+
+  def fpdate2string (fp : Long, date : Date) : String =
+    new String(Base64.encodeBase64(this.encodeFpDate(fp, date)));
+
   def long2bytearray (l : Long) : Array[Byte] = {
     var fbBytes = Array.make[Byte](8, 0);
     for (i <- new Range(0, 8, 1)) {
-      fbBytes(7-i) = (l >>> i*8).asInstanceOf[Byte];
+      fbBytes(i) = (l >>> 8*(7-i)).asInstanceOf[Byte];
     }
     return fbBytes;
   }
@@ -56,7 +66,7 @@ object UriUtils {
   def bytearray2long (bytes : Array[Byte]) : Long = {
     var retval = 0L;
     for (i <- new Range(0, 8, 1)) {
-      retval = retval | ((bytes(i) & 0xFF).asInstanceOf[Long] << (7-i)*8);
+      retval = retval | (((bytes(i) & 0xFFL) << (7-i)*8));
     }
     return retval;
   }

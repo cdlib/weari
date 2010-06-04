@@ -1,24 +1,23 @@
 package org.cdlib.was.ngIndexer;
 
+import com.shorrockin.cascal.model;
 import com.shorrockin.cascal.session._;
 import com.shorrockin.cascal.utils.Conversions._;
-import com.shorrockin.cascal.model;
-import org.apache.thrift.transport.TTransportException;
-import org.apache.thrift.TApplicationException;
 import it.unimi.dsi.webgraph._;
+import java.io._;
 import java.lang.UnsupportedOperationException;
+import java.util.Date;
+import org.apache.cassandra.utils.FBUtilities;
+import org.apache.thrift.TApplicationException;
+import org.apache.thrift.transport.TTransportException;
 import org.archive.net.UURI;
 import org.archive.util.ArchiveUtils;
-import java.util.Date;
 import scala.collection.mutable.HashMap;
 
-class CassandraWebGraph extends ImmutableSequentialGraph with WebGraph {
+class CassandraWebGraph extends WebGraph {
   val hosts  = Host("localhost", 9160, 250) :: Nil
   val params = new PoolParams(10, ExhaustionPolicy.Fail, 1000L, 6, 2)
   val pool   = new SessionPool(hosts, params, Consistency.One)  
-
-  val leastFp    = UriUtils.long2bytearray(0);
-  val greatestFp = UriUtils.long2bytearray(0xffffffffffffffffL);
 
   override def toString = "WebGraph";
   
@@ -29,7 +28,7 @@ class CassandraWebGraph extends ImmutableSequentialGraph with WebGraph {
   var numNodesFinished = false;
   var n = 0;
   var knownUrls = new HashMap[Long, Int]();
-
+  
   def fp2id (l : Long) : Int = {
     knownUrls.get(l) match {
       case Some(i) => return i;
@@ -54,9 +53,9 @@ class CassandraWebGraph extends ImmutableSequentialGraph with WebGraph {
   /* adds a URL to our collection, if necessary, returns its fingerprint */
   def addUrl (url : UURI) : Long = {
     val fp = UriUtils.fingerprint(url);
-    val fpbytes = UriUtils.encodeFp(fp);
+    val fpstring = UriUtils.fp2string(fp);
     pool.borrow { session =>
-      val key = "WebGraph" \ "Urls" \ fpbytes;
+      val key = "WebGraph" \ "Urls" \ fpstring;
       def insertUrl {
         val encoded = UriUtils.encodeUrl(url);
         session.insert(key \ ("url", encoded));
@@ -80,11 +79,10 @@ class CassandraWebGraph extends ImmutableSequentialGraph with WebGraph {
     while (!done) {
       try {
         val inserts = links.map((l)=>{
-          val fromfp = addUrl(l.from);
-          val tofp = addUrl(l.to);
-          val fpdate = UriUtils.encodeFpDate(tofp, l.date);
-          val i = Insert(columnFamily \ UriUtils.encodeFp(fromfp) \ fpdate \ ("text", l.text));
-          i;
+          Insert(columnFamily \ 
+                 UriUtils.fp2string(addUrl(l.from)) \ 
+                 UriUtils.fpdate2string(addUrl(l.to), l.date) \
+                 ("text", l.text));
         });
         if (inserts.size > 0) {
           pool.borrow { session =>
@@ -109,46 +107,53 @@ class CassandraWebGraph extends ImmutableSequentialGraph with WebGraph {
 
   class MyNodeIterator
     extends NodeIterator {
-      var position = 0L;
-      var currentKey : Option[model.Key[model.SuperColumn, Map[model.SuperColumn, Seq[model.Column[model.SuperColumn]]]]] = None;
-      var currentVal : Option[Map[model.SuperColumn,Seq[model.Column[model.SuperColumn]]]] = None;
-      var nextKey : Option[model.Key[model.SuperColumn, Map[model.SuperColumn, Seq[model.Column[model.SuperColumn]]]]] = None;
-      var nextVal : Option[Map[model.SuperColumn,Seq[model.Column[model.SuperColumn]]]] = None;
-      
+      var iteratorDone = false;
+      var currentKey : Option[String] = None;
+      var currentLong : Option[Long] = None;
+      var nextKey : Option[String] = None;
+
+      /* TODO speed up by caching this puppy */
+      def currentVal : Option[Map[model.SuperColumn,Seq[model.Column[model.SuperColumn]]]] = {
+        var retval : Option[Map[model.SuperColumn,Seq[model.Column[model.SuperColumn]]]] = None;
+        pool.borrow { session=>
+          retval = currentKey.map(key=>{ session.list(columnFamily \ key) });
+        }
+        return retval;
+      }
+
       override def outdegree = {
         currentVal match {
           case None    => -1;
           case Some(v) => v.size;
         }
       }
-      
-      def fillNext {
-        if (nextKey.isEmpty) {
-          pool.borrow { session =>
-            val res = session.list(columnFamily, KeyRange(UriUtils.encodeFp(position+1), greatestFp, 1));
-            res.keys.find(a=>true) match { /* find the first one */
-              case None => System.err.println("Could not get key");
-              case Some(key) => {
-                if (UriUtils.decodeFp(key.value) == position) {
-                  /* we have reached the end */
-                  nextKey = None;
-                  nextVal = None;
-                } else {
-                  nextKey = Some(key);
-                  nextVal = res.get(key);
-                }
-              }
-            }
-          }
+
+      def bytesort (a : String, b : String) = 
+        (-1 == FBUtilities.compareByteArrays(a.getBytes("ASCII"), b.getBytes("ASCII")));
+
+      def getNextKeyFromRange (start : String) : Option[String] = {
+        val range = KeyRange(start, "~~~~~~~~", 2); /* ~ is 0x7f, top ascii char, should sort last */
+        var retval : Option[String] = None;
+        pool.borrow { session =>
+          val res = session.list("WebGraph" \ "Urls", range);
+          val sortedKeys = res.keySet.toList.sort((a,b)=>{
+            bytesort(a.value, b.value)
+          });
+          /* find the first where start != key */
+          retval = sortedKeys.map(_.value).find(_ != start);
         }
+        return retval;
       }
     
       override def hasNext : Boolean = {
-        fillNext;
-        if (nextKey.isEmpty) {
-          numNodesFinished = true;
-          return false;
-        } else { return true; }
+        if (!iteratorDone && nextKey.isEmpty) {
+          nextKey = getNextKeyFromRange(currentKey.getOrElse(""));
+          if (nextKey.isEmpty) {
+            iteratorDone = true;
+            numNodesFinished = true;
+          }
+        }
+        return !iteratorDone;
       }
       
       override def successorArray : Array[Int] = currentVal match {
@@ -166,13 +171,56 @@ class CassandraWebGraph extends ImmutableSequentialGraph with WebGraph {
         if (!hasNext) {
           throw new NoSuchElementException();
         } else {
+          val newCurrentLong = nextKey.map(UriUtils.string2fp(_));
           currentKey = nextKey;
-          currentVal = nextVal;
           nextKey = None;
-          nextVal = None;
-          position = UriUtils.decodeFp(currentKey.getOrElse(null).key.value.getBytes);
-          return fp2id(position);
+          currentLong = newCurrentLong;
+          return fp2id(currentLong.getOrElse(0L));
         }
       }
     }
+}
+
+object CassandraWebGraph {
+  def import2bv (name : String) {
+    val g = new MyImmutableSequentialGraph(new CassandraWebGraph());
+    try { 
+      ImmutableGraph.store(classOf[BVGraph], g, name);
+    } catch { 
+      case ex: java.lang.IllegalArgumentException => ex.printStackTrace(System.err);
+    }
+  }
+
+  def import2ascii (name : String) {
+    val g = new MyImmutableSequentialGraph(new CassandraWebGraph());
+    try { 
+      ASCIIGraph.store(g, name);
+    } catch { 
+      case ex: java.lang.IllegalArgumentException => ex.printStackTrace(System.err);
+    }
+  }
+
+  def main (args : Array[String]) {
+    val g = new CassandraWebGraph();
+    val it = g.nodeIterator;
+    var i = 0;
+    while (it.hasNext) {
+      var u = it.next;
+      if (u != i) throw new RuntimeException("node seq error %d != %d.".format(i, u));
+      i = i + 1;
+    }
+    val numNodes = g.numNodes;
+    if (numNodes != i) throw new RuntimeException("num nodes error.");
+    val it2 = g.nodeIterator;
+    while (it2.hasNext) {
+      it2.next;
+      if (it.outdegree > 0) {
+        val a = it.successorArray;
+        if (a.length != it.outdegree) { System.err.println("Bad outdegree.") };
+        for (j <- a) {
+          if (j > numNodes) { System.err.println("Bad successor %d.".format(j)); }
+        }
+      }
+    }
+  }
 }
