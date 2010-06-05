@@ -13,6 +13,7 @@ import org.apache.thrift.transport.TTransportException;
 import org.archive.net.UURI;
 import org.archive.util.ArchiveUtils;
 import scala.collection.mutable.HashMap;
+import org.archive.net.UURIFactory;
 
 class CassandraWebGraph extends WebGraph {
   val hosts  = Host("localhost", 9160, 250) :: Nil
@@ -20,36 +21,70 @@ class CassandraWebGraph extends WebGraph {
   val pool   = new SessionPool(hosts, params, Consistency.One)  
 
   override def toString = "WebGraph";
-  
+
+  def borrow[T] (f : (Session) => T) : T = {
+    var retval : T = null.asInstanceOf[T];
+    pool.borrow { session =>
+      retval = f(session);
+    }
+    return retval;
+  }
+
   def addLink (link : Outlink) {
     this.addLinks(List(link));
   }
 
   var numNodesFinished = false;
-  var n = 0;
+  var numNodesCount = 0;
+  var knownUrlCounter = 0;
   var knownUrls = new HashMap[Long, Int]();
   
   def fp2id (l : Long) : Int = {
     knownUrls.get(l) match {
       case Some(i) => return i;
       case None    => {
-        knownUrls.update(l, n);
-        n = n + 1;
-        return n - 1;
+        knownUrls.update(l, knownUrlCounter);
+        knownUrlCounter = knownUrlCounter + 1;
+        return knownUrlCounter - 1;
       }
     }
   }
-  
+
+  def writeIds (f : File) {
+    val fos = new FileOutputStream(f);
+    for ((k,v) <- knownUrls) {
+      lookupFp(k).map(url=>fos.write("%d %s\n".format(v, url)));
+    }
+    fos.close;
+  }
+
   val columnFamily = "WebGraph" \\ "Outlinks";
 
   def numNodes : Int = {
     if (numNodesFinished) {
-      return n;
+      return numNodesCount;
     } else {
       throw new UnsupportedOperationException();
     }
   }
 
+  /* init node numbers so BVGraph gets +1 for each next node */
+  def init {
+    val it = this.nodeIterator;
+    while (it.hasNext) it.next;
+  }
+
+  init;
+
+  def lookupFp (fp : Long) : Option[UURI] = 
+    lookupFp(UriUtils.fp2string(fp));
+  
+  def lookupFp (fpstring : String) : Option[UURI] = {
+    borrow { session=>
+      session.get("WebGraph" \ "Urls" \ fpstring \ "url").map(x=>UURIFactory.getInstance(x.value));
+    }
+  }  
+    
   /* adds a URL to our collection, if necessary, returns its fingerprint */
   def addUrl (url : UURI) : Long = {
     val fp = UriUtils.fingerprint(url);
@@ -111,7 +146,8 @@ class CassandraWebGraph extends WebGraph {
       var currentKey : Option[String] = None;
       var currentLong : Option[Long] = None;
       var nextKey : Option[String] = None;
-
+      var itCount = 0;
+      
       /* TODO speed up by caching this puppy */
       def currentVal : Option[Map[model.SuperColumn,Seq[model.Column[model.SuperColumn]]]] = {
         var retval : Option[Map[model.SuperColumn,Seq[model.Column[model.SuperColumn]]]] = None;
@@ -120,13 +156,15 @@ class CassandraWebGraph extends WebGraph {
         }
         return retval;
       }
-
-      override def outdegree = {
-        currentVal match {
-          case None    => -1;
-          case Some(v) => v.size;
-        }
-      }
+      
+      // override def outdegree : Int = {
+      //   borrow { session =>
+      //     currentKey.map(key=>session.count(columnFamily \ key)).getOrElse(-1);
+      //   }
+      // }
+      
+      override def outdegree : Int =
+        successorArray.length;
 
       def bytesort (a : String, b : String) = 
         (-1 == FBUtilities.compareByteArrays(a.getBytes("ASCII"), b.getBytes("ASCII")));
@@ -151,6 +189,7 @@ class CassandraWebGraph extends WebGraph {
           if (nextKey.isEmpty) {
             iteratorDone = true;
             numNodesFinished = true;
+            numNodesCount = itCount;
           }
         }
         return !iteratorDone;
@@ -161,7 +200,7 @@ class CassandraWebGraph extends WebGraph {
         case Some(v) => {
           val ids = for (k <- v.keySet)
                     yield fp2id(UriUtils.decodeFp(k.value.take(8)));
-          return ids.toList.toArray[Int];
+          return ids.toList.removeDuplicates.sort((a,b)=>a < b).toArray[Int];
         }
       }
       
@@ -171,6 +210,7 @@ class CassandraWebGraph extends WebGraph {
         if (!hasNext) {
           throw new NoSuchElementException();
         } else {
+          itCount = itCount + 1;
           val newCurrentLong = nextKey.map(UriUtils.string2fp(_));
           currentKey = nextKey;
           nextKey = None;
@@ -197,6 +237,15 @@ object CassandraWebGraph {
       ASCIIGraph.store(g, name);
     } catch { 
       case ex: java.lang.IllegalArgumentException => ex.printStackTrace(System.err);
+    }
+  }
+
+  def readAscii (name : String) {
+    val ag = ASCIIGraph.loadSequential(name);
+    val it = ag.nodeIterator;
+    while (it.hasNext) {
+      System.err.println("reading...");
+      it.next;
     }
   }
 
