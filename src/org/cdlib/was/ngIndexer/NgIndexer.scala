@@ -19,14 +19,13 @@ import org.archive.net.UURIFactory;
 import org.xml.sax.ContentHandler;
 import java.util.regex._;
 import scala.collection.mutable._;
-
 class NgIndexer (writer : IndexWriter, 
                  metadataHandler : (ARCRecord, Metadata, Document)=>Unit) {
 
   val parser : Parser = new AutoDetectParser();
   val webGraphTypeRE = Pattern.compile("^(.*html.*|application/pdf)$");
   val webGraph = new CassandraWebGraph();
-                 
+ 
   def index (archiveRecord : ArchiveRecord) {
     archiveRecord match {
       case rec : ARCRecord  => {
@@ -39,7 +38,7 @@ class NgIndexer (writer : IndexWriter,
         tikaMetadata.set(HttpHeaders.CONTENT_TYPE, contentType);
         if (!url.startsWith("filedesc:") && !url.startsWith("dns:")) {
           val doc = new Document();
-          val indexContentHandler = new NgIndexerContentHandler(rec.getHeader.getLength, doc, true);
+          val indexContentHandler = new NgIndexerContentHandler(rec.getHeader.getLength >= 1048576);
           val wgContentHandler = new WebGraphContentHandler(url, rec.getHeader.getDate);
           val contentHandler = new MultiContentHander(List[ContentHandler](wgContentHandler, indexContentHandler));
           try {
@@ -55,6 +54,9 @@ class NgIndexer (writer : IndexWriter,
             rec.close;
             doc.setBoost(1.0f);
             doc.add(new Field("boost", "1.0", Field.Store.YES, Field.Index.NO));
+            indexContentHandler.contentString.map(str=>doc.add(new Field("content", str,
+                                                                         Field.Store.YES, 
+                                                                         Field.Index.ANALYZED)));
             metadataHandler(rec, tikaMetadata, doc);
             writer.addDocument(doc);
 

@@ -12,26 +12,43 @@ import org.apache.lucene.util._;
 import org.xml.sax._;
 import scala.collection.mutable._;
 
-class NgIndexerContentHandler (size : Long, doc : Document, store : Boolean)
+class NgIndexerContentHandler (useTempFile : Boolean)
   extends ContentHandler {
   
-  def this (size : Long, doc : Document) = this(size, doc, true);
+  def contentReader : Option[Reader] = 
+    contentWriter match {
+      case w : FileWriter      => tempFile.map(new FileReader(_));
+      case w : CharArrayWriter => Some(new CharArrayReader(w.toCharArray));
+      case w : StringWriter    => Some(new StringReader(w.toString));
+    }
 
-  var outlinks = new ArrayBuffer[String]();
+  def reader2string (r : Reader) : String = {
+    var buf = new Array[Char](65536);
+    var sb  = new StringBuffer();
+    var i = 0;
+    do {
+      sb.append(buf, 0, i);
+      i = r.read(buf, 0, buf.length);
+    } while (i != -1);
+    return sb.toString;
+  }
 
-  val tempFile = if (!store && size >= 1048576) {
+  def contentString : Option[String] = 
+    contentWriter match {
+      case s : StringWriter => Some(s.toString);
+      case w : Writer       => contentReader.map(reader2string(_));
+    }
+
+  val tempFile = if (useTempFile) {
     Some(File.createTempFile("ng-indexer", "data"));
   } else {
     None
   }
   
-  val contentWriter = tempFile match {
+  val contentWriter : Writer = tempFile match {
     case Some(f) => new FileWriter(f);
-    case None    => if (store) { new StringWriter(262144); }
-                    else {       new CharArrayWriter(262144); }
+    case None    => new StringWriter(262144);
   }
-
-  var contentReader : Option[Reader] = null;
 
   override def characters (ch : Array[Char], start : Int, length : Int) {
     contentWriter.write(ch, start, length);
@@ -39,21 +56,6 @@ class NgIndexerContentHandler (size : Long, doc : Document, store : Boolean)
 
   def endDocument {
     contentWriter.close;
-    if (store) {
-      val c = contentWriter.toString;
-      doc.add(new Field("content", c,
-                        Field.Store.YES, 
-                        Field.Index.ANALYZED));
-    } else {
-      contentReader = contentWriter match {
-        case w : FileWriter => tempFile match {
-          case Some (f) => Some(new FileReader(f));
-          case None => None;
-        }
-        case w : CharArrayWriter => Some(new CharArrayReader(w.toCharArray));
-      }
-      contentReader.foreach((r)=>{ doc.add(new Field("content", r)) });
-    }
   }
   
   def endElement (namespaceURI : String, localName : String, qName : String) = ()
@@ -70,21 +72,7 @@ class NgIndexerContentHandler (size : Long, doc : Document, store : Boolean)
 
   def startDocument() = ()
 
-  def startAElement(atts : Attributes) {
-    atts.getValue(atts.getIndex("href")) match {
-      case null => {}
-      case href : String =>
-        outlinks += href;
-    }
-  }
-
-  def startElement(namespaceURI : String, localName : String, qName : String, atts : Attributes) {
-    localName match {
-      case "a" => startAElement(atts);
-      case _ => {
-      }
-    }
-  }
+  def startElement(namespaceURI : String, localName : String, qName : String, atts : Attributes) = ()
     
   def startPrefixMapping(prefix : String, uri : String) = ()
 }
