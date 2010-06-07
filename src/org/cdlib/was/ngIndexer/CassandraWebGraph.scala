@@ -17,7 +17,7 @@ import org.archive.net.UURIFactory;
 
 class CassandraWebGraph extends WebGraph {
   val hosts  = Host("localhost", 9160, 250) :: Nil
-  val params = new PoolParams(10, ExhaustionPolicy.Fail, 1000L, 6, 2)
+  val params = new PoolParams(10, ExhaustionPolicy.Fail, 10000L, 6, 2)
   val pool   = new SessionPool(hosts, params, Consistency.One)  
 
   override def toString = "WebGraph";
@@ -171,16 +171,25 @@ class CassandraWebGraph extends WebGraph {
 
       def getNextKeyFromRange (start : String) : Option[String] = {
         val range = KeyRange(start, "~~~~~~~~", 2); /* ~ is 0x7f, top ascii char, should sort last */
-        var retval : Option[String] = None;
-        pool.borrow { session =>
-          val res = session.list("WebGraph" \ "Urls", range);
-          val sortedKeys = res.keySet.toList.sort((a,b)=>{
-            bytesort(a.value, b.value)
-          });
-          /* find the first where start != key */
-          retval = sortedKeys.map(_.value).find(_ != start);
+        def doit : Option[String] = {
+          borrow { session =>
+            val res = session.list("WebGraph" \ "Urls", range);
+            val sortedKeys = res.keySet.toList.sort((a,b)=>bytesort(a.value, b.value));
+            /* find the first where start != key */
+            sortedKeys.map(_.value).find(_ != start);
+          }
         }
-        return retval;
+        var retryTimes = 0;
+        while (retryTimes < 10) {
+          try {
+            return doit;
+          } catch {
+            case ex : TTransportException => {
+              retryTimes = retryTimes + 1;
+            }
+          }
+        }
+        throw new RuntimeException("Error connecting to Cassandra.");
       }
     
       override def hasNext : Boolean = {
