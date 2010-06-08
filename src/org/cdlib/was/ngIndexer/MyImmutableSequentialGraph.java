@@ -14,6 +14,9 @@ public class MyImmutableSequentialGraph extends ImmutableSequentialGraph {
 
     public MyImmutableSequentialGraph(WebGraph webGraph) {
         this.webGraph = webGraph;
+        /* init node numbers so BVGraph gets +1 for each next node */
+        NodeIterator it = this.nodeIterator();
+        while (it.hasNext()) it.next();
     }
 
     public MyImmutableSequentialGraph() {

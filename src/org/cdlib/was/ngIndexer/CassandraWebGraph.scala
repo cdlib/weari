@@ -36,19 +36,6 @@ class CassandraWebGraph extends WebGraph {
 
   var numNodesFinished = false;
   var numNodesCount = 0;
-  var knownUrlCounter = 0;
-  var knownUrls = new HashMap[Long, Int]();
-  
-  def fp2id (l : Long) : Int = {
-    knownUrls.get(l) match {
-      case Some(i) => return i;
-      case None    => {
-        knownUrls.update(l, knownUrlCounter);
-        knownUrlCounter = knownUrlCounter + 1;
-        return knownUrlCounter - 1;
-      }
-    }
-  }
 
   def writeIds (f : File) {
     val fos = new FileOutputStream(f);
@@ -67,14 +54,6 @@ class CassandraWebGraph extends WebGraph {
       throw new UnsupportedOperationException();
     }
   }
-
-  /* init node numbers so BVGraph gets +1 for each next node */
-  def init {
-    val it = this.nodeIterator;
-    while (it.hasNext) it.next;
-  }
-
-  init;
 
   def lookupFp (fp : Long) : Option[UURI] = 
     lookupFp(UriUtils.fp2string(fp));
