@@ -33,9 +33,6 @@ class SolrWebGraph (url : String) extends WebGraph {
 
   def numNodes = getFingerPrints.length;
 
-  /* init */
-  for (fp <- getFingerPrints) { fp2id(fp); }
-
   class MyNodeIterator extends NodeIterator {
       var position = -1;
       
