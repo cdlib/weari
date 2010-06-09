@@ -14,9 +14,12 @@ extends Stream.Definite[SolrDocument] {
   def this(server : SolrServer, q : SolrQuery) = this(server, q, new ArrayBuffer[SolrDocument]().drop(0), 0, -1);
 
   def addDefinedElems(buf : StringBuilder, prefix : String) : StringBuilder = {
-    val buf1 = buf.append(prefix).append(this.head);
-    if (tail.isEmpty) return buf1.append(")");
-    else return buf1.append(", ?)");
+    if (head.isEmpty) { return buf; }
+    else {
+      val buf1 = buf.append(prefix).append(this.head);
+      if (tail.isEmpty) { return buf1.append(")"); }
+      else { return buf1.append(", ?)"); }
+    }
   }
   
   override def length : Int = {
@@ -46,6 +49,6 @@ extends Stream.Definite[SolrDocument] {
 
   def tail = new SolrDocumentStream(server, q, cache.drop(1), pos, length);
   
-  override def isEmpty = (pos >= (length - 1));
+  override def isEmpty = cache.isEmpty && (pos >= length);
 }
 
