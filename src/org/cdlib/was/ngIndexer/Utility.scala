@@ -16,17 +16,21 @@ object Utility {
   }
 
   def eachArc (arcFile : java.io.File, f: (ArchiveRecord)=>Unit, count : Int) {
-    val it = ARCReaderFactory.get(arcFile).iterator;
+    val reader = ARCReaderFactory.get(arcFile)
+    val it = reader.iterator;
     for (n <- 0 to count) {
       if (it.hasNext) 
         f (it.next);
     }
+    reader.close;
   }
 
   def eachArc (arcFile : java.io.File, f: (ArchiveRecord)=>Unit) {
-    val it = ARCReaderFactory.get(arcFile).iterator;
+    val reader = ARCReaderFactory.get(arcFile)
+    val it = reader.iterator;
     while (it.hasNext) {
       f (it.next);
     }
+    reader.close;
   }
 }
