@@ -105,6 +105,8 @@ object solrIndexer {
   var segment    = "xxxxxxx";
 
   val URLFP_FIELD = "urlfp";
+  val URL_FIELD = "url";
+  val CANONICALURL_FIELD = "canonicalurl";
 
   def mdHandler (archiveRecord : ArchiveRecord, md : Metadata, doc : SolrInputDocument) {
     val recHeader = archiveRecord.getHeader;
@@ -129,7 +131,7 @@ object solrIndexer {
     /* fields for index-basic plugin */
     doc.addField("host", host, 1.0f);
     doc.addField("site", host, 1.0f);
-    doc.addField("url", recHeader.getUrl, 1.0f);
+    doc.addField(URL_FIELD, url, 1.0f);
     // doc.addField("content", ..., 1.0f);
     doc.addField("title", title, 1.0f);
     // doc.add("cache", ..., 1.0f);
@@ -148,7 +150,8 @@ object solrIndexer {
     // doc.addField("lang", ..., 1.0f);
 
     /* my fields */
-    doc.addField("urlfp", UriUtils.fingerprint(uuri));
+    doc.addField(URLFP_FIELD, UriUtils.fingerprint(uuri));
+    doc.addField(CANONICALURL_FIELD, uuri.toString, 1.0f);
 
     archiveRecord match {
       case rec : ARCRecord => {
