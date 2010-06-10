@@ -11,7 +11,6 @@ import java.io._;
 import org.archive.net.UURIFactory;
 
 class SolrWebGraph (url : String) extends WebGraph {
-  override def nodeIterator = new MyNodeIterator();
   val server = new CommonsHttpSolrServer(url);
 
   def javaList2Seq[T](javaList : java.util.List[T]) : Seq[T] =
@@ -51,7 +50,9 @@ class SolrWebGraph (url : String) extends WebGraph {
     val q = new SolrQuery().setQuery("%s:\"%s\"".format(solrIndexer.CANONICALURL_FIELD, urls(i)));
     return new SolrDocumentStream(server, q);
   }
-    
+
+  override def nodeIterator = new MyNodeIterator();
+
   class MyNodeIterator extends NodeIterator {
     var position = -1;
     
