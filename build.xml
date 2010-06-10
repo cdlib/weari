@@ -53,12 +53,19 @@
       <zipfileset src="${basedir}/lib/libthrift-917130.jar"/>
       <zipfileset src="${basedir}/lib/slf4j-api-1.5.8.jar"/>
       <zipfileset src="${basedir}/lib/slf4j-log4j12-1.5.8.jar"/>
+      <zipfileset src="${basedir}/lib/rabinpoly.jar"/>
  
+      <!-- webgraph -->
+      <zipfileset src="${basedir}/lib/colt-1.2.0.jar"/>
+      <zipfileset src="${basedir}/lib/dsiutils-1.0.7.jar"/>
+      <zipfileset src="${basedir}/lib/fastutil5-5.1.5.jar"/>
+      <zipfileset src="${basedir}/lib/webgraph-2.4.3.jar"/>
+      
       <!-- tika -->
       <zipfileset src="${basedir}/lib/tika-core-0.7.jar"/>
       <zipfileset src="${basedir}/lib/tika-parsers-0.7.jar"/>
       <zipfileset src="${basedir}/lib/commons-logging-1.1.1.jar"/>
-      <zipfileset src="${basedir}/lib/commons-compress-1.0.jar"/>
+      <zipfileset src="${basedir}/lib/commons-compress-1.1-SNAPSHOT.jar"/>
       <zipfileset src="${basedir}/lib/pdfbox-1.1.0.jar"/>
       <zipfileset src="${basedir}/lib/fontbox-1.1.0.jar"/>
       <zipfileset src="${basedir}/lib/jempbox-1.1.0.jar"/>
@@ -83,16 +90,12 @@
 
   <target name="compile">
     <mkdir dir="${basedir}/classes/"/>
-    <javac srcdir="${basedir}/src" 
-           destdir="${basedir}/classes" 
-           classpathref="project.classpath">
-      <include name="**/*.java"/>
-    </javac>
     <scalac addparams="-deprecation -unchecked " 
             srcdir="${basedir}/src" 
             destdir="${basedir}/classes" 
             classpathref="project.classpath">
       <include name="**/*.scala"/>
+      <include name="**/*.java"/>
     </scalac>
   </target>
 </project>
