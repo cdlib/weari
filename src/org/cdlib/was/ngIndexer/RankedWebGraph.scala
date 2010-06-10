@@ -7,10 +7,25 @@ class RankedWebGraph (basename : String) extends WebGraph {
   val bvg : BVGraph = BVGraph.load(basename);
   val urlFile = "%s.urls".format(bvg.basename);
 
+  private def chomp(s: String): String = {
+    try {
+      if ((s.charAt(s.length - 1) == '\n') ||
+          (s.charAt(s.length - 1) == '\r')) {
+            s.substring(0, s.length - 1)
+          } else if (s.substring(s.length - 2, s.length) == "\r\n") {
+            s.substring(0, s.length - 2)
+          } else {
+            s
+          }
+    } catch {
+      case ex: StringIndexOutOfBoundsException => s
+    }
+  }
+
   def addLink (link : Outlink) = ();
   def addLinks (links : Seq[Outlink]) = ();
 
-  lazy val urls = scala.io.Source.fromFile(urlFile).getLines.toList.toArray;
+  lazy val urls = scala.io.Source.fromFile(urlFile).getLines.map(chomp).toList.toArray;
 
   lazy val ranks = {
     val pr = new PageRankPowerMethod(bvg);
