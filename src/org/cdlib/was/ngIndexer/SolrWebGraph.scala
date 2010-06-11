@@ -46,6 +46,16 @@ class SolrWebGraph (url : String) extends WebGraph {
     pw.close;
   }
 
+  def store (basename : String) {
+    val isg = new MyImmutableSequentialGraph(this);
+    try { 
+      ImmutableGraph.store(classOf[BVGraph], isg, basename);
+      writeUrls(new File("%s.urls".format(basename)));
+    } catch { 
+      case ex: java.lang.IllegalArgumentException => ex.printStackTrace(System.err);
+    }
+  }
+
   def documents (i : Int) : SolrDocumentStream = {
     val q = new SolrQuery().setQuery("%s:\"%s\"".format(solrIndexer.CANONICALURL_FIELD, urls(i)));
     return new SolrDocumentStream(server, q);
