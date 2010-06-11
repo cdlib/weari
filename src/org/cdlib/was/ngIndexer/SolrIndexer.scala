@@ -97,31 +97,23 @@ class SolrIndexer (server : SolrServer) {
       case null => ""
     }
     val url = recHeader.getUrl;
-    updateDoc(doc, 1.0f, url, recHeader.getDate.toLowerCase,
-              title, recHeader.getMimetype.toLowerCase, recHeader.getLength, None);
-      
-    archiveRecord match {
-      case rec : ARCRecord => {
-        val digest = String.format("sha1:%s", rec.getDigestStr);
-        doc.addField("digest", digest);
-        doc.addField("id", "%s %s".format(url, digest));
-
-        /* filename:false:true:no_norms */
-        //doc.addField(new Field("filename", rec.getMetaData.getArcFile.getName, Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
-
-      }
-      case _ => {}
+    val digest = archiveRecord match {
+      case rec : ARCRecord => rec.getDigestStr;
+      case _               => ""
     }
+    
+    updateDoc(doc, 1.0f, url, recHeader.getDate.toLowerCase,
+              title, recHeader.getMimetype.toLowerCase, recHeader.getLength, digest);
   }
 
   def updateDoc (doc : SolrInputDocument, boost : Float, url : String,
-                 date : String, title : String, mediaType : String, length : Long, digest : Option[String]) {
+                 date : String, title : String, mediaType : String,
+                 length : Long, digest : String) {
     
     val uuri = UURIFactory.getInstance(url);
     val host = uuri.getHost;
 
-    /* need digest for id */
-    digest.map(d=>doc.addField(solrIndexer.ID_FIELD, "%s.%s".format(url, d)));
+    doc.addField(solrIndexer.ID_FIELD, "%s.%s".format(uuri.toString, digest));
 
     /* core fields */
     doc.addField(solrIndexer.BOOST_FIELD, boost);
@@ -164,7 +156,7 @@ class SolrIndexer (server : SolrServer) {
     val url = doc.getFirstValue(solrIndexer.URL_FIELD).asInstanceOf[String];
     val mediaType = doc.getFirstValue(solrIndexer.TYPE_FIELD).asInstanceOf[String];
     val length = doc.getFirstValue(solrIndexer.CONTENT_LENGTH_FIELD).asInstanceOf[Long];
-    val digest = Some(doc.getFirstValue(solrIndexer.DIGEST_FIELD).asInstanceOf[String]);
+    val digest = doc.getFirstValue(solrIndexer.DIGEST_FIELD).asInstanceOf[String];
 
     idoc.addField(solrIndexer.CONTENT_FIELD, doc.getFirstValue(solrIndexer.CONTENT_FIELD).asInstanceOf[String]);
     
