@@ -97,5 +97,10 @@
       <include name="**/*.scala"/>
       <include name="**/*.java"/>
     </scalac>
+    <javac srcdir="${basedir}/src" 
+           destdir="${basedir}/classes" 
+           classpathref="project.classpath">
+      <include name="**/*.java"/>
+    </javac>
   </target>
 </project>
