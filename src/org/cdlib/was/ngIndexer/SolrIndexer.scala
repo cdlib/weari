@@ -12,7 +12,7 @@ import org.apache.lucene.store._;
 import org.apache.lucene.util._;
 import org.apache.nutch.analysis._;
 import org.apache.solr.client.solrj._;
-import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
+import org.apache.solr.client.solrj.impl.StreamingUpdateSolrServer;
 import org.apache.solr.common._;
 import org.apache.solr.common._;
 import org.apache.solr.common._;
@@ -25,17 +25,22 @@ import org.archive.net.UURIFactory;
 import org.xml.sax.ContentHandler;
 import scala.collection.mutable._;
 
-class SolrIndexer (url : String) {
+class SolrIndexer (server : SolrServer) {
+  
+  def this(url : String) = this(new StreamingUpdateSolrServer(url, 50, 5));
+
   val dateFormatter = new java.text.SimpleDateFormat("yyyyMMddHHmmssSSS");
   val parser : Parser = new AutoDetectParser();
   val webGraphTypeRE = Pattern.compile("^(.*html.*|application/pdf)$");
 
-  val server = new CommonsHttpSolrServer(url);
-
-  var docBuf = new ArrayList[SolrInputDocument]();
+  def commit = {
+    server.commit;
+    server match {
+      case s : StreamingUpdateSolrServer => s.blockUntilFinished;
+    }
+  }
   
   def index (archiveRecord : ArchiveRecord) {
-    
     archiveRecord match {
       case rec : ARCRecord => {
         Utility.skipHttpHeader(rec);
@@ -75,27 +80,12 @@ class SolrIndexer (url : String) {
                 }
               }
             }
-            docBuf.add(doc);
+            server.add(doc);
           } catch {
             case ex : Exception => ex.printStackTrace(System.err);
           }
         }
       }
-    }
-    if (docBuf.size > 50) {
-      addDocs;
-    }
-  }
-
-  def addDocs {
-    server.add(docBuf);
-    server.commit;
-    docBuf.clear;
-  } 
-
-  def finish {
-    if (docBuf.size > 0) {
-      addDocs;
     }
   }
 
@@ -182,20 +172,10 @@ class SolrIndexer (url : String) {
 
   def updateDocs (q : SolrQuery, filter : (SolrInputDocument)=>SolrInputDocument) {
     val stream = new SolrDocumentStream(server, q);
-    
-    var docBuf = new ArrayList[SolrInputDocument]();
-    //XXX factor out
-    def addDocs {
-      server.add(docBuf);
-      server.commit;
-      docBuf.clear;
-    }
     for (doc <- stream) {
       val idoc = doc2InputDoc(doc);
-      docBuf.add(filter(idoc));
-      if (docBuf.size > 50) { addDocs; }
+      server.add(filter(idoc));
     }
-    if (docBuf.size > 0) { addDocs; }
   }
   
   def updateBoosts (g : RankedWebGraph) = {
@@ -241,8 +221,8 @@ object solrIndexer {
       val indexer = new SolrIndexer("http://localhost:8983/solr");
       for (path <- args.drop(1)) {
         Utility.eachArc(new File(path), indexer.index);
+        indexer.commit;
       }
-      indexer.finish;
     }
   }
 }
