@@ -14,8 +14,6 @@ import org.apache.nutch.analysis._;
 import org.apache.solr.client.solrj._;
 import org.apache.solr.client.solrj.impl.StreamingUpdateSolrServer;
 import org.apache.solr.common._;
-import org.apache.solr.common._;
-import org.apache.solr.common._;
 import org.apache.tika.metadata._;
 import org.apache.tika.parser._;
 import org.apache.tika.sax._;
@@ -164,12 +162,16 @@ class SolrIndexer (server : SolrServer) {
     return idoc;
   }
 
-  def updateDocs (q : SolrQuery, filter : (SolrInputDocument)=>SolrInputDocument) {
+  def updateDocs (q : SolrQuery, f : (SolrInputDocument)=>Unit) {
     val stream = new SolrDocumentStream(server, q);
+    var i = 1;
     for (doc <- stream) {
       val idoc = doc2InputDoc(doc);
-      server.add(filter(idoc));
+      f(idoc);
+      server.add(idoc);
+      i += 1; if ((i % 500) == 0) server.commit;
     }
+    server.commit;
   }
   
   def updateBoosts (g : RankedWebGraph) = {
@@ -178,10 +180,10 @@ class SolrIndexer (server : SolrServer) {
       it.next;
       val url = it.url;
       val boost = it.boost;
-      updateDocs(new SolrQuery().setQuery("url:\"%s\"".format(url)),
-                 { (d : SolrInputDocument)=>
-                     d.setField(solrIndexer.BOOST_FIELD, boost);
-                     d; });
+      def updateBoost (d : SolrInputDocument) {
+        d.setField(solrIndexer.BOOST_FIELD, boost);
+      }
+      updateDocs(new SolrQuery().setQuery("url:\"%s\"".format(url)), updateBoost);
     }
   }      
 }
