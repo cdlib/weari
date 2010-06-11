@@ -96,14 +96,15 @@ class SolrIndexer (server : SolrServer) {
       case s : String => s
       case null => ""
     }
-    
-    updateDoc(doc, 1.0f, recHeader.getUrl, recHeader.getDate.toLowerCase,
+    val url = recHeader.getUrl;
+    updateDoc(doc, 1.0f, url, recHeader.getDate.toLowerCase,
               title, recHeader.getMimetype.toLowerCase, recHeader.getLength, None);
       
     archiveRecord match {
       case rec : ARCRecord => {
-        
-        doc.addField("digest", String.format("sha1:%s", rec.getDigestStr));
+        val digest = String.format("sha1:%s", rec.getDigestStr);
+        doc.addField("digest", digest);
+        doc.addField("id", "%s %s".format(url, digest));
 
         /* filename:false:true:no_norms */
         //doc.addField(new Field("filename", rec.getMetaData.getArcFile.getName, Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
@@ -119,7 +120,8 @@ class SolrIndexer (server : SolrServer) {
     val uuri = UURIFactory.getInstance(url);
     val host = uuri.getHost;
 
-    doc.addField(solrIndexer.ID_FIELD, "%s.%s".format(url, date));
+    /* need digest for id */
+    digest.map(d=>doc.addField(solrIndexer.ID_FIELD, "%s.%s".format(url, d)));
 
     /* core fields */
     doc.addField(solrIndexer.BOOST_FIELD, boost);
