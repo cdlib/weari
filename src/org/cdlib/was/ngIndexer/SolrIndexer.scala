@@ -117,7 +117,7 @@ class SolrIndexer (server : SolrServer) {
 
     /* core fields */
     doc.addField(solrIndexer.BOOST_FIELD, boost);
-    digest.map(d=>doc.addField(solrIndexer.DIGEST_FIELD, d));
+    doc.addField(solrIndexer.DIGEST_FIELD, digest);
     // no segment
 
     /* fields for index-basic plugin */
