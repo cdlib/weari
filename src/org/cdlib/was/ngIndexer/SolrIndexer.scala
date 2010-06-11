@@ -183,7 +183,9 @@ class SolrIndexer (server : SolrServer) {
       def updateBoost (d : SolrInputDocument) {
         d.setField(solrIndexer.BOOST_FIELD, boost);
       }
-      updateDocs(new SolrQuery().setQuery("url:\"%s\"".format(url)), updateBoost);
+      val q = new SolrQuery().setQuery("%s:\"%s\"".format(
+        solrIndexer.CANONICALURL_FIELD, url));
+      updateDocs(q, updateBoost);
     }
   }      
 }
