@@ -56,7 +56,7 @@ class RankedWebGraph (basename : String) extends WebGraph {
 
     def rank = ranks(position);
 
-    def boost = ranks(position) * numNodes;
+    def boost = (ranks(position) * numNodes).asInstanceOf[Float];
   }
 
   override def nodeIterator = new RankedNodeIterator();
