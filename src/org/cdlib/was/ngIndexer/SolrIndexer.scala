@@ -115,6 +115,7 @@ class SolrIndexer (server : SolrServer) {
 
     /* core fields */
     doc.setDocumentBoost(boost);
+    doc.addField(solrIndexer.BOOST_FIELD, boost);
     doc.addField(solrIndexer.DIGEST_FIELD, digest);
     // no segment
 
@@ -180,7 +181,9 @@ class SolrIndexer (server : SolrServer) {
       it.next;
       val url = it.url;
       def updateBoost (d : SolrInputDocument) {
-        d.setDocumentBoost(it.boost);
+        val boost = it.boost;
+        d.setDocumentBoost(boost);
+        d.setField(solrIndexer.BOOST_FIELD, boost);
       }
       val q = new SolrQuery().setQuery("%s:\"%s\"".format(
         solrIndexer.CANONICALURL_FIELD, url));
