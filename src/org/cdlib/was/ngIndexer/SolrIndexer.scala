@@ -197,6 +197,17 @@ class SolrIndexer (server : SolrServer) {
     val q = new SolrQuery().setQuery("*:*").setRows(500);
     updateDocs(q, updateBoost);
   }      
+  
+  def indexFile (f : File) {
+    if (f.isDirectory) {
+      for (c <- f.listFiles) {
+        indexFile(c);
+      }
+    } else if (f.getName.endsWith(".arc.gz")) {
+      Utility.eachArc(f, index);
+      commit;
+    }
+  }
 }
 
 object solrIndexer {
@@ -219,16 +230,15 @@ object solrIndexer {
   val URLFP_FIELD          = "urlfp";
   val URL_FIELD            = "url";
 
-  def main (args : Array[String]) : Unit = {
+  def main (args : Array[String]) {
     if (args.size < 2) {
       System.err.println("Please supply >= two arg!");
       System.exit(1);
     } else {
       collection = args(0);
-      val indexer = new SolrIndexer("http://localhost:8983/solr");
+      val indexer = new SolrIndexer("http://gales.cdlib.org:8983/solr");
       for (path <- args.drop(1)) {
-        Utility.eachArc(new File(path), indexer.index);
-        indexer.commit;
+        indexer.indexFile(new File(path));
       }
     }
   }
