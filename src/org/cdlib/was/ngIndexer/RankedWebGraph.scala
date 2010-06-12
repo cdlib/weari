@@ -2,6 +2,7 @@ package org.cdlib.was.ngIndexer;
 
 import it.unimi.dsi.law.rank._;
 import it.unimi.dsi.webgraph._;
+import org.archive.net.UURIFactory;
 
 class RankedWebGraph (basename : String) extends WebGraph {
   val bvg : BVGraph = BVGraph.load(basename);
@@ -25,7 +26,7 @@ class RankedWebGraph (basename : String) extends WebGraph {
   def addLink (link : Outlink) = ();
   def addLinks (links : Seq[Outlink]) = ();
 
-  lazy val urls = scala.io.Source.fromFile(urlFile).getLines.map(chomp).toList.toArray;
+  lazy val urls = scala.io.Source.fromFile(urlFile).getLines.map(chomp).map(UURIFactory.getInstance(_)).toList.toArray;
 
   lazy val ranks = {
     val pr = new PageRankPowerMethod(bvg);
