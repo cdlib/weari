@@ -163,32 +163,39 @@ class SolrIndexer (server : SolrServer) {
     return idoc;
   }
 
-  def updateDocs (q : SolrQuery, f : (SolrInputDocument)=>Unit) {
+  def updateDocs (q : SolrQuery, f : (SolrDocument)=>SolrInputDocument) {
     val stream = new SolrDocumentStream(server, q);
     var i = 1;
     for (doc <- stream) {
-      val idoc = doc2InputDoc(doc);
-      f(idoc);
-      server.add(idoc);
+      server.add(f(doc));
       i += 1; if ((i % 500) == 0) server.commit;
     }
     server.commit;
   }
-  
+
+  val MIN_BOOST = 0.1f;
+  val MAX_BOOST = 10.0f;
+
   def updateBoosts (g : RankedWebGraph) = {
+    var fp2boost = new scala.collection.mutable.HashMap[Long, Float]();
     val it = g.nodeIterator;
     while (it.hasNext) {
       it.next;
-      val url = it.url;
-      def updateBoost (d : SolrInputDocument) {
-        val boost = it.boost;
-        d.setDocumentBoost(boost);
-        d.setField(solrIndexer.BOOST_FIELD, boost);
-      }
-      val q = new SolrQuery().setQuery("%s:\"%s\"".format(
-        solrIndexer.CANONICALURL_FIELD, url));
-      updateDocs(q, updateBoost);
+      fp2boost.update(UriUtils.fingerprint(it.url), it.boost);
     }
+    def updateBoost (doc : SolrDocument) : SolrInputDocument = {
+      val idoc = doc2InputDoc(doc);
+      val urlfp = doc.getFirstValue(solrIndexer.URLFP_FIELD).asInstanceOf[Long];
+      val boost1 = fp2boost.get(urlfp).getOrElse(doc.getFirstValue("boost").asInstanceOf[Float]);
+      val boost = Math.min(MAX_BOOST, Math.max(MIN_BOOST, boost1));
+      if (boost > 11.0f) throw new RuntimeException();
+      idoc.setDocumentBoost(boost);
+      idoc.removeField(solrIndexer.BOOST_FIELD);
+      idoc.setField(solrIndexer.BOOST_FIELD, boost);
+      idoc;
+    }
+    val q = new SolrQuery().setQuery("*:*").setRows(500);
+    updateDocs(q, updateBoost);
   }      
 }
 

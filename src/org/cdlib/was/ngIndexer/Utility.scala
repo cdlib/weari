@@ -2,6 +2,8 @@ package org.cdlib.was.ngIndexer;
 
 import org.archive.io._;
 import org.archive.io.arc._;
+import scala.collection.jcl.BufferWrapper;
+import scala.collection.jcl.MutableIterator.Wrapper;
 
 object Utility {
   def skipHttpHeader (rec : ARCRecord) {
@@ -33,4 +35,9 @@ object Utility {
     }
     reader.close;
   }
+
+  def javaList2Seq[T](javaList : java.util.List[T]) : Seq[T] =
+    new BufferWrapper[T]() { def underlying = javaList; }
+
+  def javaIteratorToScalaIterator[A](it : java.util.Iterator[A]) = new Wrapper(it)  
 }

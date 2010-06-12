@@ -4,19 +4,13 @@ import it.unimi.dsi.webgraph._;
 import org.apache.solr.client.solrj._;
 import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
 import org.apache.solr.common._;
-import scala.collection.jcl.BufferWrapper;
 import scala.collection.mutable.ArrayBuffer;
-import scala.collection.jcl.MutableIterator.Wrapper;
 import java.io._;
 import org.archive.net.UURIFactory;
+import Utility.{javaIteratorToScalaIterator,javaList2Seq};
 
 class SolrWebGraph (url : String) extends WebGraph {
   val server = new CommonsHttpSolrServer(url);
-
-  def javaList2Seq[T](javaList : java.util.List[T]) : Seq[T] =
-    new BufferWrapper[T]() { def underlying = javaList; }
-
-  def javaIteratorToScalaIterator[A](it : java.util.Iterator[A]) = new Wrapper(it)
 
   def addLink (link : Outlink) = ();
   def addLinks (links : Seq[Outlink]) = ();
