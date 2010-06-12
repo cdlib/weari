@@ -200,10 +200,12 @@ class SolrIndexer (server : SolrServer) {
   
   def indexFile (f : File) {
     if (f.isDirectory) {
+      System.out.println("Indexing all files in %s".format(f));
       for (c <- f.listFiles) {
         indexFile(c);
       }
     } else if (f.getName.endsWith(".arc.gz")) {
+      System.out.println("Indexing arc file %s".format(f));
       Utility.eachArc(f, index);
       commit;
     }
