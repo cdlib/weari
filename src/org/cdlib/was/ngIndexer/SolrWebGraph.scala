@@ -16,10 +16,9 @@ class SolrWebGraph (url : String) extends WebGraph {
   def addLinks (links : Seq[Outlink]) = ();
 
   lazy val urls : Seq[String] = {
-    val q = new SolrQuery().setTerms(true).setTermsSortString("index").
-      addTermsField(solrIndexer.CANONICALURL_FIELD).setTermsLimit(-1).setQueryType("/terms");
-    val resp = server.query(q);
-    javaList2Seq(resp.getTermsResponse.getTerms(solrIndexer.CANONICALURL_FIELD)).map(_.getTerm);
+    val newUrls = new ArrayBuffer[String]();
+    newUrls ++= new SolrTermStream(server, solrIndexer.CANONICALURL_FIELD);
+    newUrls;
   }
 
   lazy val fingerprints = urls.map(url=>UriUtils.fingerprint(UURIFactory.getInstance(url)));
