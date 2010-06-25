@@ -15,9 +15,12 @@ class SolrWebGraph (url : String) extends WebGraph {
   def addLink (link : Outlink) = ();
   def addLinks (links : Seq[Outlink]) = ();
 
+  val urlsSize = 3500000;
   lazy val urls : Seq[String] = {
-    val newUrls = new ArrayBuffer[String]();
-    newUrls ++= new SolrTermStream(server, solrIndexer.CANONICALURL_FIELD);
+    val terms = new SolrTermIterable(server, solrIndexer.CANONICALURL_FIELD);
+    var newUrls = new ArrayBuffer[String]() { ensureSize(urlsSize); };
+    val it = terms.elements;
+    while (it.hasNext) { newUrls += it.next; }
     newUrls;
   }
 
@@ -30,7 +33,6 @@ class SolrWebGraph (url : String) extends WebGraph {
   def writeUrls (f : File) {
     val os = new FileOutputStream(f);
     val pw = new PrintWriter(os);
-    val it1 = nodeIterator;
     val it = nodeIterator;
     while (it.hasNext) {
       it.next;
@@ -49,11 +51,6 @@ class SolrWebGraph (url : String) extends WebGraph {
     }
   }
 
-  def documents (i : Int) : SolrDocumentStream = {
-    val q = new SolrQuery().setQuery("%s:\"%s\"".format(solrIndexer.CANONICALURL_FIELD, urls(i)));
-    return new SolrDocumentStream(server, q);
-  }
-
   override def nodeIterator = new MyNodeIterator();
 
   class MyNodeIterator extends NodeIterator {
@@ -62,11 +59,22 @@ class SolrWebGraph (url : String) extends WebGraph {
     var outlinksCache : Option[Seq[Int]] = None;
     
     def url = urls(position);
-          
+
+    var docIt = (new SolrAllDocumentIterable(server, solrIndexer.CANONICALURL_FIELD, urls)).
+      elements;
+
+    def checkUrl(d : SolrDocument) = 
+      (d.getFieldValue(solrIndexer.CANONICALURL_FIELD).asInstanceOf[String] == url)
+
+    def hasNextDocument = docIt.peek.map(checkUrl(_)).getOrElse(false);
+      
+    def nextDocument : SolrDocument = docIt.next;
+    
     def currentOutlinks : Option[Seq[Int]] = {
       if (outlinksCache.isEmpty) {
         var outlinkFps = new ArrayBuffer[Long]();
-        for (doc <- documents(position)) {
+        while (hasNextDocument) {
+          val doc = nextDocument;
           val fields = doc.getFieldValues("outlinks");
           if (fields != null) {
             for (j <- javaIteratorToScalaIterator(fields.iterator)) {

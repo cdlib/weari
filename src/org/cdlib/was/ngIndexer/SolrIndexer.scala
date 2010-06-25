@@ -164,9 +164,8 @@ class SolrIndexer (server : SolrServer) {
   }
 
   def updateDocs (q : SolrQuery, f : (SolrDocument)=>SolrInputDocument) {
-    val stream = new SolrDocumentStream(server, q);
     var i = 1;
-    for (doc <- stream) {
+    for (doc <- new SolrDocumentCollection(server, q)) {
       server.add(f(doc));
       i += 1; if ((i % 500) == 0) server.commit;
     }
