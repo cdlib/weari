@@ -1,5 +1,9 @@
 package org.cdlib.was.ngIndexer;
 
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
+import javax.script.Invocable;
+import javax.script.ScriptEngine;
 import java.io._;
 import java.lang.Math;
 import java.util.ArrayList;
@@ -231,15 +235,47 @@ object solrIndexer {
   val URLFP_FIELD          = "urlfp";
   val URL_FIELD            = "url";
 
+  def readConfig : String = {
+    val configPath = System.getProperty("org.cdlib.was.ngIndexer.ConfigFile");
+    if (configPath == null) {
+      System.err.println("Please define org.cdlib.was.ngIndexer.ConfigFile!");
+      System.exit(1);
+    }
+    val file = new File(configPath);
+    val buffer = new Array[Byte](file.length.asInstanceOf[Int]);
+    val is = new FileInputStream(file);
+    is.read(buffer);
+    return new String(buffer);
+  }
+
+  class Config {
+    var indexer : SolrIndexer = null;
+    def setIndexer (indexer : SolrIndexer) = this.indexer = indexer;
+  }
+    
   def main (args : Array[String]) {
+    val config = new Config();
     if (args.size < 2) {
       System.err.println("Please supply >= two arg!");
       System.exit(1);
     } else {
-      collection = args(0);
-      val indexer = new SolrIndexer("http://gales.cdlib.org:8983/solr");
-      for (path <- args.drop(1)) {
-        indexer.indexFile(new File(path));
+      val mgr = new ScriptEngineManager();
+      val jsEngine = mgr.getEngineByName("JavaScript");
+      val invocableEngine = jsEngine.asInstanceOf[Invocable];
+      try {
+        jsEngine.put("config", config);
+        jsEngine.eval(readConfig);
+        collection = args(0);
+        for (path <- args.drop(1)) {
+          try {
+            config.indexer.indexFile(new File(path));
+          } catch {
+            case ex : ScriptException => ex.printStackTrace();
+            case ex : FileNotFoundException => ex.printStackTrace();
+            //case ex : NoSuchMethodException => ex.printStackTrace();
+            case ex : IOException => ex.printStackTrace();
+          }
+        }
       }
     }
   }
