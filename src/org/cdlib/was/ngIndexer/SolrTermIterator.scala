@@ -9,9 +9,9 @@ class SolrTermIterable(val server : SolrServer,
 extends Iterable[String] {
   
   override def toString = 
-    elements.peek.map(el=>"(%s, ...)".format(el)).getOrElse("(empty");
+    iterator.peek.map(el=>"(%s, ...)".format(el)).getOrElse("(empty");
 
-  def elements = new MyIterator[String]() {
+  override def iterator = new MyIterator[String]() {
     var lowerLimit : String = "";
 
     def fillCache {

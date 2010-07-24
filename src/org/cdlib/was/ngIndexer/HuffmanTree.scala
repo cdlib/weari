@@ -41,7 +41,7 @@ object HuffmanEncoder {
         }
       }
       if (toEncode.size > 0) {
-        acc = acc ++ encoderMap.get(toEncode.first).getOrElse(emptyBooleanList);
+        acc = acc ++ encoderMap.get(toEncode.head).getOrElse(emptyBooleanList);
         toEncode = toEncode.tail;
       }
     }

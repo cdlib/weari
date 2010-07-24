@@ -26,7 +26,7 @@ abstract class MyIterator[T] extends Iterator[T] {
   }
   
   def next : T = { 
-    if (!hasNext)  throw new Predef.NoSuchElementException();
+    if (!hasNext)  throw new NoSuchElementException();
     val retval = cache(cachePos);
     cachePos += 1;
     return retval;

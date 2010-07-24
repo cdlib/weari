@@ -95,7 +95,7 @@ object BuildHuffmanTree {
             }
           }
           if (bytes.size > 0) {
-            val b = bytes.first;
+            val b = bytes.head;
             occur = occur + 1;
             bytes = bytes.tail;
             freqTable.get(List(b)) match {
@@ -181,14 +181,14 @@ object BuildHuffmanTree {
         encoderList = Pair(n.bytes.toList, bits) :: encoderList
       }
     });
-    return encoderList.sort((e1,e2)=>e1._1.size>e2._1.size);
+    return encoderList.sortWith((e1,e2)=>e1._1.size>e2._1.size);
   }
 
   def buildEncoderMap (t : DecoderNode) : Map[Byte, Seq[Boolean]] = {
     var encoderMap = new HashMap[Byte, Seq[Boolean]]();
     processDecoderTree (t, (n, bits)=>{
       if (n.bytes.size == 1) {
-        encoderMap.update(n.bytes.first, bits);
+        encoderMap.update(n.bytes.head, bits);
       }
     });
     return encoderMap;
