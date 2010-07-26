@@ -4,7 +4,7 @@
   
   <property environment="env"/>
 
-  <property name="scala.home" value="/home/egh/d/software/scala-2.7.7.final"/>
+  <property name="scala.home" value="/home/egh/d/software/scala"/>
 
   <property name="scala.compiler_jar" 
             value="${scala.home}/lib/scala-compiler.jar"/>
@@ -43,21 +43,17 @@
       <zipfileset src="${basedir}/lib/libidn-0.5.9.jar"/>
       <zipfileset src="${basedir}/lib/mg4j-1.0.1.jar"/>
       <zipfileset src="${basedir}/lib/commons-cli-1.0.jar"/>
-      <zipfileset src="${basedir}/lib/fastutil-5.0.3-heritrix-subset-1.0.jar"/>
-      <zipfileset src="${basedir}/lib/commons-codec-1.3.jar"/>
+      <zipfileset src="${basedir}/lib/commons-codec-1.4.jar"/>
       <zipfileset src="${basedir}/lib/commons-httpclient-3.1.jar"/>
       <zipfileset src="${basedir}/lib/lucene-core-3.0.1.jar"/>
-      <zipfileset src="${basedir}/lib/cascal-1.1.jar"/>
       <zipfileset src="${basedir}/lib/commons-pool-1.5.4.jar"/>
-      <zipfileset src="${basedir}/lib/cassandra-0.6.0-beta3.jar"/>
-      <zipfileset src="${basedir}/lib/libthrift-917130.jar"/>
       <zipfileset src="${basedir}/lib/slf4j-api-1.5.8.jar"/>
       <zipfileset src="${basedir}/lib/slf4j-log4j12-1.5.8.jar"/>
       <zipfileset src="${basedir}/lib/rabinpoly.jar"/>
  
       <!-- webgraph -->
       <zipfileset src="${basedir}/lib/colt-1.2.0.jar"/>
-      <zipfileset src="${basedir}/lib/dsiutils-1.0.7.jar"/>
+      <zipfileset src="${basedir}/lib/dsiutils-1.0.10.jar"/>
       <zipfileset src="${basedir}/lib/fastutil5-5.1.5.jar"/>
       <zipfileset src="${basedir}/lib/webgraph-2.4.3.jar"/>
       
@@ -86,6 +82,17 @@
         <attribute name="Main-Class" value="org.cdlib.was.ngIndexer.ngIndexer"/>
       </manifest>
     </jar>
+  </target>
+
+  <target name="docs">
+    <mkdir dir="${basedir}/scaladocs/"/>
+    <scaladoc 
+        srcdir="${basedir}/src" 
+        destdir="${basedir}/scaladocs/"
+        classpathref="project.classpath">
+      <include name="**/*.scala"/>
+      <include name="**/*.java"/>
+    </scaladoc>
   </target>
 
   <target name="compile">
