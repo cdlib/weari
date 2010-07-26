@@ -56,7 +56,7 @@ object UriUtils {
     new String(Base64.encodeBase64(this.encodeFpDate(fp, date)));
 
   def long2bytearray (l : Long) : Array[Byte] = {
-    var fbBytes = Array.make[Byte](8, 0);
+    var fbBytes = Array.fill[Byte](8)(0);
     for (i <- new Range(0, 8, 1)) {
       fbBytes(i) = (l >>> 8*(7-i)).asInstanceOf[Byte];
     }
@@ -72,7 +72,7 @@ object UriUtils {
   }
 
   def int2bytearray (i : Int) : Array[Byte] = {
-    var fbBytes = Array.make[Byte](4, 0);
+    var fbBytes = Array.fill[Byte](4)(0);
     for (j <- new Range(0, 4, 1)) {
       fbBytes(3-j) = (i >>> j*8).asInstanceOf[Byte];
     }

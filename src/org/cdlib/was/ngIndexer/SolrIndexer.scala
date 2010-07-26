@@ -77,7 +77,7 @@ class SolrIndexer (server : SolrServer) {
               if (outlinks.size > 0) {
                 val outlinkFps = for (l <- outlinks) 
                                  yield UriUtils.fingerprint(l.to);
-                for (fp <- outlinkFps.toList.removeDuplicates.sort((a,b)=>(a < b))) {
+                for (fp <- outlinkFps.toList.distinct.sortWith((a,b)=>(a < b))) {
                   doc.addField("outlinks", fp);
                 }
               }
@@ -115,53 +115,53 @@ class SolrIndexer (server : SolrServer) {
     val uuri = UURIFactory.getInstance(url);
     val host = uuri.getHost;
 
-    doc.addField(solrIndexer.ID_FIELD, "%s.%s".format(uuri.toString, digest));
+    doc.addField(SolrIndexer.ID_FIELD, "%s.%s".format(uuri.toString, digest));
 
     /* core fields */
     doc.setDocumentBoost(boost);
-    doc.addField(solrIndexer.BOOST_FIELD, boost);
-    doc.addField(solrIndexer.DIGEST_FIELD, digest);
+    doc.addField(SolrIndexer.BOOST_FIELD, boost);
+    doc.addField(SolrIndexer.DIGEST_FIELD, digest);
     // no segment
 
     /* fields for index-basic plugin */
-    doc.addField(solrIndexer.HOST_FIELD, host);
-    doc.addField(solrIndexer.SITE_FIELD, host);
-    doc.addField(solrIndexer.URL_FIELD, url, 1.0f);
+    doc.addField(SolrIndexer.HOST_FIELD, host);
+    doc.addField(SolrIndexer.SITE_FIELD, host);
+    doc.addField(SolrIndexer.URL_FIELD, url, 1.0f);
     // doc.addField("content", ..., 1.0f);
-    doc.addField(solrIndexer.TITLE_FIELD, title, 1.0f);
+    doc.addField(SolrIndexer.TITLE_FIELD, title, 1.0f);
     // doc.add("cache", ..., 1.0f);
-    doc.addField(solrIndexer.TSTAMP_FIELD, dateFormatter.format(new java.util.Date(System.currentTimeMillis())), 1.0f);
+    doc.addField(SolrIndexer.TSTAMP_FIELD, dateFormatter.format(new java.util.Date(System.currentTimeMillis())), 1.0f);
     
     /* fields for index-anchor plugin */
     // doc.addField("anchor", ..., 1.0f);
 
     /* fields for index-more plugin */
-    doc.addField(solrIndexer.TYPE_FIELD, mediaType, 1.0f);
-    doc.addField(solrIndexer.CONTENT_LENGTH_FIELD, length, 1.0f);
+    doc.addField(SolrIndexer.TYPE_FIELD, mediaType, 1.0f);
+    doc.addField(SolrIndexer.CONTENT_LENGTH_FIELD, length, 1.0f);
     // doc.add("lastModified", ..., 1.0f)
-    doc.addField(solrIndexer.DATE_FIELD, date, 1.0f);
+    doc.addField(SolrIndexer.DATE_FIELD, date, 1.0f);
 
     /* fields for languageidentifier plugin */
     // doc.addField("lang", ..., 1.0f);
 
     /* my fields */
-    doc.addField(solrIndexer.URLFP_FIELD, UriUtils.fingerprint(uuri));
-    doc.addField(solrIndexer.CANONICALURL_FIELD, uuri.toString, 1.0f);
+    doc.addField(SolrIndexer.URLFP_FIELD, UriUtils.fingerprint(uuri));
+    doc.addField(SolrIndexer.CANONICALURL_FIELD, uuri.toString, 1.0f);
 
   }
 
   def doc2InputDoc (doc : SolrDocument) : SolrInputDocument = {
     val idoc = new SolrInputDocument();
 
-    val boost = doc.getFirstValue(solrIndexer.BOOST_FIELD).asInstanceOf[Float];
-    val date = doc.getFirstValue(solrIndexer.DATE_FIELD).asInstanceOf[String];
-    val title = doc.getFirstValue(solrIndexer.TITLE_FIELD).asInstanceOf[String];
-    val url = doc.getFirstValue(solrIndexer.URL_FIELD).asInstanceOf[String];
-    val mediaType = doc.getFirstValue(solrIndexer.TYPE_FIELD).asInstanceOf[String];
-    val length = doc.getFirstValue(solrIndexer.CONTENT_LENGTH_FIELD).asInstanceOf[Long];
-    val digest = doc.getFirstValue(solrIndexer.DIGEST_FIELD).asInstanceOf[String];
+    val boost = doc.getFirstValue(SolrIndexer.BOOST_FIELD).asInstanceOf[Float];
+    val date = doc.getFirstValue(SolrIndexer.DATE_FIELD).asInstanceOf[String];
+    val title = doc.getFirstValue(SolrIndexer.TITLE_FIELD).asInstanceOf[String];
+    val url = doc.getFirstValue(SolrIndexer.URL_FIELD).asInstanceOf[String];
+    val mediaType = doc.getFirstValue(SolrIndexer.TYPE_FIELD).asInstanceOf[String];
+    val length = doc.getFirstValue(SolrIndexer.CONTENT_LENGTH_FIELD).asInstanceOf[Long];
+    val digest = doc.getFirstValue(SolrIndexer.DIGEST_FIELD).asInstanceOf[String];
 
-    idoc.addField(solrIndexer.CONTENT_FIELD, doc.getFirstValue(solrIndexer.CONTENT_FIELD).asInstanceOf[String]);
+    idoc.addField(SolrIndexer.CONTENT_FIELD, doc.getFirstValue(SolrIndexer.CONTENT_FIELD).asInstanceOf[String]);
     
     updateDoc(idoc, boost, url, date, title, mediaType, length, digest);
     return idoc;
@@ -188,13 +188,13 @@ class SolrIndexer (server : SolrServer) {
     }
     def updateBoost (doc : SolrDocument) : SolrInputDocument = {
       val idoc = doc2InputDoc(doc);
-      val urlfp = doc.getFirstValue(solrIndexer.URLFP_FIELD).asInstanceOf[Long];
+      val urlfp = doc.getFirstValue(SolrIndexer.URLFP_FIELD).asInstanceOf[Long];
       val boost1 = fp2boost.get(urlfp).getOrElse(doc.getFirstValue("boost").asInstanceOf[Float]);
       val boost = Math.min(MAX_BOOST, Math.max(MIN_BOOST, boost1));
       if (boost > 11.0f) throw new RuntimeException();
       idoc.setDocumentBoost(boost);
-      idoc.removeField(solrIndexer.BOOST_FIELD);
-      idoc.setField(solrIndexer.BOOST_FIELD, boost);
+      idoc.removeField(SolrIndexer.BOOST_FIELD);
+      idoc.setField(SolrIndexer.BOOST_FIELD, boost);
       idoc;
     }
     val q = new SolrQuery().setQuery("*:*").setRows(500);
@@ -215,7 +215,7 @@ class SolrIndexer (server : SolrServer) {
   }
 }
 
-object solrIndexer {
+object SolrIndexer {
 
   var collection = "xxxxxxx";
   var segment    = "xxxxxxx";

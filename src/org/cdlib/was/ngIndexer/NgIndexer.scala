@@ -24,7 +24,7 @@ class NgIndexer (writer : IndexWriter,
 
   val parser : Parser = new AutoDetectParser();
   val webGraphTypeRE = Pattern.compile("^(.*html.*|application/pdf)$");
-  val webGraph = new CassandraWebGraph();
+  //val webGraph = new CassandraWebGraph();
  
   def index (archiveRecord : ArchiveRecord) {
     archiveRecord match {
@@ -61,12 +61,12 @@ class NgIndexer (writer : IndexWriter,
             writer.addDocument(doc);
 
             /* finish webgraph */
-            if (webGraphTypeRE.matcher(tikaMetadata.get(HttpHeaders.CONTENT_TYPE)).matches) {
-              val outlinks = wgContentHandler.getLinks;
-              if (outlinks.size > 0) {
-                webGraph.addLinks(outlinks);
-              }
-            }
+            // if (webGraphTypeRE.matcher(tikaMetadata.get(HttpHeaders.CONTENT_TYPE)).matches) {
+            //   val outlinks = wgContentHandler.getLinks;
+            //   if (outlinks.size > 0) {
+            //     webGraph.addLinks(outlinks);
+            //   }
+            // }
           } catch {
             case ex : Exception => ex.printStackTrace(System.err);
           }

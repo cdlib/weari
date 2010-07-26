@@ -10,15 +10,15 @@ class SolrAllDocumentIterable(val server : SolrServer,
 extends Iterable[SolrDocument] {
   
   override def toString = 
-    elements.peek.map(el=>"(%s, ...)".format(el)).getOrElse("(empty)");
+    iterator.peek.map(el=>"(%s, ...)".format(el)).getOrElse("(empty)");
 
-  def elements = new MyIterator[SolrDocument]() {
+  def iterator = new MyIterator[SolrDocument]() {
     val atOnce = 100;
     val rowsAtOnce = 1000;
     var nextUrlPos = 0;
 
     def fillCache {
-      val lastVal = fieldVals(Math.min(nextUrlPos + atOnce, fieldVals.length));
+      val lastVal = fieldVals(scala.math.min(nextUrlPos + atOnce, fieldVals.length));
       val q = new SolrQuery().
         setQuery("%s:[%s TO %s]".format(field, fieldVals(nextUrlPos), lastVal))
         .setSortField(field, SolrQuery.ORDER.asc).setRows(rowsAtOnce);

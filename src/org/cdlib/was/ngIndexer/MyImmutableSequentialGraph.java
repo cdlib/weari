@@ -19,16 +19,16 @@ public class MyImmutableSequentialGraph extends ImmutableSequentialGraph {
         while (it.hasNext()) it.next();
     }
 
-    public MyImmutableSequentialGraph() {
-        this(new CassandraWebGraph());
-    }
-
     public int numNodes () {
         return this.webGraph.numNodes();
     }
 
     public NodeIterator nodeIterator () {
         return this.webGraph.nodeIterator();
+    }
+
+    public MyImmutableSequentialGraph() {
+        this(new SolrWebGraph("http://localhost:8898/solr/"));
     }
  
     public static ImmutableGraph load(CharSequence name, ProgressLogger unused) {

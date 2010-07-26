@@ -2,18 +2,21 @@ package org.cdlib.was.ngIndexer;
 
 import org.apache.solr.common._;
 import org.apache.solr.client.solrj._;
-import scala.collection.mutable.ArrayBuffer;
 
 class SolrDocumentCollection(val server : SolrServer,
                              val q : SolrQuery)
-extends Collection[SolrDocument] {
-  override lazy val size : Int =
+extends Iterable[SolrDocument] {
+
+  /* you don't want to call this. */
+  def apply (idx : Int) = this.iterator.toSeq(idx);
+
+  lazy val length : Int =
     server.query(q.getCopy.setRows(0)).getResults.getNumFound.asInstanceOf[Int];
 
   override def toString = 
-    elements.peek.map(el=>"(%s, ...)".format(el)).getOrElse("(empty)");
+    iterator.peek.map(el=>"(%s, ...)".format(el)).getOrElse("(empty)");
 
-  def elements = new MyIterator[SolrDocument]() {
+  def iterator = new MyIterator[SolrDocument]() {
     var pos = 0;
 
     def fillCache {

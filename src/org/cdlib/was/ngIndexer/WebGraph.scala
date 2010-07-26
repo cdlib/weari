@@ -1,14 +1,7 @@
 package org.cdlib.was.ngIndexer;
 
-import java.util.Date;
 import scala.collection.mutable.HashMap;
-import org.archive.net.UURI;
 import it.unimi.dsi.webgraph.ImmutableGraph;
-
-class Outlink (val from : UURI,
-               val to : UURI,
-               val date : Date,
-               val text : String) {}
 
 abstract class WebGraph {
   def addLink (link : Outlink);

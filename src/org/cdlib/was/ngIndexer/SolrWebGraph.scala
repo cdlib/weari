@@ -1,13 +1,13 @@
 package org.cdlib.was.ngIndexer;
 
 import it.unimi.dsi.webgraph._;
+import java.io._;
 import org.apache.solr.client.solrj._;
 import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
 import org.apache.solr.common._;
-import scala.collection.mutable.ArrayBuffer;
-import java.io._;
 import org.archive.net.UURIFactory;
-import Utility.{javaIteratorToScalaIterator,javaList2Seq};
+import scala.collection.JavaConversions.asIterable;
+import scala.collection.mutable.ArrayBuffer;
 
 class SolrWebGraph (url : String) extends WebGraph {
   val server = new CommonsHttpSolrServer(url);
@@ -17,15 +17,13 @@ class SolrWebGraph (url : String) extends WebGraph {
 
   val urlsSize = 3500000;
   lazy val urls : Seq[String] = {
-    val terms = new SolrTermIterable(server, solrIndexer.CANONICALURL_FIELD);
+    val terms = new SolrTermIterable(server, SolrIndexer.CANONICALURL_FIELD);
     var newUrls = new ArrayBuffer[String]() { ensureSize(urlsSize); };
-    val it = terms.elements;
+    val it = terms.iterator;
     while (it.hasNext) { newUrls += it.next; }
     newUrls;
   }
 
-  lazy val fingerprints = urls.map(url=>UriUtils.fingerprint(UURIFactory.getInstance(url)));
-  
   def fingerprints(i : Int) = UriUtils.fingerprint(UURIFactory.getInstance(urls(i)));
 
   def numNodes = urls.length;
@@ -60,11 +58,12 @@ class SolrWebGraph (url : String) extends WebGraph {
     
     def url = urls(position);
 
-    var docIt = (new SolrAllDocumentIterable(server, solrIndexer.CANONICALURL_FIELD, urls)).
-      elements;
+    val docIterable = 
+      new SolrAllDocumentIterable(server, SolrIndexer.CANONICALURL_FIELD, urls);
+    var docIt = docIterable.iterator;
 
     def checkUrl(d : SolrDocument) = 
-      (d.getFieldValue(solrIndexer.CANONICALURL_FIELD).asInstanceOf[String] == url)
+      (d.getFieldValue(SolrIndexer.CANONICALURL_FIELD).asInstanceOf[String] == url)
 
     def hasNextDocument = docIt.peek.map(checkUrl(_)).getOrElse(false);
       
@@ -77,12 +76,13 @@ class SolrWebGraph (url : String) extends WebGraph {
           val doc = nextDocument;
           val fields = doc.getFieldValues("outlinks");
           if (fields != null) {
-            for (j <- javaIteratorToScalaIterator(fields.iterator)) {
+            for (j <- fields) {
               outlinkFps += j.asInstanceOf[Long];
             }
           }
         }
-        outlinksCache = Some(outlinkFps.map(fp2id(_)).filter(n=>n < numNodes).toList.sort((a,b)=>(a < b)).removeDuplicates);
+        outlinksCache = Some(outlinkFps.map(fp2id(_)).filter(n=>n < numNodes).
+                             toList.sortWith((a,b)=>(a < b)).distinct);
       }
       return outlinksCache;
     }
