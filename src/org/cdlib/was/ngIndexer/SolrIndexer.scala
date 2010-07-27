@@ -26,6 +26,9 @@ import org.archive.io.arc._;
 import org.archive.net.UURIFactory;
 import org.xml.sax.ContentHandler;
 import scala.collection.mutable._;
+import scala.tools.nsc.{Interpreter,Settings};
+import scala.tools.nsc.Interpreter.breakIf;
+import scala.io.Source;
 
 class SolrIndexer (server : SolrServer) {
   
@@ -248,11 +251,6 @@ object SolrIndexer {
     return new String(buffer);
   }
 
-  class Config {
-    var indexer : SolrIndexer = null;
-    def setIndexer (indexer : SolrIndexer) = this.indexer = indexer;
-  }
-    
   def main (args : Array[String]) {
     val config = new Config();
     if (args.size < 2) {
@@ -263,8 +261,21 @@ object SolrIndexer {
       val jsEngine = mgr.getEngineByName("JavaScript");
       val invocableEngine = jsEngine.asInstanceOf[Invocable];
       try {
-        jsEngine.put("config", config);
-        jsEngine.eval(readConfig);
+        if (false) {
+          /* js config */
+          jsEngine.put("config", config);
+          jsEngine.eval(readConfig);
+        } else {
+          val settings = new Settings();
+          settings.classpath.value = System.getProperty("java.class.path")
+          val interpreter = new Interpreter(settings);
+          interpreter.beQuietDuring {
+            interpreter.bind("config", "org.cdlib.was.ngIndexer.Config", config);
+            for (line <- Source.fromFile("config.scala").getLines) {
+              interpreter.interpret(line);
+            }
+          }
+        }
         collection = args(0);
         for (path <- args.drop(1)) {
           try {
