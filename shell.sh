@@ -6,6 +6,6 @@ for x in `ls -1 $BASEDIR/lib` ; do
     CLASSPATH=$CLASSPATH:$BASEDIR/lib/$x
 done
 
-JAVA_OPTS="-Xmx1024M -Xms32M" ; export JAVA_OPTS
+JAVA_OPTS="-Xmx2048M -Xms32M" ; export JAVA_OPTS
 
-~/d/software/scala-2.7.7.final/bin/scala -cp $CLASSPATH
+~/d/software/scala/bin/scala -cp $CLASSPATH
