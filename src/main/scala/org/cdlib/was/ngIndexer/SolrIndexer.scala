@@ -1,9 +1,5 @@
 package org.cdlib.was.ngIndexer;
 
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
-import javax.script.Invocable;
-import javax.script.ScriptEngine;
 import java.io._;
 import java.lang.Math;
 import java.util.ArrayList;
@@ -26,9 +22,8 @@ import org.archive.io.arc._;
 import org.archive.net.UURIFactory;
 import org.xml.sax.ContentHandler;
 import scala.collection.mutable._;
-import scala.tools.nsc.{Interpreter,Settings};
-import scala.tools.nsc.Interpreter.breakIf;
 import scala.io.Source;
+import org.cdlib.ssconf.Configurator;
 
 class SolrIndexer (server : SolrServer) {
   
@@ -238,54 +233,25 @@ object SolrIndexer {
   val URLFP_FIELD          = "urlfp";
   val URL_FIELD            = "url";
 
-  def readConfig : String = {
+  def main (args : Array[String]) {
     val configPath = System.getProperty("org.cdlib.was.ngIndexer.ConfigFile");
     if (configPath == null) {
       System.err.println("Please define org.cdlib.was.ngIndexer.ConfigFile!");
       System.exit(1);
     }
-    val file = new File(configPath);
-    val buffer = new Array[Byte](file.length.asInstanceOf[Int]);
-    val is = new FileInputStream(file);
-    is.read(buffer);
-    return new String(buffer);
-  }
-
-  def main (args : Array[String]) {
-    val config = new Config();
+    val config = (new Configurator).loadSimple(configPath, classOf[Config]);
     if (args.size < 2) {
       System.err.println("Please supply >= two arg!");
       System.exit(1);
     } else {
-      val mgr = new ScriptEngineManager();
-      val jsEngine = mgr.getEngineByName("JavaScript");
-      val invocableEngine = jsEngine.asInstanceOf[Invocable];
-      try {
-        if (false) {
-          /* js config */
-          jsEngine.put("config", config);
-          jsEngine.eval(readConfig);
-        } else {
-          val settings = new Settings();
-          settings.classpath.value = System.getProperty("java.class.path")
-          val interpreter = new Interpreter(settings);
-          interpreter.beQuietDuring {
-            interpreter.bind("config", "org.cdlib.was.ngIndexer.Config", config);
-            for (line <- Source.fromFile("config.scala").getLines) {
-              interpreter.interpret(line);
-            }
-          }
-        }
-        collection = args(0);
-        for (path <- args.drop(1)) {
-          try {
-            config.indexer.indexFile(new File(path));
-          } catch {
-            case ex : ScriptException => ex.printStackTrace();
-            case ex : FileNotFoundException => ex.printStackTrace();
-            //case ex : NoSuchMethodException => ex.printStackTrace();
-            case ex : IOException => ex.printStackTrace();
-          }
+      collection = args(0);
+      for (path <- args.drop(1)) {
+        try {
+          config.indexer().indexFile(new File(path));
+        } catch {
+          case ex : FileNotFoundException => ex.printStackTrace();
+          //case ex : NoSuchMethodException => ex.printStackTrace();
+          case ex : IOException => ex.printStackTrace();
         }
       }
     }
