@@ -239,7 +239,8 @@ object SolrIndexer {
       System.err.println("Please define org.cdlib.was.ngIndexer.ConfigFile!");
       System.exit(1);
     }
-    val config = (new Configurator).loadSimple(configPath, classOf[Config]);
+    val config : Config = 
+      (new Configurator).loadSimple(configPath, classOf[Config]);
     if (args.size < 2) {
       System.err.println("Please supply >= two arg!");
       System.exit(1);
