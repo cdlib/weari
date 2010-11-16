@@ -7,4 +7,4 @@ for x in `ls -1 $BASEDIR/lib` ; do
     CLASSPATH=$CLASSPATH:$BASEDIR/lib/$x
 done
 
-java -Xmx2048m -cp $CLASSPATH -Dorg.cdlib.was.ngIndexer.ConfigFile=$BASEDIR/config.js org.cdlib.was.ngIndexer.SolrIndexer $*
+java -Xmx2048m -cp $CLASSPATH -Dorg.cdlib.was.ngIndexer.ConfigFile=$BASEDIR/indexer.conf org.cdlib.was.ngIndexer.SolrIndexer $*
