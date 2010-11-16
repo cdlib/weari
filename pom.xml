@@ -51,6 +51,11 @@
     </dependency>
     <dependency>
       <groupId>it.unimi.dsi</groupId>
+      <artifactId>mg4j</artifactId>
+      <version>1.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>it.unimi.dsi</groupId>
       <artifactId>dsiutils</artifactId>
       <version>1.0.11</version>
     </dependency>
@@ -97,23 +102,18 @@
     <dependency>
       <groupId>org.apache.tika</groupId>
       <artifactId>tika-parsers</artifactId>
-      <version>0.7</version>
+      <version>0.8</version>
     </dependency>
     <dependency>
       <groupId>org.apache.solr</groupId>
       <artifactId>solr-core</artifactId>
-      <version>4.0-dev</version>
+      <version>1.4.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.solr</groupId>
-      <artifactId>solr-solr4j</artifactId>
-      <version>4.0-dev</version>
+      <artifactId>solr-solrj</artifactId>
+      <version>1.4.1</version>
     </dependency>
-<!--     <dependency>
-      <groupId>org.apache.lucene</groupId>
-      <artifactId>lucene-core</artifactId>
-      <version>4.0-dev</version>
-    </dependency> -->
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
@@ -159,6 +159,11 @@
       <id>scala-tools.org</id>
       <name>Scala-tools Maven2 Repository</name>
       <url>http://scala-tools.org/repo-releases</url>
+    </repository>
+    <repository>
+      <id>builds.archive.org</id>
+      <name>IA</name>
+      <url>http://builds.archive.org:8080/maven2/</url>
     </repository>
   </repositories>
   <pluginRepositories>
