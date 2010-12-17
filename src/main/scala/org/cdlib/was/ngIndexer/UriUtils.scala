@@ -33,18 +33,9 @@ object UriUtils {
 
   def decodeUrlFPDate(bytes : Array[Byte]) : Pair[Long, Date] = 
     Pair(decodeFp(bytes.take(8)), decodeDate(bytes.take(4)));
-
-  val FINGERPRINT_PT = 0xbfe6b8a5bf378d83L;
-
-  var rb = new RabinPoly(FINGERPRINT_PT);
-
-  def fingerprint (url : UURI) : Long = {
-    var fp = 0L;
-    for (byte <- url.getEscapedURI.getBytes("UTF-8")) {
-      fp = rb.append8(fp, byte);
-    }
-    return fp;
-  }
+  
+  def fingerprint (url : UURI) : Long = 
+    RabinPoly.fingerprint(url.getEscapedURI);
 
   def fp2string (fp : Long) : String =
     new String(Base64.encodeBase64(this.encodeFp(fp)));
