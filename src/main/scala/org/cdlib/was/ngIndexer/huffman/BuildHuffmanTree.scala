@@ -1,4 +1,4 @@
-package org.cdlib.was.ngIndexer;
+package org.cdlib.was.ngIndexer.huffman;
 
 import scala.collection.mutable.{HashMap,PriorityQueue};
 import scala.collection.Map;
