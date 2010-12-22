@@ -1,7 +1,6 @@
 package org.cdlib.was.ngIndexer;
 
-import org.apache.solr.client.solrj.SolrServer;
-import org.apache.solr.client.solrj.impl.{CommonsHttpSolrServer,StreamingUpdateSolrServer}
+import org.apache.solr.client.solrj.impl.{CommonsHttpSolrServer,StreamingUpdateSolrServer};
 import org.apache.solr.common.SolrInputDocument;
 
 /** A class for handling a distributed solr system.
