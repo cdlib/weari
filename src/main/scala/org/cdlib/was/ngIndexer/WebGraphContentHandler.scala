@@ -1,10 +1,10 @@
 package org.cdlib.was.ngIndexer;
 
-import org.xml.sax._;
-import scala.collection.mutable._;
-import java.io._;
-import org.archive.util.ArchiveUtils;
+import org.xml.sax.{Attributes,ContentHandler,Locator};
+import scala.collection.mutable.ArrayBuffer;
+import java.io.StringWriter;
 import org.archive.net.UURIFactory;
+import org.archive.util.ArchiveUtils;
 
 class WebGraphContentHandler (url : String, date : String)
   extends ContentHandler {

@@ -1,6 +1,6 @@
 package org.cdlib.was.ngIndexer;
 
-import org.xml.sax._;
+import org.xml.sax.{Attributes,ContentHandler,Locator};
 
 class MultiContentHander (handlers : Seq[ContentHandler]) 
   extends ContentHandler {
