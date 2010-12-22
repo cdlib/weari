@@ -54,6 +54,14 @@ object UriUtils {
     return fbBytes;
   }
 
+  def long2string (l : Long) : String = {
+    var fbBytes = Array.fill[Byte](8)(0);
+    for (i <- new Range(0, 8, 1)) {
+      fbBytes(i) = (l >>> 8*(7-i)).asInstanceOf[Byte];
+    }
+    return "%016x".format(l);
+  }
+
   def bytearray2long (bytes : Array[Byte]) : Long = {
     var retval = 0L;
     for (i <- new Range(0, 8, 1)) {
