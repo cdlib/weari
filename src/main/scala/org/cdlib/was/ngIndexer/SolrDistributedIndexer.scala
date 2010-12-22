@@ -2,17 +2,22 @@ package org.cdlib.was.ngIndexer;
 
 import org.apache.solr.client.solrj.impl.{CommonsHttpSolrServer,StreamingUpdateSolrServer};
 import org.apache.solr.common.SolrInputDocument;
+import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.params.ModifiableSolrParams;
 
 /** A class for handling a distributed solr system.
+  *
   * Uses a consistent hash of servers.
   */
 
-class SolrDistributedServer (servers : Seq[Pair[String,Int]]) {
+class SolrDistributedServer (servers : Seq[Tuple3[String,String,Int]]) {
   val ring = new ConsistentHashRing[CommonsHttpSolrServer];
+  var serverList = List[CommonsHttpSolrServer]();
 
-  for ((url, level) <- servers) {
+  for ((id, url, level) <- servers) {
     val server = new StreamingUpdateSolrServer (url, 50, 5);
-    ring.addServer(url, server, level);
+    ring.addServer(id, server, level);
+    serverList = server :: serverList;
   }
   
   def add (doc : SolrInputDocument) {
@@ -24,8 +29,16 @@ class SolrDistributedServer (servers : Seq[Pair[String,Int]]) {
   }
 
   def commit {
-    for (server <- ring.getServers) {
+    for (server <- serverList) {
       server.commit;
     }
+  }
+
+  def getShards : String = 
+    return serverList.map(_.getBaseURL).map(_.substring(7)).mkString("",",","");
+
+  def query (q : ModifiableSolrParams) : QueryResponse = {
+    q.set("shards", getShards);
+    return serverList.first.query(q);
   }
 }
