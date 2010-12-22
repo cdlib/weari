@@ -1,11 +1,13 @@
 package org.cdlib.was.ngIndexer;
 
-import org.apache.solr.common._;
-import org.apache.solr.client.solrj._;
+import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.SolrDocument;
+import org.apache.solr.common.params.SolrParams;
 
-class SolrDocumentCollection(val server : SolrServer,
+class SolrDocumentCollection(val server : { def query (q : SolrParams) : QueryResponse; },
                              val q : SolrQuery)
-extends Iterable[SolrDocument] {
+  extends Iterable[SolrDocument] {
 
   /* you don't want to call this. */
   def apply (idx : Int) = this.iterator.toSeq(idx);
