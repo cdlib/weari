@@ -1,7 +1,6 @@
 package org.cdlib.was.ngIndexer;
 
 import scala.collection.mutable.HashMap;
-import it.unimi.dsi.webgraph.ImmutableGraph;
 
 abstract class WebGraph {
   def addLink (link : Outlink);

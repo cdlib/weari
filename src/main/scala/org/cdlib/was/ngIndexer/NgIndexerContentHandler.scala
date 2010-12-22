@@ -1,16 +1,7 @@
 package org.cdlib.was.ngIndexer;
 
-import org.archive.io._;
-import org.archive.io.arc._;
-import java.io._;
-import java.lang.Math;
-import org.apache.lucene.index._;
-import org.apache.lucene.document._;
-import org.apache.lucene.store._;
-import org.apache.lucene.analysis.standard._;
-import org.apache.lucene.util._;
-import org.xml.sax._;
-import scala.collection.mutable._;
+import java.io.{CharArrayReader,CharArrayWriter,File,FileReader,FileWriter,Reader,StringReader,StringWriter,Writer};
+import org.xml.sax.{Attributes,ContentHandler,Locator};
 
 class NgIndexerContentHandler (useTempFile : Boolean)
   extends ContentHandler {
