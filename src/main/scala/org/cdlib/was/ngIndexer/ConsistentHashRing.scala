@@ -48,10 +48,10 @@ class ConsistentHashRing[T] {
     val r = locations.range(l, -1L);
     if (r.size == 0) { 
       /* special case when we are at the end of the ring */
-      return locations.first._2;
+      return locations.head._2;
     } else { 
       /* return the next server */
-      return r.first._2;
+      return r.head._2;
     }
   }
 

@@ -39,6 +39,6 @@ class SolrDistributedServer (servers : Seq[Tuple3[String,String,Int]]) {
 
   def query (q : ModifiableSolrParams) : QueryResponse = {
     q.set("shards", getShards);
-    return serverList.first.query(q);
+    return serverList.head.query(q);
   }
 }
