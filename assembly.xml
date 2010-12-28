@@ -8,9 +8,8 @@
   <fileSets>
     <fileSet>
       <includes>
-        <include>${project.basedir}/bin/*</include>
-        <include>${project.basedir}/doc/*</include>
-        <include>${project.basedir}/conf/*</include>
+        <include>${project.basedir}/ng-indexer</include>
+        <include>${project.basedir}/indexer.conf.example</include>
       </includes>
     </fileSet>
   </fileSets>
