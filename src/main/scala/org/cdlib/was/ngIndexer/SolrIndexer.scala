@@ -13,6 +13,7 @@ object SolrIndexer {
   val HOST_FIELD           = "host";
   val ID_FIELD             = "id";
   val JOB_FIELD            = "job";
+  val PROJECT_FIELD        = "project";
   val SERVER_FIELD         = "server";
   val SITE_FIELD           = "site";
   val SPECIFICATION_FIELD  = "specification";
@@ -37,13 +38,15 @@ object SolrIndexer {
     } else {
       val job = args(0);
       val specification = args(1);
-      for (path <- args.drop(2)) {
+      val project = args(2)
+      for (path <- args.drop(3)) {
         try {
           val server = new SolrDistributedServer(config.indexers());
           val processor = new SolrProcessor;
           processor.processFile(new File(path)) { (doc)=>
             doc.setField(JOB_FIELD, job);
             doc.setField(SPECIFICATION_FIELD, specification);
+            doc.setField(PROJECT_FIELD, project);
             server.add(doc);
           }
           server.commit;
