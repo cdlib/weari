@@ -59,7 +59,7 @@
         <field name="id" type="string" stored="true" indexed="true"/>
 
         <!-- core fields -->
-        <field name="segment" type="string" stored="true" indexed="false"/>
+        <!-- <field name="segment" type="string" stored="true" indexed="false"/> -->
         <field name="digest" type="string" stored="true" indexed="false"/>
         <field name="boost" type="float" stored="true" indexed="false"/>
 
@@ -68,7 +68,7 @@
         <field name="site" type="string" stored="false" indexed="true"/>
         <field name="url" type="url" stored="true" indexed="true"
             required="true"/>
-        <field name="content" type="text" stored="true" indexed="true"/>
+        <field name="content" type="text" stored="true" indexed="true" compressed="true"/>
         <field name="title" type="text" stored="true" indexed="true"/>
         <field name="cache" type="string" stored="true" indexed="false"/>
         <field name="tstamp" type="long" stored="true" indexed="false"/>
@@ -84,7 +84,8 @@
             indexed="false"/>
         <field name="lastModified" type="long" stored="true"
             indexed="false"/>
-        <field name="date" type="string" stored="true" indexed="true"/>
+        <field name="date" type="string" stored="true" indexed="true"
+               multiValued="true"/>
 
         <!-- fields for languageidentifier plugin -->
         <field name="lang" type="string" stored="true" indexed="true"/>
@@ -108,8 +109,14 @@
         <field name="urlfp" type="long" stored="true" indexed="true"/>
         <field name="canonicalurl" type="string" stored="true" indexed="true"/>
         <field name="server" type="string" stored="true" indexed="false"/>
-        <field name="job" type="string" stored="true" indexed="true"/>
-        <field name="specification" type="string" stored="true" indexed="true"/>
+        <field name="job" type="string" stored="true" indexed="true"
+               multiValued="true" />
+        <field name="specification" type="string" stored="true" indexed="true"
+               multiValued="true"/>
+        <field name="project" type="string" stored="true" indexed="true"
+               multiValued="true"/>
+        <field name="arcname" type="string" stored="true" indexed="true"
+               multiValued="true"/>
     </fields>
     <uniqueKey>id</uniqueKey>
     <defaultSearchField>content</defaultSearchField>
