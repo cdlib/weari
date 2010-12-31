@@ -78,7 +78,7 @@
             multiValued="true"/> -->
 
         <!-- fields for index-more plugin -->
-        <field name="type" type="string" stored="true" indexed="true">
+        <field name="type" type="string" stored="true" indexed="true"/>
         <field name="contentLength" type="long" stored="true"
             indexed="false"/>
         <field name="lastModified" type="long" stored="true"
