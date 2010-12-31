@@ -4,6 +4,7 @@ import java.io.{File,FileNotFoundException,IOException};
 import org.cdlib.ssconf.Configurator;
 
 object SolrIndexer {
+  val ARCNAME_FIELD        = "arcname";
   val BOOST_FIELD          = "boost";
   val CANONICALURL_FIELD   = "canonicalurl";
   val CONTENT_FIELD        = "content";
@@ -44,6 +45,7 @@ object SolrIndexer {
           val server = new SolrDistributedServer(config.indexers());
           val processor = new SolrProcessor;
           processor.processFile(new File(path)) { (doc)=>
+            doc.setField(ARCNAME_FIELD, new File(path).getName);
             doc.setField(JOB_FIELD, job);
             doc.setField(SPECIFICATION_FIELD, specification);
             doc.setField(PROJECT_FIELD, project);
