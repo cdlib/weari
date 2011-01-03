@@ -21,15 +21,6 @@ class SolrProcessor {
   val dateFormatter = new java.text.SimpleDateFormat("yyyyMMddHHmmssSSS");
   val webGraphTypeRE = Pattern.compile("^(.*html.*|application/pdf)$");
 
-//   // def updateDocs (q : SolrQuery, f : (SolrDocument)=>SolrInputDocument) {
-//   //   var i = 1;
-//   //   for (doc <- new SolrDocumentCollection(server, q)) {
-//   //     server.add(f(doc));
-//   //     i += 1; if ((i % 500) == 0) server.commit;
-//   //   }
-//   //   server.commit;
-//   // }
-
   def updateDoc (doc : SolrInputDocument, 
                  boost : Float, 
                  url : String,
@@ -175,7 +166,7 @@ class SolrProcessor {
       for (c <- file.listFiles) {
         processFile(c)(func);
       }
-    } else if (file.getName.endsWith(".arc.gz")) {
+    } else if (file.getName.indexOf("arc.gz") != -1) {
       Utility.eachArc(file, (rec)=>record2doc(rec).map(func));
     }
   }
