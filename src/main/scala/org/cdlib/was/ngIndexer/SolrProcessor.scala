@@ -107,7 +107,7 @@ class SolrProcessor {
   /** Take an archive record & return a solr document.
     *
     */
-  def record2doc(archiveRecord : ArchiveRecord) : Option[SolrInputDocument] = {
+  def record2doc(archiveRecord : ArchiveRecord) : Option[Pair[String,SolrInputDocument]] = {
     archiveRecord match {
       case rec : ARCRecord => {
         Utility.skipHttpHeader(rec);
@@ -117,42 +117,37 @@ class SolrProcessor {
         val contentType = rec.getMetaData.getMimetype;
         tikaMetadata.set(HttpHeaders.CONTENT_LOCATION, url);
         tikaMetadata.set(HttpHeaders.CONTENT_TYPE, contentType);
-        if (!url.startsWith("filedesc:") && !url.startsWith("dns:")) {
-          System.err.println("Indexing %s".format(url));
-          val doc = new SolrInputDocument();
-          val indexContentHandler = new NgIndexerContentHandler(rec.getHeader.getLength  >= 1048576);
-          val wgContentHandler = new WebGraphContentHandler(url, rec.getHeader.getDate);
-          val contentHandler = new MultiContentHander(List[ContentHandler](wgContentHandler, indexContentHandler));
+        val doc = new SolrInputDocument();
+        val indexContentHandler = new NgIndexerContentHandler(rec.getHeader.getLength  >= 1048576);
+        val wgContentHandler = new WebGraphContentHandler(url, rec.getHeader.getDate);
+        val contentHandler = new MultiContentHander(List[ContentHandler](wgContentHandler, indexContentHandler));
+        try {
           try {
-            try {
-              parser.parse(rec, contentHandler, tikaMetadata, parseContext);
-            } catch {
-              case ex : Throwable => {
-                System.err.println(String.format("Error reading %s", rec.getHeader.getUrl));
-                ex.printStackTrace(System.err);
-              }
-            }
-            /* finish index */
-            rec.close;
-            indexContentHandler.contentString.map(str=>doc.addField("content", str));
-            mdHandler(rec, tikaMetadata, doc);
-            /* finish webgraph */
-            if (webGraphTypeRE.matcher(tikaMetadata.get(HttpHeaders.CONTENT_TYPE)).matches) {
-              val outlinks = wgContentHandler.outlinks;
-              if (outlinks.size > 0) {
-                val outlinkFps = for (l <- outlinks) 
-                                 yield UriUtils.fingerprint(l.to);
-                for (fp <- outlinkFps.toList.distinct.sortWith((a,b)=>(a < b))) {
-                  doc.addField("outlinks", fp);
-                }
-              }
-            }
-            return Some(doc);
+            parser.parse(rec, contentHandler, tikaMetadata, parseContext);
           } catch {
-            case ex : Exception => ex.printStackTrace(System.err);
-            return None;
+            case ex : Throwable => {
+              System.err.println(String.format("Error reading %s", rec.getHeader.getUrl));
+              ex.printStackTrace(System.err);
+            }
           }
-        } else {
+          /* finish index */
+          rec.close;
+          indexContentHandler.contentString.map(str=>doc.addField("content", str));
+          mdHandler(rec, tikaMetadata, doc);
+          /* finish webgraph */
+          if (webGraphTypeRE.matcher(tikaMetadata.get(HttpHeaders.CONTENT_TYPE)).matches) {
+            val outlinks = wgContentHandler.outlinks;
+            if (outlinks.size > 0) {
+              val outlinkFps = for (l <- outlinks) 
+                               yield UriUtils.fingerprint(l.to);
+              for (fp <- outlinkFps.toList.distinct.sortWith((a,b)=>(a < b))) {
+                doc.addField("outlinks", fp);
+              }
+            }
+          }
+          return Some((url, doc));
+        } catch {
+          case ex : Exception => ex.printStackTrace(System.err);
           return None;
         }
       }
@@ -161,7 +156,7 @@ class SolrProcessor {
 
   /** For each record in a file, call the function.
     */
-  def processFile (file : File) (func : (SolrInputDocument) => Unit) {
+  def processFile (file : File) (func : (Pair[String,SolrInputDocument]) => Unit) {
     if (file.isDirectory) {
       for (c <- file.listFiles) {
         processFile(c)(func);
