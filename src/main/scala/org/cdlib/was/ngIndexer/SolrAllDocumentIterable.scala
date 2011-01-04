@@ -12,7 +12,7 @@ extends Iterable[SolrDocument] {
   override def toString = 
     iterator.peek.map(el=>"(%s, ...)".format(el)).getOrElse("(empty)");
 
-  def iterator = new MyIterator[SolrDocument]() {
+  def iterator = new CachingIterator[SolrDocument]() {
     val atOnce = 100;
     val rowsAtOnce = 1000;
     var nextUrlPos = 0;

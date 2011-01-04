@@ -11,7 +11,7 @@ extends Iterable[String] {
   override def toString = 
     iterator.peek.map(el=>"(%s, ...)".format(el)).getOrElse("(empty");
 
-  override def iterator = new MyIterator[String]() {
+  override def iterator = new CachingIterator[String]() {
     var lowerLimit : String = "";
 
     def fillCache {

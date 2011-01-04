@@ -18,7 +18,7 @@ class SolrDocumentCollection(val server : { def query (q : SolrParams) : QueryRe
   override def toString = 
     iterator.peek.map(el=>"(%s, ...)".format(el)).getOrElse("(empty)");
 
-  def iterator = new MyIterator[SolrDocument]() {
+  def iterator = new CachingIterator[SolrDocument]() {
     var pos = 0;
 
     def fillCache {

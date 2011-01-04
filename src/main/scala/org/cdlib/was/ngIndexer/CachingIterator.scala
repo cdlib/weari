@@ -2,7 +2,7 @@ package org.cdlib.was.ngIndexer;
 
 import scala.collection.mutable.ArrayBuffer;
 
-abstract class MyIterator[T] extends Iterator[T] {
+abstract class CachingIterator[T] extends Iterator[T] {
   protected var cachePos = 0;
   protected var cache = new ArrayBuffer[T]();
   
