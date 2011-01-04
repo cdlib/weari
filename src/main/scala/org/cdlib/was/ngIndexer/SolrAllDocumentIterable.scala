@@ -1,8 +1,7 @@
 package org.cdlib.was.ngIndexer;
 
-import org.apache.solr.common._;
-import org.apache.solr.client.solrj._;
-import scala.collection.mutable.ArrayBuffer;
+import org.apache.solr.common.SolrDocument;
+import org.apache.solr.client.solrj.{SolrQuery,SolrServer};
 
 class SolrAllDocumentIterable(val server : SolrServer,
                               val field : String,
