@@ -1,4 +1,4 @@
-package org.cdlib.was.ngIndexer;
+package org.cdlib.was.ngIndexer.webgraph;
 
 import it.unimi.dsi.logging.ProgressLogger;
 import it.unimi.dsi.webgraph.ImmutableGraph;

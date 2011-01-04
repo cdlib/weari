@@ -1,4 +1,4 @@
-package org.cdlib.was.ngIndexer;
+package org.cdlib.was.ngIndexer.webgraph;
 
 import it.unimi.dsi.law.rank._;
 import it.unimi.dsi.webgraph._;

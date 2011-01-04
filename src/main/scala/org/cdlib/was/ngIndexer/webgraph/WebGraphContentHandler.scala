@@ -1,4 +1,4 @@
-package org.cdlib.was.ngIndexer;
+package org.cdlib.was.ngIndexer.webgraph;
 
 import org.xml.sax.{Attributes,ContentHandler,Locator};
 import scala.collection.mutable.ArrayBuffer;

@@ -1,4 +1,4 @@
-package org.cdlib.was.ngIndexer;
+package org.cdlib.was.ngIndexer.webgraph;
 
 import scala.collection.mutable.HashMap;
 

@@ -11,6 +11,7 @@ import org.apache.tika.parser.{AutoDetectParser,ParseContext,Parser};
 import org.apache.tika.metadata.HttpHeaders;
 import org.xml.sax.ContentHandler;
 import org.apache.solr.client.solrj.SolrQuery;
+import org.cdlib.was.ngIndexer.webgraph.WebGraphContentHandler;
 
 /** Class for processing (W)ARC files into Solr documents.
   *

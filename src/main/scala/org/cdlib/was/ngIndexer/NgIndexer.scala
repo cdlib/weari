@@ -19,12 +19,13 @@ import org.archive.net.UURIFactory;
 import org.xml.sax.ContentHandler;
 import java.util.regex._;
 import scala.collection.mutable._;
+import org.cdlib.was.ngIndexer.webgraph.WebGraphContentHandler;
+
 class NgIndexer (writer : IndexWriter, 
                  metadataHandler : (ARCRecord, Metadata, Document)=>Unit) {
 
   val parser : Parser = new AutoDetectParser();
   val webGraphTypeRE = Pattern.compile("^(.*html.*|application/pdf)$");
-  //val webGraph = new CassandraWebGraph();
  
   def index (archiveRecord : ArchiveRecord) {
     archiveRecord match {

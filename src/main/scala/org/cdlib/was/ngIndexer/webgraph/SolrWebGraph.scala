@@ -1,5 +1,6 @@
-package org.cdlib.was.ngIndexer;
+package org.cdlib.was.ngIndexer.webgraph;
 
+import org.cdlib.was.ngIndexer.{SolrAllDocumentIterable,SolrIndexer,SolrTermIterable,UriUtils};
 import it.unimi.dsi.webgraph._;
 import java.io._;
 import org.apache.solr.client.solrj._;
