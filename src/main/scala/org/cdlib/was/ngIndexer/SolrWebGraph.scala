@@ -6,8 +6,8 @@ import org.apache.solr.client.solrj._;
 import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
 import org.apache.solr.common._;
 import org.archive.net.UURIFactory;
-import scala.collection.JavaConversions.asIterable;
 import scala.collection.mutable.ArrayBuffer;
+import scala.collection.JavaConversions.asScalaIterable;
 
 class SolrWebGraph (url : String) extends WebGraph {
   val server = new CommonsHttpSolrServer(url);
