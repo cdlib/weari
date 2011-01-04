@@ -2,13 +2,14 @@ package org.cdlib.was.ngIndexer;
 
 import org.xml.sax.{Attributes,ContentHandler,Locator};
 
+/** A proxy ContentHandler that passes everything off to multiple
+  * child ContentHandlers.
+  */
 class MultiContentHander (handlers : Seq[ContentHandler]) 
   extends ContentHandler {
   
   def eachHandler (f : ContentHandler=>Unit) {
-    for (h <- handlers) {
-      f(h);
-    }
+    for (h <- handlers) f(h);
   }
   
   def characters (ch : Array[Char], start : Int, length : Int) {
