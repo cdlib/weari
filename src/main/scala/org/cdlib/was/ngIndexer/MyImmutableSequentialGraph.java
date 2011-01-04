@@ -1,7 +1,9 @@
 package org.cdlib.was.ngIndexer;
 
-import it.unimi.dsi.webgraph.*;
 import it.unimi.dsi.logging.ProgressLogger;
+import it.unimi.dsi.webgraph.ImmutableGraph;
+import it.unimi.dsi.webgraph.ImmutableSequentialGraph;
+import it.unimi.dsi.webgraph.NodeIterator;
 import java.io.InputStream;
 
 public class MyImmutableSequentialGraph extends ImmutableSequentialGraph {
