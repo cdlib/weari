@@ -3,7 +3,7 @@ package org.cdlib.was.ngIndexer;
 import org.apache.solr.client.solrj.impl.{CommonsHttpSolrServer,StreamingUpdateSolrServer};
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.common.params.ModifiableSolrParams;
+import org.apache.solr.common.params.{ModifiableSolrParams,SolrParams};
 
 /** A class for handling a distributed solr system.
   *
@@ -37,8 +37,12 @@ class SolrDistributedServer (servers : Seq[Tuple3[String,String,Int]]) {
   def getShards : String = 
     return serverList.map(_.getBaseURL).map(_.substring(7)).mkString("",",","");
 
-  def query (q : ModifiableSolrParams) : QueryResponse = {
-    q.set("shards", getShards);
-    return serverList.head.query(q);
+  def query (q : SolrParams) : QueryResponse = {
+    val q2 = new ModifiableSolrParams(q);
+    q2.set("shards", getShards);
+    if (q2.get("qt") == "/terms") {
+      q2.set("shards.qt", "/terms");
+    }
+    return serverList.head.query(q2);
   }
 }

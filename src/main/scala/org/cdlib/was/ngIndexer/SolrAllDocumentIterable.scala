@@ -1,9 +1,11 @@
 package org.cdlib.was.ngIndexer;
 
+import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
-import org.apache.solr.client.solrj.{SolrQuery,SolrServer};
+import org.apache.solr.common.params.SolrParams;
 
-class SolrAllDocumentIterable(val server : SolrServer,
+class SolrAllDocumentIterable(val server : { def query (q : SolrParams) : QueryResponse; },
                               val field : String,
                               val fieldVals : Seq[String])
 extends Iterable[SolrDocument] {
