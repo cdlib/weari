@@ -45,9 +45,9 @@
       <version>3.1</version>
     </dependency>
     <dependency>
-      <groupId>org.archive</groupId>
-      <artifactId>heritrix</artifactId>
-      <version>1.14.4</version>
+      <groupId>org.archive.heritrix</groupId>
+      <artifactId>heritrix-commons</artifactId>
+      <version>3.0.0</version>
     </dependency>
     <dependency>
       <groupId>it.unimi.dsi</groupId>
