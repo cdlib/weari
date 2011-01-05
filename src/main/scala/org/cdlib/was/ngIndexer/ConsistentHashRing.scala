@@ -28,10 +28,12 @@ class ConsistentHashRing[T] {
     }
   }
 
-  val DEFAULT_LEVEL = 10;
+  def compare(x : Long, y : Long) : Int = UnsignedLongOrdering.compare(x, y);
+
+  val DEFAULT_LEVEL = 1000;
   
   /* locations of servers on our ring */
-  private var locations : SortedMap[Long, T] = new TreeMap[Long,T]();
+  private var locations : SortedMap[Long, T] = SortedMap[Long,T]()(UnsignedLongOrdering);
 
   private var levels : Map[String, Int] = Map[String, Int]();
 
@@ -45,11 +47,11 @@ class ConsistentHashRing[T] {
     * @param l The place in the ring.
     */
   def getServerFor(l : Long) : T = {
-    val r = locations.range(l, -1L);
-    if (r.size == 0) { 
+    val r = locations.from(l);
+    if (r.size == 0) {
       /* special case when we are at the end of the ring */
       return locations.head._2;
-    } else { 
+    } else {
       /* return the next server */
       return r.head._2;
     }
@@ -95,7 +97,7 @@ class ConsistentHashRing[T] {
     * Will be consistent for any id.
     */
   private def getServerLocations(id : String, level : Int) : Seq[Long] =
-    for (i <- 0.to(level)) 
+    for (i <- 1.to(level))
       yield hash("%s-%d".format(id, i));
 
   def getServers : Seq[T] = locations.values.toList.distinct;
