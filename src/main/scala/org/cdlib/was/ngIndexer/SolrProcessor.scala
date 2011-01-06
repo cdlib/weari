@@ -22,48 +22,28 @@ class SolrProcessor {
   val dateFormatter = new java.text.SimpleDateFormat("yyyyMMddHHmmssSSS");
   val webGraphTypeRE = Pattern.compile("^(.*html.*|application/pdf)$");
 
-  def updateDoc (doc : SolrInputDocument, 
-                 boost : Float, 
-                 url : String,
-                 date : String, 
-                 title : String, 
-                 mediaType : String,
-                 length : Long,
-                 digest : String) {
+  /** Update the boost in a document.
+    */
+  def updateDocBoost (doc : SolrInputDocument,
+                      boost : Float) {
+    doc.setDocumentBoost(boost);
+    doc.addField(SolrIndexer.BOOST_FIELD, boost);
+  }
+    
+  /** Update the url & digest fields in a document.
+    */
+  def updateDocUrlDigest (doc : SolrInputDocument, 
+                          url : String,
+                          digest : String) {
     
     val uuri = UURIFactory.getInstance(url);
     val host = uuri.getHost;
-
     doc.addField(SolrIndexer.ID_FIELD, "%s.%s".format(uuri.toString, digest));
-
-    /* core fields */
-    doc.setDocumentBoost(boost);
-    doc.addField(SolrIndexer.BOOST_FIELD, boost);
     doc.addField(SolrIndexer.DIGEST_FIELD, digest);
-    // no segment
-
-    /* fields for index-basic plugin */
     doc.addField(SolrIndexer.HOST_FIELD, host);
     doc.addField(SolrIndexer.SITE_FIELD, host);
     doc.addField(SolrIndexer.URL_FIELD, url, 1.0f);
-    // doc.addField("content", ..., 1.0f);
-    doc.addField(SolrIndexer.TITLE_FIELD, title, 1.0f);
-    // doc.add("cache", ..., 1.0f);
     doc.addField(SolrIndexer.TSTAMP_FIELD, dateFormatter.format(new java.util.Date(System.currentTimeMillis())), 1.0f);
-    
-    /* fields for index-anchor plugin */
-    // doc.addField("anchor", ..., 1.0f);
-
-    /* fields for index-more plugin */
-    doc.addField(SolrIndexer.TYPE_FIELD, mediaType, 1.0f);
-    doc.addField(SolrIndexer.CONTENT_LENGTH_FIELD, length, 1.0f);
-    // doc.add("lastModified", ..., 1.0f)
-    doc.addField(SolrIndexer.DATE_FIELD, date, 1.0f);
-
-    /* fields for languageidentifier plugin */
-    // doc.addField("lang", ..., 1.0f);
-
-    /* my fields */
     doc.addField(SolrIndexer.URLFP_FIELD, UriUtils.fingerprint(uuri));
     doc.addField(SolrIndexer.CANONICALURL_FIELD, uuri.toString, 1.0f);
   }
@@ -71,17 +51,20 @@ class SolrProcessor {
   def doc2InputDoc (doc : SolrDocument) : SolrInputDocument = {
     val idoc = new SolrInputDocument();
 
-    val boost = doc.getFirstValue(SolrIndexer.BOOST_FIELD).asInstanceOf[Float];
-    val date = doc.getFirstValue(SolrIndexer.DATE_FIELD).asInstanceOf[String];
-    val title = doc.getFirstValue(SolrIndexer.TITLE_FIELD).asInstanceOf[String];
-    val url = doc.getFirstValue(SolrIndexer.URL_FIELD).asInstanceOf[String];
-    val mediaType = doc.getFirstValue(SolrIndexer.TYPE_FIELD).asInstanceOf[String];
-    val length = doc.getFirstValue(SolrIndexer.CONTENT_LENGTH_FIELD).asInstanceOf[Long];
-    val digest = doc.getFirstValue(SolrIndexer.DIGEST_FIELD).asInstanceOf[String];
-
+    updateDocUrlDigest(idoc, 
+                       doc.getFirstValue(SolrIndexer.URL_FIELD).asInstanceOf[String],
+                       doc.getFirstValue(SolrIndexer.DIGEST_FIELD).asInstanceOf[String])
+    updateDocBoost(idoc, doc.getFirstValue(SolrIndexer.BOOST_FIELD).asInstanceOf[Float]);
+    idoc.addField(SolrIndexer.DATE_FIELD, 
+                  doc.getFirstValue(SolrIndexer.DATE_FIELD).asInstanceOf[String], 1.0f);
+    idoc.addField(SolrIndexer.TITLE_FIELD, 
+                 doc.getFirstValue(SolrIndexer.TITLE_FIELD).asInstanceOf[String], 1.0f);
+    idoc.addField(SolrIndexer.TYPE_FIELD, 
+                  doc.getFirstValue(SolrIndexer.TYPE_FIELD).asInstanceOf[String], 1.0f);
+    idoc.addField(SolrIndexer.CONTENT_LENGTH_FIELD,
+                  doc.getFirstValue(SolrIndexer.CONTENT_LENGTH_FIELD).asInstanceOf[Long], 1.0f);
     idoc.addField(SolrIndexer.CONTENT_FIELD, doc.getFirstValue(SolrIndexer.CONTENT_FIELD).asInstanceOf[String]);
     
-    updateDoc(idoc, boost, url, date, title, mediaType, length, digest);
     return idoc;
   }
 
@@ -123,15 +106,16 @@ class SolrProcessor {
             case s : String => s
             case null => ""
           }
-          val url = recHeader.getUrl;
           val digest = archiveRecord match {
             case rec : ARCRecord => rec.getDigestStr;
             case _               => ""
           }
-
-          updateDoc(doc, 1.0f, url, recHeader.getDate.toLowerCase,
-                    title, recHeader.getMimetype.toLowerCase, recHeader.getLength, digest);
-
+          updateDocBoost(doc, 1.0f);
+          updateDocUrlDigest(doc, url, digest);
+          doc.addField(SolrIndexer.DATE_FIELD, recHeader.getDate.toLowerCase, 1.0f);
+          doc.addField(SolrIndexer.TYPE_FIELD, recHeader.getMimetype.toLowerCase, 1.0f);
+          doc.addField(SolrIndexer.TITLE_FIELD, title, 1.0f);
+          doc.addField(SolrIndexer.CONTENT_LENGTH_FIELD, recHeader.getLength, 1.0f);
           /* finish webgraph */
           if (webGraphTypeRE.matcher(tikaMetadata.get(HttpHeaders.CONTENT_TYPE)).matches) {
             val outlinks = wgContentHandler.outlinks;
