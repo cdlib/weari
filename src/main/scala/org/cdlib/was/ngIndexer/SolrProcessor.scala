@@ -19,7 +19,10 @@ import org.cdlib.was.ngIndexer.webgraph.WebGraphContentHandler;
   */
 class SolrProcessor {
   val parser : Parser = new AutoDetectParser();
+  /* date formatter for solr */
   val dateFormatter = new java.text.SimpleDateFormat("yyyyMMddHHmmssSSS");
+  /* regular expression to match against mime types which should have
+     outlinks indexed */
   val webGraphTypeRE = Pattern.compile("^(.*html.*|application/pdf)$");
 
   /** Update the boost in a document.
@@ -48,6 +51,9 @@ class SolrProcessor {
     doc.addField(SolrIndexer.CANONICALURL_FIELD, uuri.toString, 1.0f);
   }
 
+  /** Turn an existing SolrDocument into a SolrInputDocument suitable
+    * for sending back to solr.
+    */
   def doc2InputDoc (doc : SolrDocument) : SolrInputDocument = {
     val idoc = new SolrInputDocument();
 
@@ -81,13 +87,15 @@ class SolrProcessor {
         val tikaMetadata = new Metadata();
         val parseContext = new ParseContext();
         val url = rec.getMetaData.getUrl;
-        val contentType = rec.getMetaData.getMimetype;
-        tikaMetadata.set(HttpHeaders.CONTENT_LOCATION, url);
-        tikaMetadata.set(HttpHeaders.CONTENT_TYPE, contentType);
+        val recHeader = rec.getHeader;
+        val contentType = rec.getMetaData.getMimetype.toLowerCase;
         val doc = new SolrInputDocument();
         val indexContentHandler = new NgIndexerContentHandler(rec.getHeader.getLength  >= 1048576);
         val wgContentHandler = new WebGraphContentHandler(url, rec.getHeader.getDate);
         val contentHandler = new MultiContentHander(List[ContentHandler](wgContentHandler, indexContentHandler));
+
+        tikaMetadata.set(HttpHeaders.CONTENT_LOCATION, url);
+        tikaMetadata.set(HttpHeaders.CONTENT_TYPE, contentType);
         try {
           try {
             parser.parse(rec, contentHandler, tikaMetadata, parseContext);
@@ -99,8 +107,7 @@ class SolrProcessor {
           }
           /* finish index */
           rec.close;
-          indexContentHandler.contentString.map(str=>doc.addField("content", str));
-          val recHeader = rec.getHeader;
+          indexContentHandler.contentString.map(str=>doc.addField(SolrIndexer.CONTENT_FIELD, str));
 
           val title = tikaMetadata.get("title") match {
             case s : String => s
@@ -113,7 +120,7 @@ class SolrProcessor {
           updateDocBoost(doc, 1.0f);
           updateDocUrlDigest(doc, url, digest);
           doc.addField(SolrIndexer.DATE_FIELD, recHeader.getDate.toLowerCase, 1.0f);
-          doc.addField(SolrIndexer.TYPE_FIELD, recHeader.getMimetype.toLowerCase, 1.0f);
+          doc.addField(SolrIndexer.TYPE_FIELD, tikaMetadata.get(HttpHeaders.CONTENT_TYPE), 1.0f);
           doc.addField(SolrIndexer.TITLE_FIELD, title, 1.0f);
           doc.addField(SolrIndexer.CONTENT_LENGTH_FIELD, recHeader.getLength, 1.0f);
           /* finish webgraph */
