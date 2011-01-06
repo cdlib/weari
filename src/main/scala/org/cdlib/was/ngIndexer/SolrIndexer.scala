@@ -48,7 +48,6 @@ object SolrIndexer {
             val url = urldoc._1;
             val doc = urldoc._2;
             if (!url.startsWith("filedesc:") && !url.startsWith("dns:")) {
-              System.err.println("Indexing %s".format(url));
               doc.setField(ARCNAME_FIELD, new File(path).getName);
               doc.setField(JOB_FIELD, job);
               doc.setField(SPECIFICATION_FIELD, specification);
