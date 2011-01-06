@@ -29,7 +29,9 @@ object Utility {
     val reader = ARCReaderFactory.get(arcFile)
     val it = reader.iterator;
     while (it.hasNext) {
-      f (it.next);
+      val next = it.next;
+      f (next);
+      next.close;
     }
     reader.close;
   }
