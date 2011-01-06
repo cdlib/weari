@@ -88,23 +88,6 @@ class SolrProcessor {
   val MIN_BOOST = 0.1f;
   val MAX_BOOST = 10.0f;
 
-  def mdHandler (archiveRecord : ArchiveRecord, md : Metadata, doc : SolrInputDocument) {
-    val recHeader = archiveRecord.getHeader;
-
-    val title = md.get("title") match {
-      case s : String => s
-      case null => ""
-    }
-    val url = recHeader.getUrl;
-    val digest = archiveRecord match {
-      case rec : ARCRecord => rec.getDigestStr;
-      case _               => ""
-    }
-    
-    updateDoc(doc, 1.0f, url, recHeader.getDate.toLowerCase,
-              title, recHeader.getMimetype.toLowerCase, recHeader.getLength, digest);
-  }
-
   /** Take an archive record & return a solr document.
     *
     */
@@ -134,7 +117,21 @@ class SolrProcessor {
           /* finish index */
           rec.close;
           indexContentHandler.contentString.map(str=>doc.addField("content", str));
-          mdHandler(rec, tikaMetadata, doc);
+          val recHeader = rec.getHeader;
+
+          val title = tikaMetadata.get("title") match {
+            case s : String => s
+            case null => ""
+          }
+          val url = recHeader.getUrl;
+          val digest = archiveRecord match {
+            case rec : ARCRecord => rec.getDigestStr;
+            case _               => ""
+          }
+
+          updateDoc(doc, 1.0f, url, recHeader.getDate.toLowerCase,
+                    title, recHeader.getMimetype.toLowerCase, recHeader.getLength, digest);
+
           /* finish webgraph */
           if (webGraphTypeRE.matcher(tikaMetadata.get(HttpHeaders.CONTENT_TYPE)).matches) {
             val outlinks = wgContentHandler.outlinks;
