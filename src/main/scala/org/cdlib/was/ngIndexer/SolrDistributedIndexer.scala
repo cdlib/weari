@@ -9,7 +9,6 @@ import org.apache.solr.common.params.{ModifiableSolrParams,SolrParams};
   *
   * Uses a consistent hash of servers.
   */
-
 class SolrDistributedServer (servers : Seq[Tuple3[String,String,Int]]) {
   val ring = new ConsistentHashRing[CommonsHttpSolrServer];
   var serverList = List[CommonsHttpSolrServer]();
@@ -29,17 +28,17 @@ class SolrDistributedServer (servers : Seq[Tuple3[String,String,Int]]) {
   }
 
   def commit {
-    for (server <- serverList) {
-      server.commit;
-    }
+    for (server <- serverList) server.commit;
   }
 
-  def getShards : String = 
+  /** Gets the string to use when submitting a shards query param
+    */
+  def getShardsValue : String = 
     return serverList.map(_.getBaseURL).map(_.substring(7)).mkString("",",","");
 
   def query (q : SolrParams) : QueryResponse = {
     val q2 = new ModifiableSolrParams(q);
-    q2.set("shards", getShards);
+    q2.set("shards", getShardsValue);
     if (q2.get("qt") == "/terms") {
       q2.set("shards.qt", "/terms");
     }
