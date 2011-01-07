@@ -91,7 +91,7 @@ class SolrProcessor {
   /** Take an archive record & return a solr document.
     *
     */
-  def record2doc(archiveRecord : ArchiveRecord) : Option[Pair[String,SolrInputDocument]] = {
+  def record2doc(archiveRecord : ArchiveRecord) : Option[SolrInputDocument] = {
     archiveRecord match {
       case rec : ARCRecord => {
         Utility.skipHttpHeader(rec);
@@ -141,7 +141,7 @@ class SolrProcessor {
               }
             }
           }
-          return Some((url, doc));
+          return Some(doc);
       } catch {
           case ex : Exception => ex.printStackTrace(System.err);
           return None;
@@ -162,13 +162,13 @@ class SolrProcessor {
 
   /** For each record in a file, call the function.
     */
-  def processFileAsDocs (file : File) (func : (String,SolrInputDocument) => Unit) {
+  def processFileAsDocs (file : File) (func : (SolrInputDocument) => Unit) {
     if (file.isDirectory) {
       for (c <- file.listFiles) {
         processFileAsDocs(c)(func);
       }
     } else if (file.getName.indexOf("arc.gz") != -1) {
-      Utility.eachArc(file, (rec)=>record2doc(rec).map((p)=>func(p._1, p._2)));
+      Utility.eachArc(file, (rec)=>record2doc(rec).map(d=>func(d)));
     }
   }
 
