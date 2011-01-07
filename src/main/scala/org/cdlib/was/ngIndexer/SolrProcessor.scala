@@ -75,22 +75,14 @@ class SolrProcessor {
     */
   def doc2InputDoc (doc : SolrDocument) : SolrInputDocument = {
     val idoc = new SolrInputDocument();
-
-    updateDocUrlDigest(idoc, 
-                       doc.getFirstValue(URL_FIELD).asInstanceOf[String],
-                       doc.getFirstValue(DIGEST_FIELD).asInstanceOf[String])
-    updateDocBoost(idoc, doc.getFirstValue(BOOST_FIELD).asInstanceOf[Float]);
-    idoc.addField(DATE_FIELD, 
-                  doc.getFirstValue(DATE_FIELD).asInstanceOf[String], 1.0f);
-    idoc.addField(TITLE_FIELD, 
-                 doc.getFirstValue(TITLE_FIELD).asInstanceOf[String], 1.0f);
-    idoc.addField(TYPE_FIELD, 
-                  doc.getFirstValue(TYPE_FIELD).asInstanceOf[String], 1.0f);
-    idoc.addField(CONTENT_LENGTH_FIELD,
-                  doc.getFirstValue(CONTENT_LENGTH_FIELD).asInstanceOf[Long], 1.0f);
-    idoc.addField(CONTENT_FIELD, 
-                  doc.getFirstValue(CONTENT_FIELD).asInstanceOf[String]);
-    
+    for (fieldName <- SolrIndexer.SINGLE_VALUED_FIELDS) {
+      idoc.addField(fieldName, doc.getFirstValue(fieldName));
+    }
+    for (fieldName <- SolrIndexer.MULTI_VALUED_FIELDS) {
+      for (value <- doc.getFieldValues(fieldName)) {
+        idoc.addField(fieldName, value);
+      }
+    }    
     return idoc;
   }
 
@@ -177,32 +169,26 @@ class SolrProcessor {
 
    def mergeDocs (a : SolrInputDocument, b : SolrInputDocument) : SolrInputDocument = {
     val retval = new SolrInputDocument;
-    if (a.getField(ID_FIELD) != b.getField(ID_FIELD)) {
+    if (a.getFieldValue(ID_FIELD) != b.getFieldValue(ID_FIELD)) {
       throw new Exception;
     } else {
       /* identical fields */
-      for (fieldName <- List(CANONICALURL_FIELD,
-                             CONTENT_FIELD,
-                             CONTENT_LENGTH_FIELD,
-                             DIGEST_FIELD,
-                             HOST_FIELD,
-                             ID_FIELD, 
-                             SITE_FIELD,
-                             TITLE_FIELD,
-                             TSTAMP_FIELD,
-                             TYPE_FIELD,
-                             URLFP_FIELD,
-                             URL_FIELD)) {
-        retval.setField(fieldName, a.getField(fieldName));
+      for (fieldName <- SolrIndexer.SINGLE_VALUED_FIELDS) {
+        retval.setField(fieldName, a.getFieldValue(fieldName));
       }
       /* fields to merge */
-      for (fieldName <- List(ARCNAME_FIELD,
-                             DATE_FIELD,
-                             JOB_FIELD,
-                             PROJECT_FIELD,
-                             SPECIFICATION_FIELD)) {
-        val values = a.getFieldValues(fieldName) ++ b.getFieldValues(fieldName);
-        for (value <- values.toList.distinct) {
+      for (fieldName <- SolrIndexer.MULTI_VALUED_FIELDS) {
+        val valuesA = a.getFieldValues(fieldName) match {
+          case null => List();
+          case x => x.toList;
+        }
+        val valuesB = b.getFieldValues(fieldName) match {
+          case null => List();
+          case x => x.toList;
+        }
+        val values = (valuesA ++ valuesB).distinct;
+        System.out.println("%s %s => %s".format(valuesA, valuesB, values));
+        for (value <- values) {
           retval.addField(fieldName, value);
         }
       }
