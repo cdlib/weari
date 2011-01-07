@@ -187,7 +187,6 @@ class SolrProcessor {
           case x => x.toList;
         }
         val values = (valuesA ++ valuesB).distinct;
-        System.out.println("%s %s => %s".format(valuesA, valuesB, values));
         for (value <- values) {
           retval.addField(fieldName, value);
         }
