@@ -3,6 +3,7 @@ package org.cdlib.was.ngIndexer;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.impl.{CommonsHttpSolrServer,StreamingUpdateSolrServer};
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.{ModifiableSolrParams,SolrParams};
 
@@ -21,7 +22,7 @@ class SolrDistributedServer (serverInit : Seq[Tuple3[String,String,Int]]) {
   }
   
   def add (doc : SolrInputDocument) {
-    val id = doc.getField(SolrIndexer.ID_FIELD).getValue.asInstanceOf[String];
+    val id = doc.getFieldValue(SolrIndexer.ID_FIELD).asInstanceOf[String];
     val server = ring.getServerFor(id);
     /* we need to store the server this is indexed on */
     doc.addField(SolrIndexer.SERVER_FIELD, server.getBaseURL);
@@ -59,7 +60,7 @@ class SolrDistributedServer (serverInit : Seq[Tuple3[String,String,Int]]) {
   }
 
   def deleteById(id : String) {
-    val result = getById(id);
+    val result = getById(id).get;
     val serverName = result.getFirstValue(SolrIndexer.SERVER_FIELD).asInstanceOf[String];
     val server = servers.get(serverName).get;
     server.deleteById(id);
