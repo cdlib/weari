@@ -57,7 +57,6 @@ class SolrProcessor {
   def updateDocUrlDigest (doc : SolrInputDocument, 
                           url : String,
                           digest : String) {
-    
     val uuri = UURIFactory.getInstance(url);
     val host = uuri.getHost;
     doc.addField(ID_FIELD, "%s.%s".format(uuri.toString, digest));
@@ -125,12 +124,8 @@ class SolrProcessor {
             case s : String => s
             case null => ""
           }
-          val digest = archiveRecord match {
-            case rec : ARCRecord => rec.getDigestStr;
-            case _               => ""
-          }
           updateDocBoost(doc, 1.0f);
-          updateDocUrlDigest(doc, url, digest);
+          updateDocUrlDigest(doc, url, rec.getDigestStr);
           doc.addField(DATE_FIELD, recHeader.getDate.toLowerCase, 1.0f);
           doc.addField(TYPE_FIELD, tikaMetadata.get(HttpHeaders.CONTENT_TYPE), 1.0f);
           doc.addField(TITLE_FIELD, title, 1.0f);
@@ -157,17 +152,17 @@ class SolrProcessor {
 
   /** For each record in a file, call the function.
     */
-  def processFile (file : File) (func : (String,SolrInputDocument) => Unit) {
+  def processFileAsDocs (file : File) (func : (String,SolrInputDocument) => Unit) {
     if (file.isDirectory) {
       for (c <- file.listFiles) {
-        processFile(c)(func);
+        processFileAsDocs(c)(func);
       }
     } else if (file.getName.indexOf("arc.gz") != -1) {
       Utility.eachArc(file, (rec)=>record2doc(rec).map((p)=>func(p._1, p._2)));
     }
   }
 
-   def mergeDocs (a : SolrInputDocument, b : SolrInputDocument) : SolrInputDocument = {
+  def mergeDocs (a : SolrInputDocument, b : SolrInputDocument) : SolrInputDocument = {
     val retval = new SolrInputDocument;
     if (a.getFieldValue(ID_FIELD) != b.getFieldValue(ID_FIELD)) {
       throw new Exception;
@@ -178,15 +173,14 @@ class SolrProcessor {
       }
       /* fields to merge */
       for (fieldName <- SolrIndexer.MULTI_VALUED_FIELDS) {
-        val valuesA = a.getFieldValues(fieldName) match {
-          case null => List();
-          case x => x.toList;
-        }
-        val valuesB = b.getFieldValues(fieldName) match {
-          case null => List();
-          case x => x.toList;
-        }
-        val values = (valuesA ++ valuesB).distinct;
+        def emptyIfNull(xs : java.util.Collection[java.lang.Object]) : 
+          List[java.lang.Object] =
+          xs match {
+            case null => List();
+            case seq  => seq.toList;
+          }
+        val values = (emptyIfNull(a.getFieldValues(fieldName)) ++
+                      emptyIfNull(b.getFieldValues(fieldName))).distinct;
         for (value <- values) {
           retval.addField(fieldName, value);
         }
