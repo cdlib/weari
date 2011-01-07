@@ -1,22 +1,23 @@
 package org.cdlib.was.ngIndexer;
 
+import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.impl.{CommonsHttpSolrServer,StreamingUpdateSolrServer};
-import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.{ModifiableSolrParams,SolrParams};
 
 /** A class for handling a distributed solr system.
   *
   * Uses a consistent hash of servers.
   */
-class SolrDistributedServer (servers : Seq[Tuple3[String,String,Int]]) {
+class SolrDistributedServer (serverInit : Seq[Tuple3[String,String,Int]]) {
   val ring = new ConsistentHashRing[CommonsHttpSolrServer];
-  var serverList = List[CommonsHttpSolrServer]();
+  var servers = scala.collection.mutable.Map[String,CommonsHttpSolrServer]();
 
-  for ((id, url, level) <- servers) {
+  for ((id, url, level) <- serverInit) {
     val server = new StreamingUpdateSolrServer (url, 50, 5);
     ring.addServer(id, server, level);
-    serverList = server :: serverList;
+    servers += (server.getBaseURL -> server);
   }
   
   def add (doc : SolrInputDocument) {
@@ -28,13 +29,13 @@ class SolrDistributedServer (servers : Seq[Tuple3[String,String,Int]]) {
   }
 
   def commit {
-    for (server <- serverList) server.commit;
+    for (server <- servers.values) server.commit;
   }
 
   /** Gets the string to use when submitting a shards query param
     */
   def getShardsValue : String = 
-    return serverList.map(_.getBaseURL).map(_.substring(7)).mkString("",",","");
+    return servers.values.map(_.getBaseURL).map(_.substring(7)).mkString("",",","");
 
   def query (q : SolrParams) : QueryResponse = {
     val q2 = new ModifiableSolrParams(q);
@@ -42,6 +43,15 @@ class SolrDistributedServer (servers : Seq[Tuple3[String,String,Int]]) {
     if (q2.get("qt") == "/terms") {
       q2.set("shards.qt", "/terms");
     }
-    return serverList.head.query(q2);
+    return servers.values.head.query(q2);
+  }
+  
+  def deleteById(id : String) {
+    val q = new SolrQuery;
+    q.setQuery("id:\"%s\"".format(id));
+    val c = new SolrDocumentCollection(this, q);
+    val result = c.head;
+    val serverName = result.getFirstValue(SolrIndexer.SERVER_FIELD).asInstanceOf[String];
+    servers.get(serverName).get.deleteById(id);
   }
 }
