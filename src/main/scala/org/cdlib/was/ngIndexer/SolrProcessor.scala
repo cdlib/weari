@@ -12,6 +12,25 @@ import org.apache.tika.metadata.HttpHeaders;
 import org.xml.sax.ContentHandler;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.cdlib.was.ngIndexer.webgraph.WebGraphContentHandler;
+import org.cdlib.was.ngIndexer.SolrIndexer.{ARCNAME_FIELD,
+                                            BOOST_FIELD,
+                                            CANONICALURL_FIELD,
+                                            CONTENT_FIELD,
+                                            CONTENT_LENGTH_FIELD,
+                                            DATE_FIELD,
+                                            DIGEST_FIELD,
+                                            HOST_FIELD,
+                                            ID_FIELD,
+                                            JOB_FIELD,
+                                            PROJECT_FIELD,
+                                            SITE_FIELD,
+                                            SPECIFICATION_FIELD,
+                                            TITLE_FIELD,
+                                            TSTAMP_FIELD,
+                                            TYPE_FIELD,
+                                            URL_FIELD,
+                                            URLFP_FIELD };
+import scala.collection.JavaConversions.asScalaIterable;
 
 /** Class for processing (W)ARC files into Solr documents.
   *
@@ -30,7 +49,7 @@ class SolrProcessor {
   def updateDocBoost (doc : SolrInputDocument,
                       boost : Float) {
     doc.setDocumentBoost(boost);
-    doc.addField(SolrIndexer.BOOST_FIELD, boost);
+    doc.addField(BOOST_FIELD, boost);
   }
     
   /** Update the url & digest fields in a document.
@@ -41,14 +60,14 @@ class SolrProcessor {
     
     val uuri = UURIFactory.getInstance(url);
     val host = uuri.getHost;
-    doc.addField(SolrIndexer.ID_FIELD, "%s.%s".format(uuri.toString, digest));
-    doc.addField(SolrIndexer.DIGEST_FIELD, digest);
-    doc.addField(SolrIndexer.HOST_FIELD, host);
-    doc.addField(SolrIndexer.SITE_FIELD, host);
-    doc.addField(SolrIndexer.URL_FIELD, url, 1.0f);
-    doc.addField(SolrIndexer.TSTAMP_FIELD, dateFormatter.format(new java.util.Date(System.currentTimeMillis())), 1.0f);
-    doc.addField(SolrIndexer.URLFP_FIELD, UriUtils.fingerprint(uuri));
-    doc.addField(SolrIndexer.CANONICALURL_FIELD, uuri.toString, 1.0f);
+    doc.addField(ID_FIELD, "%s.%s".format(uuri.toString, digest));
+    doc.addField(DIGEST_FIELD, digest);
+    doc.addField(HOST_FIELD, host);
+    doc.addField(SITE_FIELD, host);
+    doc.addField(URL_FIELD, url, 1.0f);
+    doc.addField(TSTAMP_FIELD, dateFormatter.format(new java.util.Date(System.currentTimeMillis())), 1.0f);
+    doc.addField(URLFP_FIELD, UriUtils.fingerprint(uuri));
+    doc.addField(CANONICALURL_FIELD, uuri.toString, 1.0f);
   }
 
   /** Turn an existing SolrDocument into a SolrInputDocument suitable
@@ -58,18 +77,19 @@ class SolrProcessor {
     val idoc = new SolrInputDocument();
 
     updateDocUrlDigest(idoc, 
-                       doc.getFirstValue(SolrIndexer.URL_FIELD).asInstanceOf[String],
-                       doc.getFirstValue(SolrIndexer.DIGEST_FIELD).asInstanceOf[String])
-    updateDocBoost(idoc, doc.getFirstValue(SolrIndexer.BOOST_FIELD).asInstanceOf[Float]);
-    idoc.addField(SolrIndexer.DATE_FIELD, 
-                  doc.getFirstValue(SolrIndexer.DATE_FIELD).asInstanceOf[String], 1.0f);
-    idoc.addField(SolrIndexer.TITLE_FIELD, 
-                 doc.getFirstValue(SolrIndexer.TITLE_FIELD).asInstanceOf[String], 1.0f);
-    idoc.addField(SolrIndexer.TYPE_FIELD, 
-                  doc.getFirstValue(SolrIndexer.TYPE_FIELD).asInstanceOf[String], 1.0f);
-    idoc.addField(SolrIndexer.CONTENT_LENGTH_FIELD,
-                  doc.getFirstValue(SolrIndexer.CONTENT_LENGTH_FIELD).asInstanceOf[Long], 1.0f);
-    idoc.addField(SolrIndexer.CONTENT_FIELD, doc.getFirstValue(SolrIndexer.CONTENT_FIELD).asInstanceOf[String]);
+                       doc.getFirstValue(URL_FIELD).asInstanceOf[String],
+                       doc.getFirstValue(DIGEST_FIELD).asInstanceOf[String])
+    updateDocBoost(idoc, doc.getFirstValue(BOOST_FIELD).asInstanceOf[Float]);
+    idoc.addField(DATE_FIELD, 
+                  doc.getFirstValue(DATE_FIELD).asInstanceOf[String], 1.0f);
+    idoc.addField(TITLE_FIELD, 
+                 doc.getFirstValue(TITLE_FIELD).asInstanceOf[String], 1.0f);
+    idoc.addField(TYPE_FIELD, 
+                  doc.getFirstValue(TYPE_FIELD).asInstanceOf[String], 1.0f);
+    idoc.addField(CONTENT_LENGTH_FIELD,
+                  doc.getFirstValue(CONTENT_LENGTH_FIELD).asInstanceOf[Long], 1.0f);
+    idoc.addField(CONTENT_FIELD, 
+                  doc.getFirstValue(CONTENT_FIELD).asInstanceOf[String]);
     
     return idoc;
   }
@@ -107,7 +127,7 @@ class SolrProcessor {
           }
           /* finish index */
           rec.close;
-          indexContentHandler.contentString.map(str=>doc.addField(SolrIndexer.CONTENT_FIELD, str));
+          indexContentHandler.contentString.map(str=>doc.addField(CONTENT_FIELD, str));
 
           val title = tikaMetadata.get("title") match {
             case s : String => s
@@ -119,10 +139,10 @@ class SolrProcessor {
           }
           updateDocBoost(doc, 1.0f);
           updateDocUrlDigest(doc, url, digest);
-          doc.addField(SolrIndexer.DATE_FIELD, recHeader.getDate.toLowerCase, 1.0f);
-          doc.addField(SolrIndexer.TYPE_FIELD, tikaMetadata.get(HttpHeaders.CONTENT_TYPE), 1.0f);
-          doc.addField(SolrIndexer.TITLE_FIELD, title, 1.0f);
-          doc.addField(SolrIndexer.CONTENT_LENGTH_FIELD, recHeader.getLength, 1.0f);
+          doc.addField(DATE_FIELD, recHeader.getDate.toLowerCase, 1.0f);
+          doc.addField(TYPE_FIELD, tikaMetadata.get(HttpHeaders.CONTENT_TYPE), 1.0f);
+          doc.addField(TITLE_FIELD, title, 1.0f);
+          doc.addField(CONTENT_LENGTH_FIELD, recHeader.getLength, 1.0f);
           /* finish webgraph */
           if (webGraphTypeRE.matcher(tikaMetadata.get(HttpHeaders.CONTENT_TYPE)).matches) {
             val outlinks = wgContentHandler.outlinks;
@@ -135,7 +155,7 @@ class SolrProcessor {
             }
           }
           return Some((url, doc));
-        } catch {
+      } catch {
           case ex : Exception => ex.printStackTrace(System.err);
           return None;
         }
@@ -153,6 +173,41 @@ class SolrProcessor {
     } else if (file.getName.indexOf("arc.gz") != -1) {
       Utility.eachArc(file, (rec)=>record2doc(rec).map((p)=>func(p._1, p._2)));
     }
+  }
+
+   def mergeDocs (a : SolrInputDocument, b : SolrInputDocument) : SolrInputDocument = {
+    val retval = new SolrInputDocument;
+    if (a.getField(ID_FIELD) != b.getField(ID_FIELD)) {
+      throw new Exception;
+    } else {
+      /* identical fields */
+      for (fieldName <- List(CANONICALURL_FIELD,
+                             CONTENT_FIELD,
+                             CONTENT_LENGTH_FIELD,
+                             DIGEST_FIELD,
+                             HOST_FIELD,
+                             ID_FIELD, 
+                             SITE_FIELD,
+                             TITLE_FIELD,
+                             TSTAMP_FIELD,
+                             TYPE_FIELD,
+                             URLFP_FIELD,
+                             URL_FIELD)) {
+        retval.setField(fieldName, a.getField(fieldName));
+      }
+      /* fields to merge */
+      for (fieldName <- List(ARCNAME_FIELD,
+                             DATE_FIELD,
+                             JOB_FIELD,
+                             PROJECT_FIELD,
+                             SPECIFICATION_FIELD)) {
+        val values = a.getFieldValues(fieldName) ++ b.getFieldValues(fieldName);
+        for (value <- values.toList.distinct) {
+          retval.addField(fieldName, value);
+        }
+      }
+    }
+    return retval;
   }
 
   // def updateBoosts (g : RankedWebGraph) = {
