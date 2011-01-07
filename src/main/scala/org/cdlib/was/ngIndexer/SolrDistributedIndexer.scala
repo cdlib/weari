@@ -45,12 +45,21 @@ class SolrDistributedServer (serverInit : Seq[Tuple3[String,String,Int]]) {
     }
     return servers.values.head.query(q2);
   }
-  
-  def deleteById(id : String) {
+
+  def getById(id : String) : Option[SolrDocument] = {
     val q = new SolrQuery;
     q.setQuery("id:\"%s\"".format(id));
-    val c = new SolrDocumentCollection(this, q);
-    val result = c.head;
+    try {
+      return Some((new SolrDocumentCollection(this, q)).head);
+    } catch {
+      case ex : NoSuchElementException => {
+        return None;
+      }
+    }
+  }
+
+  def deleteById(id : String) {
+    val result = getById(id);
     val serverName = result.getFirstValue(SolrIndexer.SERVER_FIELD).asInstanceOf[String];
     val server = servers.get(serverName).get;
     server.deleteById(id);
