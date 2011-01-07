@@ -150,6 +150,16 @@ class SolrProcessor {
     }
   }
 
+  def record2id (archiveRecord : ArchiveRecord) : String = {
+    archiveRecord match {
+      case rec : ARCRecord => {
+        Utility.skipHttpHeader(rec);
+        val uuri = UURIFactory.getInstance(rec.getMetaData.getUrl);
+        return "%s.%s".format(uuri.toString, rec.getDigestStr);
+      }
+    }
+  }
+
   /** For each record in a file, call the function.
     */
   def processFileAsDocs (file : File) (func : (String,SolrInputDocument) => Unit) {
