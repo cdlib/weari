@@ -145,13 +145,13 @@ class SolrProcessor {
 
   /** For each record in a file, call the function.
     */
-  def processFile (file : File) (func : (Pair[String,SolrInputDocument]) => Unit) {
+  def processFile (file : File) (func : (String,SolrInputDocument) => Unit) {
     if (file.isDirectory) {
       for (c <- file.listFiles) {
         processFile(c)(func);
       }
     } else if (file.getName.indexOf("arc.gz") != -1) {
-      Utility.eachArc(file, (rec)=>record2doc(rec).map(func));
+      Utility.eachArc(file, (rec)=>record2doc(rec).map((p)=>func(p._1, p._2)));
     }
   }
 

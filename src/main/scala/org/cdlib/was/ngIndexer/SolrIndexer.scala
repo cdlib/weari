@@ -44,9 +44,7 @@ object SolrIndexer {
         try {
           val server = new SolrDistributedServer(config.indexers());
           val processor = new SolrProcessor;
-          processor.processFile(new File(path)) { (urldoc)=>
-            val url = urldoc._1;
-            val doc = urldoc._2;
+          processor.processFile(new File(path)) { (url, doc)=>
             if (!url.startsWith("filedesc:") && !url.startsWith("dns:")) {
               doc.setField(ARCNAME_FIELD, new File(path).getName);
               doc.setField(JOB_FIELD, job);
