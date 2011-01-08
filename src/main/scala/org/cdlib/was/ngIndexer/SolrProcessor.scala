@@ -12,31 +12,60 @@ import org.apache.tika.metadata.HttpHeaders;
 import org.xml.sax.ContentHandler;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.cdlib.was.ngIndexer.webgraph.WebGraphContentHandler;
-import org.cdlib.was.ngIndexer.SolrIndexer.{ARCNAME_FIELD,
-                                            BOOST_FIELD,
-                                            CANONICALURL_FIELD,
-                                            CONTENT_FIELD,
-                                            CONTENT_LENGTH_FIELD,
-                                            DATE_FIELD,
-                                            DIGEST_FIELD,
-                                            HOST_FIELD,
-                                            ID_FIELD,
-                                            JOB_FIELD,
-                                            PROJECT_FIELD,
-                                            SITE_FIELD,
-                                            SPECIFICATION_FIELD,
-                                            TITLE_FIELD,
-                                            TSTAMP_FIELD,
-                                            TYPE_FIELD,
-                                            URL_FIELD,
-                                            URLFP_FIELD };
 import scala.collection.JavaConversions.asScalaIterable;
+import java.util.{Collection=>JCollection};
+import java.lang.{Object=>JObject};
+
+object SolrProcessor {
+  val ARCNAME_FIELD        = "arcname";
+  val BOOST_FIELD          = "boost";
+  val CANONICALURL_FIELD   = "canonicalurl";
+  val CONTENT_FIELD        = "content";
+  val CONTENT_LENGTH_FIELD = "contentLength";
+  val DATE_FIELD           = "date";
+  val DIGEST_FIELD         = "digest";
+  val HOST_FIELD           = "host";
+  val ID_FIELD             = "id";
+  val JOB_FIELD            = "job";
+  val PROJECT_FIELD        = "project";
+  val SERVER_FIELD         = "server";
+  val SITE_FIELD           = "site";
+  val SPECIFICATION_FIELD  = "specification";
+  val TITLE_FIELD          = "title";
+  val TSTAMP_FIELD         = "tstamp";
+  val TYPE_FIELD           = "type";
+  val URLFP_FIELD          = "urlfp";
+  val URL_FIELD            = "url";
+
+  /* fields which have a single value */
+  val SINGLE_VALUED_FIELDS = 
+      List(CANONICALURL_FIELD,
+           CONTENT_FIELD,
+           CONTENT_LENGTH_FIELD,
+           DIGEST_FIELD,
+           HOST_FIELD,
+           ID_FIELD, 
+           SITE_FIELD,
+           TITLE_FIELD,
+           TSTAMP_FIELD,
+           TYPE_FIELD,
+           URLFP_FIELD,
+           URL_FIELD);
+
+  val MULTI_VALUED_FIELDS =
+    List(ARCNAME_FIELD,
+         DATE_FIELD,
+         JOB_FIELD,
+         PROJECT_FIELD,
+         SPECIFICATION_FIELD);
+}
 
 /** Class for processing (W)ARC files into Solr documents.
   *
   * @author egh
   */
 class SolrProcessor {
+  import SolrProcessor._;
   val parser : Parser = new AutoDetectParser();
   /* date formatter for solr */
   val dateFormatter = new java.text.SimpleDateFormat("yyyyMMddHHmmssSSS");
@@ -74,10 +103,10 @@ class SolrProcessor {
     */
   def doc2InputDoc (doc : SolrDocument) : SolrInputDocument = {
     val idoc = new SolrInputDocument();
-    for (fieldName <- SolrIndexer.SINGLE_VALUED_FIELDS) {
+    for (fieldName <- SINGLE_VALUED_FIELDS) {
       idoc.addField(fieldName, doc.getFirstValue(fieldName));
     }
-    for (fieldName <- SolrIndexer.MULTI_VALUED_FIELDS) {
+    for (fieldName <- MULTI_VALUED_FIELDS) {
       for (value <- doc.getFieldValues(fieldName)) {
         idoc.addField(fieldName, value);
       }
@@ -178,17 +207,15 @@ class SolrProcessor {
       throw new Exception;
     } else {
       /* identical fields */
-      for (fieldName <- SolrIndexer.SINGLE_VALUED_FIELDS) {
+      for (fieldName <- SINGLE_VALUED_FIELDS) {
         retval.setField(fieldName, a.getFieldValue(fieldName));
       }
       /* fields to merge */
-      for (fieldName <- SolrIndexer.MULTI_VALUED_FIELDS) {
-        def emptyIfNull(xs : java.util.Collection[java.lang.Object]) : 
-          List[java.lang.Object] =
-          xs match {
-            case null => List();
-            case seq  => seq.toList;
-          }
+      for (fieldName <- MULTI_VALUED_FIELDS) {
+        def emptyIfNull(xs : JCollection[JObject]) : List[JObject] = xs match {
+          case null => List();
+          case seq  => seq.toList;
+        }
         val values = (emptyIfNull(a.getFieldValues(fieldName)) ++
                       emptyIfNull(b.getFieldValues(fieldName))).distinct;
         for (value <- values) {

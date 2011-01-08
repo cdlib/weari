@@ -1,6 +1,6 @@
 package org.cdlib.was.ngIndexer.webgraph;
 
-import org.cdlib.was.ngIndexer.{SolrAllDocumentIterable,SolrIndexer,SolrTermIterable,UriUtils};
+import org.cdlib.was.ngIndexer.{SolrAllDocumentIterable,SolrProcessor,SolrTermIterable,UriUtils};
 import it.unimi.dsi.webgraph._;
 import java.io._;
 import org.apache.solr.client.solrj._;
@@ -18,7 +18,7 @@ class SolrWebGraph (url : String) extends WebGraph {
 
   val urlsSize = 3500000;
   lazy val urls : Seq[String] = {
-    val terms = new SolrTermIterable(server, SolrIndexer.CANONICALURL_FIELD);
+    val terms = new SolrTermIterable(server, SolrProcessor.CANONICALURL_FIELD);
     var newUrls = new ArrayBuffer[String]() { ensureSize(urlsSize); };
     val it = terms.iterator;
     while (it.hasNext) { newUrls += it.next; }
@@ -60,11 +60,11 @@ class SolrWebGraph (url : String) extends WebGraph {
     def url = urls(position);
 
     val docIterable = 
-      new SolrAllDocumentIterable(server, SolrIndexer.CANONICALURL_FIELD, urls);
+      new SolrAllDocumentIterable(server, SolrProcessor.CANONICALURL_FIELD, urls);
     var docIt = docIterable.iterator;
 
     def checkUrl(d : SolrDocument) = 
-      (d.getFieldValue(SolrIndexer.CANONICALURL_FIELD).asInstanceOf[String] == url)
+      (d.getFieldValue(SolrProcessor.CANONICALURL_FIELD).asInstanceOf[String] == url)
 
     def hasNextDocument = docIt.peek.map(checkUrl(_)).getOrElse(false);
       

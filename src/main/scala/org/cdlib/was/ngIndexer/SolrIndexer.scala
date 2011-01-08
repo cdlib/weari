@@ -2,50 +2,14 @@ package org.cdlib.was.ngIndexer;
 
 import java.io.{File,FileNotFoundException,IOException};
 import org.cdlib.ssconf.Configurator;
+import org.cdlib.was.ngIndexer.SolrProcessor.{ARCNAME_FIELD,
+                                              ID_FIELD,
+                                              JOB_FIELD,
+                                              PROJECT_FIELD,
+                                              SPECIFICATION_FIELD,
+                                              URL_FIELD};
 
 object SolrIndexer {
-  val ARCNAME_FIELD        = "arcname";
-  val BOOST_FIELD          = "boost";
-  val CANONICALURL_FIELD   = "canonicalurl";
-  val CONTENT_FIELD        = "content";
-  val CONTENT_LENGTH_FIELD = "contentLength";
-  val DATE_FIELD           = "date";
-  val DIGEST_FIELD         = "digest";
-  val HOST_FIELD           = "host";
-  val ID_FIELD             = "id";
-  val JOB_FIELD            = "job";
-  val PROJECT_FIELD        = "project";
-  val SERVER_FIELD         = "server";
-  val SITE_FIELD           = "site";
-  val SPECIFICATION_FIELD  = "specification";
-  val TITLE_FIELD          = "title";
-  val TSTAMP_FIELD         = "tstamp";
-  val TYPE_FIELD           = "type";
-  val URLFP_FIELD          = "urlfp";
-  val URL_FIELD            = "url";
-
-  /* fields which have a single value */
-  val SINGLE_VALUED_FIELDS = 
-      List(CANONICALURL_FIELD,
-           CONTENT_FIELD,
-           CONTENT_LENGTH_FIELD,
-           DIGEST_FIELD,
-           HOST_FIELD,
-           ID_FIELD, 
-           SITE_FIELD,
-           TITLE_FIELD,
-           TSTAMP_FIELD,
-           TYPE_FIELD,
-           URLFP_FIELD,
-           URL_FIELD);
-
-  val MULTI_VALUED_FIELDS =
-    List(ARCNAME_FIELD,
-         DATE_FIELD,
-         JOB_FIELD,
-         PROJECT_FIELD,
-         SPECIFICATION_FIELD);
-
   def main (args : Array[String]) {
     val configPath = System.getProperty("org.cdlib.was.ngIndexer.ConfigFile");
     if (configPath == null) {
