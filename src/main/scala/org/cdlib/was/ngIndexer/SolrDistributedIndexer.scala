@@ -11,12 +11,14 @@ import org.apache.solr.common.params.{ModifiableSolrParams,SolrParams};
   *
   * Uses a consistent hash of servers.
   */
-class SolrDistributedServer (serverInit : Seq[Tuple3[String,String,Int]]) {
+class SolrDistributedServer (serverInit : Seq[Tuple3[String,String,Int]],
+                             queueSize : Int = 50,
+                             queueRunners : Int = 5) {
   val ring = new ConsistentHashRing[CommonsHttpSolrServer];
   var servers = scala.collection.mutable.Map[String,CommonsHttpSolrServer]();
 
   for ((id, url, level) <- serverInit) {
-    val server = new StreamingUpdateSolrServer (url, 50, 5);
+    val server = new StreamingUpdateSolrServer (url, queueSize, queueRunners);
     ring.addServer(id, server, level);
     servers += (server.getBaseURL -> server);
   }
