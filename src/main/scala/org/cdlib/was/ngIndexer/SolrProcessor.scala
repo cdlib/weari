@@ -189,15 +189,21 @@ class SolrProcessor {
     }
   }
 
+  def processFile[T](file : File) (func : (ArchiveRecord) => Unit) {
+    if (file.isDirectory) {
+      for (child <- file.listFiles) {
+        processFile(child)(func);
+      }
+    } else if (file.getName.indexOf("arc.gz") != -1) {
+      Utility.eachArc(file, func);
+    }
+  }
+
   /** For each record in a file, call the function.
     */
   def processFileAsDocs (file : File) (func : (SolrInputDocument) => Unit) {
-    if (file.isDirectory) {
-      for (c <- file.listFiles) {
-        processFileAsDocs(c)(func);
-      }
-    } else if (file.getName.indexOf("arc.gz") != -1) {
-      Utility.eachArc(file, (rec)=>record2doc(rec).map(d=>func(d)));
+    processFile(file) { (rec)=>
+      record2doc(rec).map(func);
     }
   }
 
@@ -224,6 +230,14 @@ class SolrProcessor {
       }
     }
     return retval;
+  }
+
+  def removeFieldValue (doc : SolrInputDocument, key : String, value : Any) {
+    val values = doc.getFieldValues(key);
+    doc.removeField(key);
+    for (value <- values.filter(_==value)) {
+      doc.addField(key, value);
+    }
   }
 
   // def updateBoosts (g : RankedWebGraph) = {
