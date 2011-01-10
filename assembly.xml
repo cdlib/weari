@@ -10,6 +10,7 @@
       <includes>
         <include>${project.basedir}/ng-indexer</include>
         <include>${project.basedir}/indexer.conf.example</include>
+        <include>${project.basedir}/schema.xml</include>
       </includes>
     </fileSet>
   </fileSets>
