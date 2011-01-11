@@ -1,20 +1,28 @@
 package org.cdlib.was.ngIndexer;
 
 import java.io.File;
-import java.util.regex.Pattern;
-import org.archive.net.UURIFactory;
-import org.archive.io.ArchiveRecord;
-import org.apache.tika.metadata.Metadata;
-import org.apache.solr.common.{SolrDocument,SolrInputDocument};
-import org.archive.io.arc.ARCRecord;
-import org.apache.tika.parser.{AutoDetectParser,ParseContext,Parser};
-import org.apache.tika.metadata.HttpHeaders;
-import org.xml.sax.ContentHandler;
-import org.apache.solr.client.solrj.SolrQuery;
-import org.cdlib.was.ngIndexer.webgraph.WebGraphContentHandler;
-import scala.collection.JavaConversions.asScalaIterable;
-import java.util.{Collection=>JCollection};
 import java.lang.{Object=>JObject};
+import java.util.regex.Pattern;
+import java.util.{Collection=>JCollection};
+
+import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.common.{SolrDocument,SolrInputDocument};
+
+import org.apache.tika.config.TikaConfig;
+import org.apache.tika.detect.ContainerAwareDetector;
+import org.apache.tika.metadata.HttpHeaders;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.parser.{AutoDetectParser,ParseContext,Parser};
+
+import org.archive.io.ArchiveRecord;
+import org.archive.io.arc.ARCRecord;
+import org.archive.net.UURIFactory;
+
+import org.cdlib.was.ngIndexer.webgraph.WebGraphContentHandler;
+
+import org.xml.sax.ContentHandler;
+
+import scala.collection.JavaConversions.asScalaIterable;
 
 object SolrProcessor {
   val ARCNAME_FIELD        = "arcname";
@@ -133,6 +141,9 @@ class SolrProcessor {
         val indexContentHandler = new NgIndexerContentHandler(rec.getHeader.getLength  >= 1048576);
         val wgContentHandler = new WebGraphContentHandler(url, rec.getHeader.getDate);
         val contentHandler = new MultiContentHander(List[ContentHandler](wgContentHandler, indexContentHandler));
+        val detector = (new TikaConfig).getMimeRepository;
+        val parser = new AutoDetectParser(detector);
+        parseContext.set(classOf[Parser], parser);
 
         tikaMetadata.set(HttpHeaders.CONTENT_LOCATION, url);
         tikaMetadata.set(HttpHeaders.CONTENT_TYPE, contentType);

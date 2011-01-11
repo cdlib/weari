@@ -25,11 +25,17 @@ class WebGraphContentHandler (url : String, date : String)
   
   def endAElement {
     if (inAnchorText) {
-      outlinks += new Outlink(UURIFactory.getInstance(url), 
-                              UURIFactory.getInstance(outlinkTo),
-                              ArchiveUtils.getDate(date),
-                              outlinkText.toString);
-      inAnchorText = false;
+      try {
+        outlinks += new Outlink(UURIFactory.getInstance(url), 
+                                UURIFactory.getInstance(outlinkTo),
+                                ArchiveUtils.getDate(date),
+                                outlinkText.toString);
+        inAnchorText = false;
+      } catch {
+        case ex : org.apache.commons.httpclient.URIException => {
+          /* no big deal, we just got a bad URL */
+        }
+      }
     }
   }
 
