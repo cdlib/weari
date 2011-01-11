@@ -1,16 +1,19 @@
 package org.cdlib.was.ngIndexer.webgraph;
 
-import org.cdlib.was.ngIndexer.{SolrAllDocumentIterable,SolrProcessor,SolrTermIterable,UriUtils};
 import it.unimi.dsi.webgraph._;
 import java.io._;
 import org.apache.solr.client.solrj._;
 import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
 import org.apache.solr.common._;
 import org.archive.net.UURIFactory;
-import scala.collection.mutable.ArrayBuffer;
+import org.cdlib.was.ngIndexer.{SolrAllDocumentIterable,SolrProcessor,SolrTermIterable,UriUtils};
+import org.slf4j.LoggerFactory;
 import scala.collection.JavaConversions.asScalaIterable;
+import scala.collection.mutable.ArrayBuffer;
 
 class SolrWebGraph (url : String) extends WebGraph {
+  val logger = LoggerFactory.getLogger(classOf[SolrWebGraph]);
+
   val server = new CommonsHttpSolrServer(url);
 
   def addLink (link : Outlink) = ();
@@ -46,7 +49,9 @@ class SolrWebGraph (url : String) extends WebGraph {
       ImmutableGraph.store(classOf[BVGraph], isg, basename);
       writeUrls(new File("%s.urls".format(basename)));
     } catch { 
-      case ex: java.lang.IllegalArgumentException => ex.printStackTrace(System.err);
+      case ex: java.lang.IllegalArgumentException => {
+        logger.error("Caught exception storing.",ex);
+      }
     }
   }
 

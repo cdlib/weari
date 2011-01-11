@@ -20,6 +20,8 @@ import org.archive.net.UURIFactory;
 
 import org.cdlib.was.ngIndexer.webgraph.WebGraphContentHandler;
 
+import org.slf4j.LoggerFactory;
+
 import org.xml.sax.ContentHandler;
 
 import scala.collection.JavaConversions.asScalaIterable;
@@ -74,6 +76,9 @@ object SolrProcessor {
   */
 class SolrProcessor {
   import SolrProcessor._;
+
+  val logger = LoggerFactory.getLogger(classOf[SolrProcessor]);
+
   val parser : Parser = new AutoDetectParser();
   /* date formatter for solr */
   val dateFormatter = new java.text.SimpleDateFormat("yyyyMMddHHmmssSSS");
@@ -152,8 +157,7 @@ class SolrProcessor {
             parser.parse(rec, contentHandler, tikaMetadata, parseContext);
           } catch {
             case ex : Throwable => {
-              System.err.println(String.format("Error reading %s", rec.getHeader.getUrl));
-              ex.printStackTrace(System.err);
+              logger.error("Error reading {}", rec.getHeader.getUrl, ex);
             }
           }
           /* finish index */
