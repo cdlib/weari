@@ -1,7 +1,9 @@
 package org.cdlib.was.ngIndexer;
 
-import org.archive.io._;
-import org.archive.io.arc._;
+import org.archive.io.ArchiveRecord;
+import org.archive.io.arc.{ARCRecord,ARCReaderFactory};
+
+import java.io.File;
 
 object Utility {
   def skipHttpHeader (rec : ARCRecord) {
@@ -15,18 +17,29 @@ object Utility {
     }
   }
 
-  def eachArc (arcFile : java.io.File, f: (ArchiveRecord)=>Unit, count : Int) {
-    val reader = ARCReaderFactory.get(arcFile)
-    val it = reader.iterator;
-    for (n <- 0 to count) {
-      if (it.hasNext) 
-        f (it.next);
+  def eachArcRecursive[T](file : File) (func : (ArchiveRecord) => Unit) {
+    if (file.isDirectory) {
+      for (child <- file.listFiles) {
+        eachArcRecursive(child)(func);
+      }
+    } else if (file.getName.indexOf("arc.gz") != -1) {
+      eachArc(file, func);
     }
-    reader.close;
   }
 
   def eachArc (arcFile : java.io.File, f: (ArchiveRecord)=>Unit) {
     val reader = ARCReaderFactory.get(arcFile)
+    val it = reader.iterator;
+    while (it.hasNext) {
+      val next = it.next;
+      f (next);
+      next.close;
+    }
+    reader.close;
+  }
+
+  def eachArc (stream : java.io.InputStream, arcName : String, f: (ArchiveRecord)=>Unit) {
+    val reader = ARCReaderFactory.get(arcName, stream, true);
     val it = reader.iterator;
     while (it.hasNext) {
       val next = it.next;

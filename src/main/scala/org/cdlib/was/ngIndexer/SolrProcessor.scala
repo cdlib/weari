@@ -1,28 +1,27 @@
 package org.cdlib.was.ngIndexer;
 
-import java.io.File;
-import java.lang.{Object=>JObject};
-import java.util.regex.Pattern;
-import java.util.{Collection=>JCollection};
+import java.io.{InputStream, File}
 
-import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.common.{SolrDocument,SolrInputDocument};
+import java.lang.{Object=>JObject}
 
-import org.apache.tika.config.TikaConfig;
-import org.apache.tika.detect.ContainerAwareDetector;
-import org.apache.tika.metadata.HttpHeaders;
-import org.apache.tika.metadata.Metadata;
-import org.apache.tika.parser.{AutoDetectParser,ParseContext,Parser};
+import java.util.{Collection=>JCollection}
+import java.util.regex.Pattern
 
-import org.archive.io.ArchiveRecord;
-import org.archive.io.arc.ARCRecord;
-import org.archive.net.UURIFactory;
+import org.apache.solr.common.{SolrDocument, SolrInputDocument}
 
-import org.cdlib.was.ngIndexer.webgraph.WebGraphContentHandler;
+import org.apache.tika.config.TikaConfig
+import org.apache.tika.metadata.{Metadata, HttpHeaders}
+import org.apache.tika.parser.{AutoDetectParser, ParseContext, Parser}
 
-import org.slf4j.LoggerFactory;
+import org.archive.io.ArchiveRecord
+import org.archive.io.arc.ARCRecord
+import org.archive.net.UURIFactory
 
-import org.xml.sax.ContentHandler;
+import org.cdlib.was.ngIndexer.webgraph.WebGraphContentHandler
+
+import org.slf4j.LoggerFactory
+
+import org.xml.sax.ContentHandler
 
 import scala.collection.JavaConversions.asScalaIterable;
 
@@ -204,24 +203,24 @@ class SolrProcessor {
     }
   }
 
-  def processFile[T](file : File) (func : (ArchiveRecord) => Unit) {
-    if (file.isDirectory) {
-      for (child <- file.listFiles) {
-        processFile(child)(func);
-      }
-    } else if (file.getName.indexOf("arc.gz") != -1) {
-      Utility.eachArc(file, func);
-    }
-  }
-
   /** For each record in a file, call the function.
     */
-  def processFileAsDocs (file : File) (func : (SolrInputDocument) => Unit) {
-    processFile(file) { (rec)=>
+  def processFile (file : File) (func : (SolrInputDocument) => Unit) {
+    Utility.eachArcRecursive(file) { (rec)=>
       record2doc(rec).map(func);
     }
   }
 
+  def processStream (arcName : String, stream : InputStream) 
+                    (func : (SolrInputDocument) => Unit) {
+    Utility.eachArc(stream, arcName, (rec)=>{
+      record2doc(rec).map(func);
+    });
+  }
+
+  /** Merge two documents into one, presuming they have the same id.
+    * Multi-value fields are appended.
+    */
   def mergeDocs (a : SolrInputDocument, b : SolrInputDocument) : SolrInputDocument = {
     val retval = new SolrInputDocument;
     if (a.getFieldValue(ID_FIELD) != b.getFieldValue(ID_FIELD)) {
@@ -247,10 +246,12 @@ class SolrProcessor {
     return retval;
   }
 
+  /** Remove a single value from a document's field.
+    */
   def removeFieldValue (doc : SolrInputDocument, key : String, value : Any) {
-    val values = doc.getFieldValues(key);
+    val oldValues = doc.getFieldValues(key);
     doc.removeField(key);
-    for (value <- values.filter(_==value)) {
+    for (value <- oldValues.filter(_==value)) {
       doc.addField(key, value);
     }
   }

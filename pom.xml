@@ -141,28 +141,20 @@
       <artifactId>scalatest</artifactId>
       <version>1.2</version>
     </dependency>
-
-    <!-- ssconf and depends -->
     <dependency>
-      <groupId>org.clapper</groupId>
-      <artifactId>classutil_2.8.1</artifactId>
-      <version>0.3.2</version>
+      <groupId>org.apache.zookeeper</groupId>
+      <artifactId>zookeeper</artifactId>
+      <version>3.3.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.zookeeper</groupId>
+      <artifactId>zookeeper-recipes-queue</artifactId>
+      <version>3.3.1-CDL</version>
     </dependency>
     <dependency>
       <groupId>org.cdlib</groupId>
       <artifactId>ssconf</artifactId>
       <version>0.1-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-compiler</artifactId>
-      <version>2.8.1</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-simple</artifactId>
-      <version>1.5.2</version>
     </dependency>
   </dependencies>
 
