@@ -8,17 +8,23 @@ import org.cdlib.ssconf.Configurator;
 
 import sun.misc.{Signal, SignalHandler};
 
+trait QueueItemHandler {
+  def handle (item : Item) : Unit;
+}
+
+trait QueueItemHandlerFactory {
+  def mkHandler : QueueItemHandler;
+}
+
 /** Generic work queue processor
  */
-abstract class QueueProcessor (zooKeeperHosts : String, path : String, workers : Int) {
+class QueueProcessor (zooKeeperHosts : String, path : String, workers : Int, handlerFactory : QueueItemHandlerFactory) {
   var finished = false;
   var zookeeper = new ZooKeeper(zooKeeperHosts, 10000, 
                                 new DistributedQueue.Ignorer());
   val q = new DistributedQueue(zookeeper, path, null);
 
-  def handler (item : Item) : Unit;
-
-  class Worker extends Thread {
+  class Worker (handler : QueueItemHandler) extends Thread {    
     override def run {
       while (!finished) {
         try {
@@ -26,7 +32,7 @@ abstract class QueueProcessor (zooKeeperHosts : String, path : String, workers :
           if (next == null) {
             Thread.sleep(100);
           } else {
-            handler(next);
+            handler.handle(next);
           }
         } catch {
           case ex : NoSuchElementException => ();
@@ -72,9 +78,8 @@ abstract class QueueProcessor (zooKeeperHosts : String, path : String, workers :
   }
 
   def start {
-    val threads = for (n <- 1 to workers) {
-      (new Worker).start;
-    }
+    for (n <- 1 to workers)
+      (new Worker(handlerFactory.mkHandler)).start;
     (new Cleanup).start;
     (new Reconnect).start;
   }
