@@ -20,6 +20,7 @@ class SolrIndexer(config : Config) {
 
   def index (stream : InputStream, arcName : String, 
              job : String, specification : String, project : String) {
+    var counter = 0;
     processor.processStream(arcName, stream) { (doc) =>
       val url = doc.getFieldValue(URL_FIELD).asInstanceOf[String];
       if (!url.startsWith("filedesc:") && !url.startsWith("dns:")) {
@@ -37,13 +38,18 @@ class SolrIndexer(config : Config) {
             server.add(mergedDoc);
           }
         }
+        counter = counter + 1;
+        if (counter > 10) {
+          server.commit;
+          counter = 0;
+        }
       }
     }
-    server.commit;
   }
 
   def delete (file : File, job : String, specification : String, 
               project : String) {
+    var counter = 0;
     Utility.eachArc(file, { (rec) =>
       val id = processor.record2id(rec);
       server.getById(id) match {
@@ -57,10 +63,14 @@ class SolrIndexer(config : Config) {
                                      specification);
           server.deleteById(id);
           server.add(inputdoc);
+          counter = counter + 1;
+          if (counter > 10) {
+            server.commit;
+            counter = 0;
+          }
         }
       }
     });
-    server.commit;
   }
 }
 
