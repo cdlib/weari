@@ -9,25 +9,23 @@ import org.cdlib.was.ngIndexer.SolrProcessor.{ARCNAME_FIELD,
                                               SPECIFICATION_FIELD,
                                               URL_FIELD};
 
+/** For updating a solr index
+  */
 class SolrIndexer(config : Config) {
   val processor = new SolrProcessor;
   val server = new SolrDistributedServer(config.indexers());    
 
-  def index (file : File, job : String, specification : String, 
-             project : String) {
-    index(new FileInputStream(file), file.getName, job, specification, project);
+  /** Index an ARC file. */
+  def index (file : File, extraFields : Map[String, String]) {
+    index(new FileInputStream(file), file.getName, extraFields);
   }
 
-  def index (stream : InputStream, arcName : String, 
-             job : String, specification : String, project : String) {
+  def index (stream : InputStream, arcName : String, extraFields : Map[String, String]) {
     var counter = 0;
     processor.processStream(arcName, stream) { (doc) =>
       val url = doc.getFieldValue(URL_FIELD).asInstanceOf[String];
       if (!url.startsWith("filedesc:") && !url.startsWith("dns:")) {
-        doc.setField(ARCNAME_FIELD, arcName);
-        doc.setField(JOB_FIELD, job);
-        doc.setField(SPECIFICATION_FIELD, specification);
-        doc.setField(PROJECT_FIELD, project);
+        for ((k,v) <- extraFields) { doc.setField(k, v); }
         val id = doc.getField(ID_FIELD).getValue.asInstanceOf[String];
         server.getById(id) match {
           case None => server.add(doc);
@@ -47,8 +45,7 @@ class SolrIndexer(config : Config) {
     }
   }
 
-  def delete (file : File, job : String, specification : String, 
-              project : String) {
+  def delete (file : File, removeFields : Map[String,String]) {
     var counter = 0;
     Utility.eachArc(file, { (rec) =>
       val id = processor.record2id(rec);
@@ -57,10 +54,9 @@ class SolrIndexer(config : Config) {
         case Some(olddoc) => {
           val inputdoc = processor.doc2InputDoc(olddoc);
           processor.removeFieldValue(inputdoc, ARCNAME_FIELD, file.getName);
-          processor.removeFieldValue(inputdoc, JOB_FIELD, job);
-          processor.removeFieldValue(inputdoc, PROJECT_FIELD, project);
-          processor.removeFieldValue(inputdoc, SPECIFICATION_FIELD, 
-                                     specification);
+          for ((k,v) <- removeFields) {
+            processor.removeFieldValue(inputdoc, k, v);
+          }
           server.deleteById(id);
           server.add(inputdoc);
           counter = counter + 1;
@@ -75,15 +71,17 @@ class SolrIndexer(config : Config) {
 }
 
 object SolrIndexer {
-  def main (args : Array[String]) {
+  def loadConfigOrExit : Config = {
     val configPath = System.getProperty("org.cdlib.was.ngIndexer.ConfigFile");
     if (configPath == null) {
       System.err.println("Please define org.cdlib.was.ngIndexer.ConfigFile!");
       System.exit(1);
     }
-    val configurator = new Configurator;
-    val config : Config = 
-      configurator.loadSimple(configPath, classOf[Config]);
+    return (new Configurator).loadSimple(configPath, classOf[Config]);
+  }
+
+  def main (args : Array[String]) {
+    val config = loadConfigOrExit;
     val indexer = new SolrIndexer(config);
 
     if (args.size < 3) {
@@ -98,12 +96,16 @@ object SolrIndexer {
         command match {
           case "delete" => {
             for (path <- args.drop(4)) {
-              indexer.delete(new File(path), job, specification, project);
+              indexer.delete(new File(path), Map(JOB_FIELD->job,
+                                                 SPECIFICATION_FIELD->specification,
+                                                 PROJECT_FIELD->project));
             }
           }
           case "index" => {
             for (path <- args.drop(4)) {
-              indexer.index(new File(path), job, specification, project);
+              indexer.index(new File(path), Map(JOB_FIELD -> job, 
+                                                 SPECIFICATION_FIELD -> specification, 
+                                                 PROJECT_FIELD -> project))
             }
           }
           case _ => {

@@ -6,19 +6,17 @@ import org.apache.zookeeper.recipes.queue.Item
 
 import org.cdlib.ssconf.Configurator
 
+import org.cdlib.was.ngIndexer.SolrProcessor.{JOB_FIELD,
+                                              PROJECT_FIELD,
+                                              SPECIFICATION_FIELD};
+
 import sun.misc.{Signal, SignalHandler};
 
 object Daemon {
   val httpClient = new SimpleHttpClient;
     
   /* load configuration */
-  val configPath = System.getProperty("org.cdlib.was.ngIndexer.ConfigFile");
-  if (configPath == null) {
-    System.err.println("Please define org.cdlib.was.ngIndexer.ConfigFile!");
-    System.exit(1);
-  }
-  val config : Config = 
-    (new Configurator).loadSimple(configPath, classOf[Config]);
+  val config = SolrIndexer.loadConfigOrExit;
   
   /* for work queue */
   val zkHosts = config.zooKeeperHosts();
@@ -40,7 +38,9 @@ object Daemon {
               System.err.println("Fetching %s".format(uri));
               httpClient.getUri(uri) { (stream)=>
                 System.err.println("Indexing %s".format(uri));
-                indexer.index(stream, arcName, job, specification, project);
+                indexer.index(stream, arcName, Map(JOB_FIELD->job,
+                                                   SPECIFICATION_FIELD->specification, 
+                                                   PROJECT_FIELD->project));
               }
             }
           }
