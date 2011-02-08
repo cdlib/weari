@@ -130,7 +130,7 @@ class SolrProcessor {
   val MIN_BOOST = 0.1f;
   val MAX_BOOST = 10.0f;
 
-  /** Cue up a record to it's start, & return the content type. */
+  /** Cue up a record to its start, & return the content type. */
   def readyRecord (archiveRecord : ArchiveRecord) : Option[String] = {
     archiveRecord match {
       case rec : WARCRecord => {
