@@ -154,11 +154,11 @@ class SolrProcessor {
   def record2doc(rec : ArchiveRecord) : Option[SolrInputDocument] = {
     val contentType = readyRecord(rec);
     if (contentType.isEmpty) { rec.close; return None; }
-    val tikaMetadata = new Metadata();
-    val parseContext = new ParseContext();
+    val tikaMetadata = new Metadata;
+    val parseContext = new ParseContext;
     val recHeader = rec.getHeader;
     val url = recHeader.getUrl;
-    val doc = new SolrInputDocument();
+    val doc = new SolrInputDocument;
     val indexContentHandler = new NgIndexerContentHandler(rec.getHeader.getLength  >= 1048576);
     val wgContentHandler = new WebGraphContentHandler(url, rec.getHeader.getDate);
     val contentHandler = new MultiContentHander(List[ContentHandler](wgContentHandler, indexContentHandler));
@@ -221,16 +221,12 @@ class SolrProcessor {
   /** For each record in a file, call the function.
     */
   def processFile (file : File) (func : (SolrInputDocument) => Unit) {
-    Utility.eachArc(file, { (rec)=>
-      record2doc(rec).map(func);
-    });
+    Utility.eachArc(file, record2doc(_).map(func));
   }
 
   def processStream (arcName : String, stream : InputStream) 
                     (func : (SolrInputDocument) => Unit) {
-    Utility.eachArc(stream, arcName, (rec)=>{
-      record2doc(rec).map(func);
-    });
+    Utility.eachArc(stream, arcName, record2doc(_).map(func));
   }
 
   /** Merge two documents into one, presuming they have the same id.
