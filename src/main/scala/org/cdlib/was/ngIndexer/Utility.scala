@@ -31,16 +31,6 @@ object Utility {
     }
   }
 
-  def eachArcRecursive[T](file : File) (func : (ArchiveRecord) => Unit) {
-    if (file.isDirectory) {
-      for (child <- file.listFiles) {
-        eachArcRecursive(child)(func);
-      }
-    } else if (file.getName.indexOf("arc.gz") != -1) {
-      eachArc(file, func);
-    }
-  }
-
   def eachArc (arcFile : java.io.File, f: (ArchiveRecord)=>Unit) {
     val reader = ArchiveReaderFactory.get(arcFile)
     val it = reader.iterator;

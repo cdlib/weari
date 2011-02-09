@@ -221,9 +221,9 @@ class SolrProcessor {
   /** For each record in a file, call the function.
     */
   def processFile (file : File) (func : (SolrInputDocument) => Unit) {
-    Utility.eachArcRecursive(file) { (rec)=>
+    Utility.eachArc(file, { (rec)=>
       record2doc(rec).map(func);
-    }
+    });
   }
 
   def processStream (arcName : String, stream : InputStream) 
