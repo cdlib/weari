@@ -153,7 +153,7 @@ class SolrProcessor {
     */
   def record2doc(rec : ArchiveRecord) : Option[SolrInputDocument] = {
     val contentType = readyRecord(rec);
-    if (contentType.isEmpty) { return None; }
+    if (contentType.isEmpty) { rec.close; return None; }
     val tikaMetadata = new Metadata();
     val parseContext = new ParseContext();
     val recHeader = rec.getHeader;
