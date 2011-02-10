@@ -1,5 +1,7 @@
 package org.cdlib.was.ngIndexer;
 
+import java.io.File;
+
 import java.net.URI
 
 import org.apache.zookeeper.recipes.queue.Item
@@ -9,6 +11,8 @@ import org.cdlib.ssconf.Configurator
 import org.cdlib.was.ngIndexer.SolrProcessor.{JOB_FIELD,
                                               PROJECT_FIELD,
                                               SPECIFICATION_FIELD};
+
+import scala.util.matching.Regex;
 
 import sun.misc.{Signal, SignalHandler};
 
@@ -23,19 +27,19 @@ object Daemon {
   val zkPath =  config.zooKeeperPath();
   val threadCount = config.threadCount();
 
+  val ArcRE = new Regex(""".*?([A-Za-z0-9\.-]+arc.gz).*""");
+
   val handlerFactory = new QueueItemHandlerFactory {
-    def mkHandler : QueueItemHandler = {
-      val indexer = new SolrIndexer(config);
+    val indexer = new SolrIndexer(config);
     
+    def mkHandler : QueueItemHandler = {
       new QueueItemHandler {
         def handle (item : Item) {
           val cmd = new String(item.getData(), "UTF-8").split(" ");
-          System.err.println("got command: %s".format(cmd.toList.toString));
           cmd.toList match {
             case List("INDEX", uriString, job, specification, project) => {
               val uri = new URI(uriString);
-              val arcName = uri.getPath.split("/").last;
-              System.err.println("Fetching %s".format(uri));
+              val ArcRE(arcName) = uriString;
               httpClient.getUri(uri) { (stream)=>
                 System.err.println("Indexing %s".format(uri));
                 indexer.index(stream, arcName, Map(JOB_FIELD->job,
@@ -54,7 +58,7 @@ object Daemon {
   /* build a queue processor */
 
   object handler extends SignalHandler {
-    def handle (signal : Signal) { queueProcessor.finish }
+    def handle (signal : Signal) { queueProcessor.finish; }
   }
 
   def main (args : Array[String]) {   
