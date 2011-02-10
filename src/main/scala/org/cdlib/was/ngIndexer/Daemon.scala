@@ -65,6 +65,7 @@ object Daemon {
 
   def main (args : Array[String]) {   
     Signal.handle(new Signal("TERM"), handler);
+    Signal.handle(new Signal("INT"), handler);
     queueProcessor.start;
   }
 }
