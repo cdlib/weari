@@ -1,6 +1,6 @@
 package org.cdlib.was.ngIndexer;
 
-import java.io.{File,InputStream,FileOutputStream,OutputStream};
+import java.io.{BufferedInputStream,File,InputStream,FileOutputStream,OutputStream};
 
 import org.apache.http.impl.io.AbstractSessionInputBuffer;
 import org.apache.http.message.ParserCursor;
@@ -16,8 +16,6 @@ import org.archive.io.arc.ARCRecord;
 import org.archive.io.warc.WARCRecord;
 
 import org.apache.http.message.BasicLineParser;
-
-import java.io.{BufferedInputStream,BufferedReader,File,InputStream,InputStreamReader};
 
 import scala.util.matching.Regex;
 
@@ -97,11 +95,23 @@ object Utility {
     reader.close;
   }
 
-  def readLine (br : BufferedReader) : CharArrayBuffer = {
+  def readLine (is : InputStream) : CharArrayBuffer = {
     val buff = new CharArrayBuffer(1024);
-    val line = br.readLine;
-    val arr = line.toCharArray;
-    buff.append(arr, 0, arr.length);
+    var b : Int = 0;
+    b = is.read;
+    while (b != -1) {
+      if (b == 13) {
+        // CR - now read LF
+        is.read;
+        return buff;
+      } else if (b == 10) {
+        // LF
+        return buff;
+      } else {
+        buff.append(b.asInstanceOf[Char]);
+      }
+      b = is.read;
+    }
     return buff;
   }
 
@@ -119,29 +129,29 @@ object Utility {
     return retval;
   }
 
-  def readHeaderLines (br : BufferedReader) : Seq[CharArrayBuffer] = {
+  def readHeaderLines (is : InputStream) : Seq[CharArrayBuffer] = {
     var lines = List[CharArrayBuffer]();
-    var line = readLine(br);
+    var line = readLine(is);
     while (!line.isEmpty) {
       lines = line :: lines;
-      line = readLine(br);
+      line = readLine(is);
     }
     return joinHeaderLines(lines);
   }
 
   def parseHeaders (rec : WARCRecord) : Option[Pair[Int,Map[String,Header]]] = {
     val header = rec.getHeader();
-    val br = new BufferedReader(new InputStreamReader(rec, "UTF-8"));
-    val firstLine = readLine(br);
+    val firstLine = readLine(rec);
     val lineParser = new BasicLineParser;
     try {
       val statusLine = lineParser.parseStatusLine(firstLine, new ParserCursor(0, firstLine.length - 1));
-      val headers = readHeaderLines(br).map(lineParser.parseHeader(_));
+      val headers = readHeaderLines(rec).map(lineParser.parseHeader(_));
       var headerMap = Map[String,Header]();
       headerMap ++= headers.map { (h)=> h.getName.toLowerCase->h };
       return Some((statusLine.getStatusCode, headerMap));
     } catch {
       case ex : ParseException => {
+        ex.printStackTrace(System.err);
         return None;
       }
     }

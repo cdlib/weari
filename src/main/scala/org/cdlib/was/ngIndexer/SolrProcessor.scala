@@ -135,18 +135,22 @@ class SolrProcessor {
   def readyRecord (archiveRecord : ArchiveRecord) : Option[String] = {
     archiveRecord match {
       case rec : WARCRecord => {
-        Utility.parseHeaders(rec) match {
-          case None => None;
-          case Some((responseCode, headers)) =>
-            headers.get(HttpHeaders.CONTENT_TYPE.toLowerCase) match {
-              case None => Some("application/octet-stream");
-              case Some(header) => Some(header.getValue);
-             }
+        if (rec.getHeader.getMimetype == "application/http; msgtype=response") {
+          Utility.parseHeaders(rec) match {
+            case None => None;
+            case Some((responseCode, headers)) =>
+              headers.get(HttpHeaders.CONTENT_TYPE.toLowerCase) match {
+                case None => Some("application/octet-stream");
+                case Some(header) => Some(header.getValue);
+              }
+          }
+        } else {
+          None;
         }
       }
       case rec : ARCRecord => {
         Utility.skipHttpHeader(rec);
-        return Some(rec.getMetaData.getMimetype.toLowerCase);
+        return Some(rec.getHeader.getMimetype.toLowerCase);
       }
     }
   }
