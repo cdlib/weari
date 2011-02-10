@@ -43,9 +43,14 @@ object Daemon {
               val ArcRE(arcName) = uriString;
               httpClient.getUri(uri) { (stream)=>
                 System.err.println("Indexing %s".format(uri));
-                return indexer.index(stream, arcName, Map(JOB_FIELD->job,
-                                                          SPECIFICATION_FIELD->specification, 
-                                                          PROJECT_FIELD->project));
+                val tmpDir = new File(System.getProperty("java.io.tmpdir"));
+                val tmpFile = new File(tmpDir, arcName);
+                Utility.readStreamIntoFile(tmpFile, stream);
+                val retval = indexer.index(tmpFile, Map(JOB_FIELD->job,
+                                                        SPECIFICATION_FIELD->specification, 
+                                                        PROJECT_FIELD->project));
+                tmpFile.delete;
+                return retval;
               }
             }
           }

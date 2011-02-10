@@ -21,8 +21,8 @@ class SolrIndexer(config : Config) {
   val logger = LoggerFactory.getLogger(classOf[SolrIndexer]);
 
   /** Index an ARC file. */
-  def index (file : File, extraFields : Map[String, String]) {
-    index(new FileInputStream(file), file.getName, extraFields);
+  def index (file : File, extraFields : Map[String, String]) : Boolean = {
+    return index(new FileInputStream(file), file.getName, extraFields);
   }
 
   def index (stream : InputStream, arcName : String, extraFields : Map[String, String]) : Boolean = {

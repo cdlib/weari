@@ -1,5 +1,7 @@
 package org.cdlib.was.ngIndexer;
 
+import java.io.{File,InputStream,FileOutputStream,OutputStream};
+
 import org.apache.http.impl.io.AbstractSessionInputBuffer;
 import org.apache.http.message.ParserCursor;
 import org.apache.http.Header;
@@ -20,6 +22,48 @@ import java.io.{BufferedInputStream,BufferedReader,File,InputStream,InputStreamR
 import scala.util.matching.Regex;
 
 object Utility {
+  /**
+   *
+   * Read a set of bytes from an input stream and pass them on to a function.
+   *
+   * @param stream The InputStream to return from.
+   * @param f a function taking two arguments, an Int and Array[byte]. Used for side effects.
+   * @returns Unit
+   * @author egh
+   */
+  def readBytes (stream : InputStream, f : (Int, Array[Byte]) => Unit) : Unit = {
+    var buffer = new Array[Byte](1024);
+    var bytesRead = stream.read(buffer);
+    while (bytesRead != -1)  {
+      f (bytesRead, buffer);
+      bytesRead = stream.read(buffer);
+    }
+  }
+
+  /**
+   *
+   * Open an OutputStream on a File, ensuring that the stream is closed.
+   *
+   * @param file The File to open.
+   * @param f a function taking two arguments, an Int and Array[byte]. Used for side effects.
+   * @returns Unit
+   * @author egh
+   */
+  def withFileOutputStream[A] (file : File, f : OutputStream => A) : A = {
+    val out = new FileOutputStream(file);
+    try {
+      f (out);
+    } finally {
+      out.close();
+    }
+  }
+
+  def readStreamIntoFile (file : File, in : InputStream) = {
+    withFileOutputStream (file, (out) =>
+      readBytes(in, (bytesRead, buffer) =>
+        out.write(buffer, 0, bytesRead)));
+  }
+
   def skipHttpHeader (rec : ARCRecord) {
     val contentBegin = rec.getMetaData.getContentBegin;
     var totalbytesread = 0;
