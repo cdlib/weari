@@ -120,10 +120,11 @@ class SolrProcessor {
       idoc.addField(fieldName, doc.getFirstValue(fieldName));
     }
     for (fieldName <- MULTI_VALUED_FIELDS) {
-      for (value <- doc.getFieldValues(fieldName)) {
-        idoc.addField(fieldName, value);
+      val values = doc.getFieldValues(fieldName);
+      if (values != null) {
+        for (value <- values) { idoc.addField(fieldName, value); }
       }
-    }    
+    }
     return idoc;
   }
 
@@ -165,7 +166,7 @@ class SolrProcessor {
     val detector = (new TikaConfig).getMimeRepository;
     val parser = new AutoDetectParser(detector);
     parseContext.set(classOf[Parser], parser);
-
+    System.err.println("Processing %s".format(url));
     tikaMetadata.set(HttpHeaders.CONTENT_LOCATION, url);
     tikaMetadata.set(HttpHeaders.CONTENT_TYPE, contentType.get);
     try {
@@ -173,7 +174,7 @@ class SolrProcessor {
         parser.parse(rec, contentHandler, tikaMetadata, parseContext);
       } catch {
         case ex : Throwable => {
-          logger.error("Error reading {}", rec.getHeader.getUrl, ex);
+          logger.error("Error reading {}: {}", rec.getHeader.getUrl, ex);
         }
       }
       /* finish index */
