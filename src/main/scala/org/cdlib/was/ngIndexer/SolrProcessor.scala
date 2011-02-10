@@ -1,6 +1,6 @@
 package org.cdlib.was.ngIndexer;
 
-import java.io.{InputStream, File}
+import java.io.{BufferedInputStream,InputStream, File}
 
 import java.lang.{Object=>JObject}
 
@@ -170,7 +170,8 @@ class SolrProcessor {
     tikaMetadata.set(HttpHeaders.CONTENT_LOCATION, url);
     tikaMetadata.set(HttpHeaders.CONTENT_TYPE, contentType.get);
     try {
-      parser.parse(rec, contentHandler, tikaMetadata, parseContext);
+      val bis = new BufferedInputStream(rec);
+      parser.parse(bis, contentHandler, tikaMetadata, parseContext);
     } catch {
       case ex : Throwable => {
         logger.error("Error reading {}: {}", rec.getHeader.getUrl, ex);
