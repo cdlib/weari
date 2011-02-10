@@ -136,10 +136,12 @@ class SolrProcessor {
     archiveRecord match {
       case rec : WARCRecord => {
         Utility.parseHeaders(rec) match {
-          case None => return None;
-          case Some((responseCode, headers)) => {
-            return Some((headers.get(HttpHeaders.CONTENT_TYPE.toLowerCase).get.getValue));
-          }
+          case None => None;
+          case Some((responseCode, headers)) =>
+            headers.get(HttpHeaders.CONTENT_TYPE.toLowerCase) match {
+              case None => Some("application/octet-stream");
+              case Some(header) => Some(header.getValue);
+             }
         }
       }
       case rec : ARCRecord => {
@@ -149,11 +151,11 @@ class SolrProcessor {
     }
   }
 
-  /** Take an archive record & return a solr document.
+  /** Take an archive record & return a solr document, or none if we cannot parse.
     *
     */
   def record2doc(rec : ArchiveRecord) : Option[SolrInputDocument] = {
-    val contentType = readyRecord(rec);
+    val contentType =  readyRecord(rec); 
     if (contentType.isEmpty) { rec.close; return None; }
     val tikaMetadata = new Metadata;
     val parseContext = new ParseContext;
