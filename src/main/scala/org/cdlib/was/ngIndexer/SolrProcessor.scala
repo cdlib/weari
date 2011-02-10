@@ -170,43 +170,38 @@ class SolrProcessor {
     tikaMetadata.set(HttpHeaders.CONTENT_LOCATION, url);
     tikaMetadata.set(HttpHeaders.CONTENT_TYPE, contentType.get);
     try {
-      try {
-        parser.parse(rec, contentHandler, tikaMetadata, parseContext);
-      } catch {
-        case ex : Throwable => {
-          logger.error("Error reading {}: {}", rec.getHeader.getUrl, ex);
-        }
-      }
-      /* finish index */
-      rec.close;
-      indexContentHandler.contentString.map(str=>doc.addField(CONTENT_FIELD, str));
-
-      val title = tikaMetadata.get("title") match {
-        case s : String => s
-        case null => ""
-      }
-      updateDocBoost(doc, 1.0f);
-      updateDocUrlDigest(doc, url, rec.getDigestStr);
-      doc.addField(DATE_FIELD, recHeader.getDate.toLowerCase, 1.0f);
-      doc.addField(TYPE_FIELD, tikaMetadata.get(HttpHeaders.CONTENT_TYPE), 1.0f);
-      doc.addField(TITLE_FIELD, title, 1.0f);
-      doc.addField(CONTENT_LENGTH_FIELD, recHeader.getLength, 1.0f);
-      /* finish webgraph */
-      if (webGraphTypeRE.matcher(tikaMetadata.get(HttpHeaders.CONTENT_TYPE)).matches) {
-        val outlinks = wgContentHandler.outlinks;
-        if (outlinks.size > 0) {
-          val outlinkFps = for (l <- outlinks) 
-                           yield UriUtils.fingerprint(l.to);
-          for (fp <- outlinkFps.toList.distinct.sortWith((a,b)=>(a < b))) {
-            doc.addField("outlinks", fp);
-          }
-        }
-      }
-      return Some(doc);
+      parser.parse(rec, contentHandler, tikaMetadata, parseContext);
     } catch {
-      case ex : Exception => ex.printStackTrace(System.err);
-      return None;
+      case ex : Throwable => {
+        logger.error("Error reading {}: {}", rec.getHeader.getUrl, ex);
+      }
     }
+    /* finish index */
+    rec.close;
+    indexContentHandler.contentString.map(str=>doc.addField(CONTENT_FIELD, str));
+    
+    val title = tikaMetadata.get("title") match {
+      case s : String => s
+      case null => ""
+    }
+    updateDocBoost(doc, 1.0f);
+    updateDocUrlDigest(doc, url, rec.getDigestStr);
+    doc.addField(DATE_FIELD, recHeader.getDate.toLowerCase, 1.0f);
+    doc.addField(TYPE_FIELD, tikaMetadata.get(HttpHeaders.CONTENT_TYPE), 1.0f);
+    doc.addField(TITLE_FIELD, title, 1.0f);
+    doc.addField(CONTENT_LENGTH_FIELD, recHeader.getLength, 1.0f);
+    /* finish webgraph */
+    if (webGraphTypeRE.matcher(tikaMetadata.get(HttpHeaders.CONTENT_TYPE)).matches) {
+      val outlinks = wgContentHandler.outlinks;
+      if (outlinks.size > 0) {
+        val outlinkFps = for (l <- outlinks) 
+                         yield UriUtils.fingerprint(l.to);
+        for (fp <- outlinkFps.toList.distinct.sortWith((a,b)=>(a < b))) {
+          doc.addField("outlinks", fp);
+        }
+      }
+    }
+    return Some(doc);
   }
 
   def record2id (archiveRecord : ArchiveRecord) : String = {

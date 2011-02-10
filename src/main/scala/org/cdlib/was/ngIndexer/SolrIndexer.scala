@@ -1,7 +1,9 @@
 package org.cdlib.was.ngIndexer;
 
 import java.io.{File,FileInputStream,FileNotFoundException,InputStream,IOException};
+
 import org.cdlib.ssconf.Configurator;
+
 import org.cdlib.was.ngIndexer.SolrProcessor.{ARCNAME_FIELD,
                                               ID_FIELD,
                                               JOB_FIELD,
@@ -9,40 +11,52 @@ import org.cdlib.was.ngIndexer.SolrProcessor.{ARCNAME_FIELD,
                                               SPECIFICATION_FIELD,
                                               URL_FIELD};
 
+import org.slf4j.LoggerFactory
+
 /** For updating a solr index
   */
 class SolrIndexer(config : Config) {
   val processor = new SolrProcessor;
+
+  val logger = LoggerFactory.getLogger(classOf[SolrIndexer]);
 
   /** Index an ARC file. */
   def index (file : File, extraFields : Map[String, String]) {
     index(new FileInputStream(file), file.getName, extraFields);
   }
 
-  def index (stream : InputStream, arcName : String, extraFields : Map[String, String]) {
+  def index (stream : InputStream, arcName : String, extraFields : Map[String, String]) : Boolean = {
     val server = new SolrDistributedServer(config.indexers());    
     var counter = 0;
-    processor.processStream(arcName, stream) { (doc) =>
-      val url = doc.getFieldValue(URL_FIELD).asInstanceOf[String];
-      if (!url.startsWith("filedesc:") && !url.startsWith("dns:")) {
-        for ((k,v) <- extraFields) { doc.setField(k, v); }
-        val id = doc.getField(ID_FIELD).getValue.asInstanceOf[String];
-        server.getById(id) match {
-          case None => server.add(doc);
-          case Some(olddoc) => {
-            val oldinputdoc = processor.doc2InputDoc(olddoc);
-            val mergedDoc = processor.mergeDocs(oldinputdoc, doc);
-            server.deleteById(id);
-            server.add(mergedDoc);
+    try {
+      processor.processStream(arcName, stream) { (doc) =>
+        val url = doc.getFieldValue(URL_FIELD).asInstanceOf[String];
+        if (!url.startsWith("filedesc:") && !url.startsWith("dns:")) {
+          for ((k,v) <- extraFields) { doc.setField(k, v); }
+          val id = doc.getField(ID_FIELD).getValue.asInstanceOf[String];
+          server.getById(id) match {
+            case None => server.add(doc);
+            case Some(olddoc) => {
+              val oldinputdoc = processor.doc2InputDoc(olddoc);
+              val mergedDoc = processor.mergeDocs(oldinputdoc, doc);
+              server.deleteById(id);
+              server.add(mergedDoc);
+            }
+          }
+          counter = counter + 1;
+          if (counter > 10) {
+            server.commit;
+            counter = 0;
           }
         }
-        counter = counter + 1;
-        if (counter > 10) {
-          server.commit;
-          counter = 0;
-        }
+      }
+    } catch {
+      case ex : Exception => {
+        logger.error("Exception while generating doc from arc ({}): {}.", arcName, ex);
+        return false;
       }
     }
+    return true;
   }
 
   def delete (file : File, removeFields : Map[String,String]) {

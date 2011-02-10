@@ -43,10 +43,9 @@ object Daemon {
               val ArcRE(arcName) = uriString;
               httpClient.getUri(uri) { (stream)=>
                 System.err.println("Indexing %s".format(uri));
-                indexer.index(stream, arcName, Map(JOB_FIELD->job,
-                                                   SPECIFICATION_FIELD->specification, 
-                                                   PROJECT_FIELD->project));
-                return true;
+                return indexer.index(stream, arcName, Map(JOB_FIELD->job,
+                                                          SPECIFICATION_FIELD->specification, 
+                                                          PROJECT_FIELD->project));
               }
             }
           }
