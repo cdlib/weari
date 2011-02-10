@@ -31,10 +31,11 @@ object Daemon {
 
   val handlerFactory = new QueueItemHandlerFactory {
     val indexer = new SolrIndexer(config);
+
     
     def mkHandler : QueueItemHandler = {
       new QueueItemHandler {
-        def handle (item : Item) {
+        def handle (item : Item) : Boolean = {
           val cmd = new String(item.getData(), "UTF-8").split(" ");
           cmd.toList match {
             case List("INDEX", uriString, job, specification, project) => {
@@ -45,6 +46,7 @@ object Daemon {
                 indexer.index(stream, arcName, Map(JOB_FIELD->job,
                                                    SPECIFICATION_FIELD->specification, 
                                                    PROJECT_FIELD->project));
+                return true;
               }
             }
           }

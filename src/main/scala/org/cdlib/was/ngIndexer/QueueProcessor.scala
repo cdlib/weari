@@ -1,15 +1,18 @@
 package org.cdlib.was.ngIndexer;
 
+import java.util.NoSuchElementException;
 import org.apache.zookeeper.recipes.queue.DistributedQueue;
 import org.apache.zookeeper.recipes.queue.Item;
 import org.apache.zookeeper.{KeeperException, ZooKeeper};
 
 import org.cdlib.ssconf.Configurator;
 
+import org.slf4j.LoggerFactory
+
 import sun.misc.{Signal, SignalHandler};
 
 trait QueueItemHandler {
-  def handle (item : Item) : Unit;
+  def handle (item : Item) : Boolean;
 }
 
 trait QueueItemHandlerFactory {
@@ -23,16 +26,22 @@ class QueueProcessor (zooKeeperHosts : String, path : String, workers : Int, han
   var zookeeper = new ZooKeeper(zooKeeperHosts, 10000, 
                                 new DistributedQueue.Ignorer());
   val q = new DistributedQueue(zookeeper, path, null);
+  val logger = LoggerFactory.getLogger(classOf[QueueProcessor]);
 
   class Worker (handler : QueueItemHandler) extends Thread {    
     override def run {
       while (!finished) {
         try {
-          val next = q.consume();
+          val next = q.consume;
           if (next == null) {
             Thread.sleep(100);
           } else {
-            handler.handle(next);
+            if (handler.handle(next)) {
+              /* if it returns true, consider this finished */
+              q.complete(next.getId);
+            } else {
+              q.requeue(next.getId);
+            }
           }
         } catch {
           case ex : NoSuchElementException => ();
@@ -66,8 +75,9 @@ class QueueProcessor (zooKeeperHosts : String, path : String, workers : Int, han
             try { 
               q.cleanup(Item.COMPLETED);
             } catch {
+              case ex : NoSuchElementException => ();
               case ex : Exception => 
-                System.err.println("Caught exception cleaning up.");
+                logger.error("Caught exception {} cleaning up.", ex);
             }
           }
           if (finished) return;
