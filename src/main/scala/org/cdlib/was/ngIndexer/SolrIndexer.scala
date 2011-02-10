@@ -13,7 +13,6 @@ import org.cdlib.was.ngIndexer.SolrProcessor.{ARCNAME_FIELD,
   */
 class SolrIndexer(config : Config) {
   val processor = new SolrProcessor;
-  val server = new SolrDistributedServer(config.indexers());    
 
   /** Index an ARC file. */
   def index (file : File, extraFields : Map[String, String]) {
@@ -21,6 +20,7 @@ class SolrIndexer(config : Config) {
   }
 
   def index (stream : InputStream, arcName : String, extraFields : Map[String, String]) {
+    val server = new SolrDistributedServer(config.indexers());    
     var counter = 0;
     processor.processStream(arcName, stream) { (doc) =>
       val url = doc.getFieldValue(URL_FIELD).asInstanceOf[String];
@@ -46,6 +46,7 @@ class SolrIndexer(config : Config) {
   }
 
   def delete (file : File, removeFields : Map[String,String]) {
+    val server = new SolrDistributedServer(config.indexers());    
     var counter = 0;
     Utility.eachArc(file, { (rec) =>
       val id = processor.record2id(rec);
@@ -72,12 +73,18 @@ class SolrIndexer(config : Config) {
 
 object SolrIndexer {
   def loadConfigOrExit : Config = {
-    val configPath = System.getProperty("org.cdlib.was.ngIndexer.ConfigFile");
-    if (configPath == null) {
-      System.err.println("Please define org.cdlib.was.ngIndexer.ConfigFile!");
+    val configPath = System.getProperty("org.cdlib.was.ngIndexer.ConfigFile") match {
+      case null =>
+        val default = new File("indexer.conf");
+        if (default.exists) { Some(default.getPath); }
+        else { None; }
+      case path => Some(path);
+    }
+    if (configPath.isEmpty) {
+      System.err.println("Please define org.cdlib.was.ngIndexer.ConfigFile! or create indexer.conf file.");
       System.exit(1);
     }
-    return (new Configurator).loadSimple(configPath, classOf[Config]);
+    return (new Configurator).loadSimple(configPath.get, classOf[Config]);
   }
 
   def main (args : Array[String]) {
