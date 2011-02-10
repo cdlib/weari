@@ -49,7 +49,7 @@
     <dependency>
       <groupId>org.archive.heritrix</groupId>
       <artifactId>heritrix-commons</artifactId>
-      <version>3.1.1-SNAPSHOT</version>
+      <version>3.0.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>it.unimi.dsi</groupId>
@@ -163,6 +163,12 @@
       <id>scala-tools.org</id>
       <name>Scala-tools Maven2 Repository</name>
       <url>http://scala-tools.org/repo-releases</url>
+    </repository>
+
+    <repository>
+      <id>builds.archive.org</id>
+      <name>builds.archive.org</name>
+      <url>http://builds.archive.org:8080/maven2/</url>
     </repository>
   </repositories>
 
