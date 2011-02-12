@@ -77,6 +77,9 @@ object SolrProcessor {
 class SolrProcessor {
   import SolrProcessor._;
 
+  implicit def archiveRecord2Wrapper (rec : ArchiveRecord) = 
+    new ArchiveRecordWrapper(rec);
+
   val logger = LoggerFactory.getLogger(classOf[SolrProcessor]);
 
   val parser : Parser = new AutoDetectParser();
@@ -131,43 +134,18 @@ class SolrProcessor {
   val MIN_BOOST = 0.1f;
   val MAX_BOOST = 10.0f;
 
-  /** Cue up a record to its start, & return the content type. */
-  def readyRecord (archiveRecord : ArchiveRecord) : Option[String] = {
-    archiveRecord match {
-      case rec : WARCRecord => {
-        if (rec.getHeader.getMimetype == "application/http; msgtype=response") {
-          Utility.parseHeaders(rec) match {
-            case None => None;
-            case Some((responseCode, headers)) =>
-              headers.get(HttpHeaders.CONTENT_TYPE.toLowerCase) match {
-                case None => Some("application/octet-stream");
-                case Some(header) => Some(header.getValue);
-              }
-          }
-        } else {
-          None;
-        }
-      }
-      case rec : ARCRecord => {
-        Utility.skipHttpHeader(rec);
-        return Some(rec.getHeader.getMimetype.toLowerCase);
-      }
-    }
-  }
-
   /** Take an archive record & return a solr document, or none if we cannot parse.
     *
     */
-  def record2doc(rec : ArchiveRecord) : Option[SolrInputDocument] = {
-    val contentType =  readyRecord(rec); 
-    if (contentType.isEmpty) { rec.close; return None; }
+  def record2doc(rec : ArchiveRecordWrapper) : Option[SolrInputDocument] = {
+    val contentType = rec.getContentType;
+    if (!rec.isHttpResponse) { rec.close; return None; }
     val tikaMetadata = new Metadata;
     val parseContext = new ParseContext;
-    val recHeader = rec.getHeader;
-    val url = recHeader.getUrl;
+    val url = rec.getUrl;
     val doc = new SolrInputDocument;
-    val indexContentHandler = new NgIndexerContentHandler(rec.getHeader.getLength  >= 1048576);
-    val wgContentHandler = new WebGraphContentHandler(url, rec.getHeader.getDate);
+    val indexContentHandler = new NgIndexerContentHandler(rec.getLength  >= 1048576);
+    val wgContentHandler = new WebGraphContentHandler(url, rec.getDate);
     val contentHandler = new MultiContentHander(List[ContentHandler](wgContentHandler, indexContentHandler));
     val detector = (new TikaConfig).getMimeRepository;
     val parser = new AutoDetectParser(detector);
@@ -180,7 +158,7 @@ class SolrProcessor {
       parser.parse(bis, contentHandler, tikaMetadata, parseContext);
     } catch {
       case ex : Throwable => {
-        logger.error("Error reading {}: {}", rec.getHeader.getUrl, ex);
+        logger.error("Error reading {}: {}", rec.getUrl, ex);
       }
     }
     /* finish index */
@@ -193,10 +171,10 @@ class SolrProcessor {
     }
     updateDocBoost(doc, 1.0f);
     updateDocUrlDigest(doc, url, rec.getDigestStr);
-    doc.addField(DATE_FIELD, recHeader.getDate.toLowerCase, 1.0f);
+    doc.addField(DATE_FIELD, rec.getDate.toLowerCase, 1.0f);
     doc.addField(TYPE_FIELD, tikaMetadata.get(HttpHeaders.CONTENT_TYPE), 1.0f);
     doc.addField(TITLE_FIELD, title, 1.0f);
-    doc.addField(CONTENT_LENGTH_FIELD, recHeader.getLength, 1.0f);
+    doc.addField(CONTENT_LENGTH_FIELD, rec.getLength, 1.0f);
     /* finish webgraph */
     if (webGraphTypeRE.matcher(tikaMetadata.get(HttpHeaders.CONTENT_TYPE)).matches) {
       val outlinks = wgContentHandler.outlinks;
@@ -209,16 +187,6 @@ class SolrProcessor {
       }
     }
     return Some(doc);
-  }
-
-  def record2id (archiveRecord : ArchiveRecord) : String = {
-    archiveRecord match {
-      case rec : ARCRecord => {
-        Utility.skipHttpHeader(rec);
-        val uuri = UURIFactory.getInstance(rec.getMetaData.getUrl);
-        return "%s.%s".format(uuri.toString, rec.getDigestStr);
-      }
-    }
   }
 
   /** For each record in a file, call the function.

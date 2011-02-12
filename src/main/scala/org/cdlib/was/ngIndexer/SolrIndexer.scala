@@ -63,7 +63,7 @@ class SolrIndexer(config : Config) {
     val server = new SolrDistributedServer(config.indexers());    
     var counter = 0;
     Utility.eachArc(file, { (rec) =>
-      val id = processor.record2id(rec);
+      val id = "xxx" ; // TODO
       server.getById(id) match {
         case None => ();
         case Some(olddoc) => {
