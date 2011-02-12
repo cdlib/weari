@@ -42,6 +42,7 @@ object SolrProcessor {
   val SITE_FIELD           = "site";
   val SPECIFICATION_FIELD  = "specification";
   val TITLE_FIELD          = "title";
+  val TOPTYPE_FIELD        = "topType";
   val TSTAMP_FIELD         = "tstamp";
   val TYPE_FIELD           = "type";
   val URLFP_FIELD          = "urlfp";
@@ -176,6 +177,7 @@ class SolrProcessor {
     updateDocUrlDigest(doc, url, rec.getDigestStr);
     doc.addField(DATE_FIELD, rec.getDate.toLowerCase, 1.0f);
     doc.addField(TYPE_FIELD, tikaMetadata.get(HttpHeaders.CONTENT_TYPE), 1.0f);
+    doc.addField(TOPTYPE_FIELD, tikaMetadata.get(HttpHeaders.CONTENT_TYPE).split("/")(0), 1.0f);
     doc.addField(TITLE_FIELD, title, 1.0f);
     doc.addField(CONTENT_LENGTH_FIELD, rec.getLength, 1.0f);
     /* finish webgraph */
