@@ -139,7 +139,10 @@ class SolrProcessor {
     */
   def record2doc(rec : ArchiveRecordWrapper) : Option[SolrInputDocument] = {
     val contentType = rec.getContentType;
-    if (!rec.isHttpResponse) { rec.close; return None; }
+    if (!rec.isHttpResponse || rec.getStatusCode != 200) {
+      rec.close; 
+      return None; 
+    }
     val tikaMetadata = new Metadata;
     val parseContext = new ParseContext;
     val url = rec.getUrl;

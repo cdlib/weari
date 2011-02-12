@@ -20,7 +20,7 @@ import org.archive.io.warc.WARCRecord;
 import org.apache.http.message.BasicLineParser;
 
 class ArchiveRecordWrapper (rec : ArchiveRecord) extends InputStream {
-
+  private var statusCode : Option[Int] = None;
   private var ready : Boolean = false;
   private var contentType : Option[String] = None;
   private var httpResponse : Boolean = false;
@@ -96,7 +96,7 @@ class ArchiveRecordWrapper (rec : ArchiveRecord) extends InputStream {
           httpResponse = true;
           val header = parseHeaders(rec1);
           header.map {(header1)=>
-            val responseCode = header1._1;
+            statusCode = Some(header1._1);
             val headers = header1._2;
             contentType = headers.get(HttpHeaders.CONTENT_TYPE.toLowerCase).map(_.getValue);
           }
@@ -114,6 +114,7 @@ class ArchiveRecordWrapper (rec : ArchiveRecord) extends InputStream {
         val url = rec1.getMetaData.getUrl;
         httpResponse = !url.startsWith("filedesc:") && !url.startsWith("dns:");
         contentType = Some(rec1.getHeader.getMimetype.toLowerCase);
+        statusCode = Some(rec1.getStatusCode);
       }
     }
   }
@@ -127,7 +128,12 @@ class ArchiveRecordWrapper (rec : ArchiveRecord) extends InputStream {
   //     }
   //   }
   // }
-  
+
+  def getStatusCode : Option[Int] = {
+    if (!ready) cueUp;
+    return statusCode;
+  }
+
   def getContentType : Option[String] = {
     if (!ready) cueUp;
     return contentType;
