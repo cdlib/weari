@@ -140,7 +140,7 @@ class SolrProcessor {
     */
   def record2doc(rec : ArchiveRecordWrapper) : Option[SolrInputDocument] = {
     val contentType = rec.getContentType;
-    if (!rec.isHttpResponse || rec.getStatusCode != 200) {
+    if (!rec.isHttpResponse || !rec.getStatusCode.exists(_==200)) {
       rec.close; 
       return None; 
     }
