@@ -31,7 +31,8 @@ class SimpleHttpClient {
       response = httpClient.execute(request);
       return f ((response.getStatusLine.getStatusCode, response));
     } finally {
-      if (response != null) response.getEntity.consumeContent;
+      if ((response != null) && (response.getEntity != null))
+        { response.getEntity.consumeContent; }
     }      
   }
 
