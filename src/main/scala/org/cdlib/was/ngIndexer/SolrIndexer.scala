@@ -2,6 +2,8 @@ package org.cdlib.was.ngIndexer;
 
 import java.io.{File,FileInputStream,FileNotFoundException,InputStream,IOException};
 
+import org.apache.solr.common.SolrInputDocument;
+
 import org.cdlib.ssconf.Configurator;
 
 import org.cdlib.was.ngIndexer.SolrProcessor.{ARCNAME_FIELD,
@@ -17,6 +19,7 @@ import org.slf4j.LoggerFactory
   */
 class SolrIndexer(config : Config) {
   val processor = new SolrProcessor;
+  val server = new SolrDistributedServer(config.indexers());    
 
   val logger = LoggerFactory.getLogger(classOf[SolrIndexer]);
 
@@ -25,31 +28,44 @@ class SolrIndexer(config : Config) {
     return index(new FileInputStream(file), file.getName, extraFields);
   }
 
+  def indexDoc(server : SolrDistributedServer, doc : SolrInputDocument, extraFields : Map[String,String]) {
+    for ((k,v) <- extraFields) { doc.setField(k, v); }
+    val id = doc.getField(ID_FIELD).getValue.asInstanceOf[String];
+    server.getById(id) match {
+      case None => server.add(doc);
+      case Some(olddoc) => {
+        val oldinputdoc = processor.doc2InputDoc(olddoc);
+        val mergedDoc = processor.mergeDocs(oldinputdoc, doc);
+        server.deleteById(id);
+        server.add(mergedDoc);
+      }
+    }
+  }
+        
   def index (stream : InputStream, arcName : String, extraFields : Map[String, String]) : Boolean = {
-    val server = new SolrDistributedServer(config.indexers());    
     var counter = 0;
     try {
       processor.processStream(arcName, stream) { (doc) =>
-        val url = doc.getFieldValue(URL_FIELD).asInstanceOf[String];
-        if (!url.startsWith("filedesc:") && !url.startsWith("dns:")) {
-          for ((k,v) <- extraFields) { doc.setField(k, v); }
-          val id = doc.getField(ID_FIELD).getValue.asInstanceOf[String];
-          server.getById(id) match {
-            case None => server.add(doc);
-            case Some(olddoc) => {
-              val oldinputdoc = processor.doc2InputDoc(olddoc);
-              val mergedDoc = processor.mergeDocs(oldinputdoc, doc);
-              server.deleteById(id);
-              server.add(mergedDoc);
+        var retryTimes = 0;
+        var finished = false;
+        while (retryTimes < 3 && !finished) {
+          try {
+            indexDoc(server, doc, extraFields);
+            finished = true;
+          } catch {
+            case ex : Exception => {
+              logger.error("Exception while indexing document from arc ({}): {}.", arcName, ex);
+              retryTimes = retryTimes + 1;
             }
           }
-          counter = counter + 1;
-          if (counter > 10) {
-            server.commit;
-            counter = 0;
-          }
+        }
+        counter = counter + 1;
+        if (counter > 1000) {
+          server.commit;
+          counter = 0;
         }
       }
+      server.commit;
     } catch {
       case ex : Exception => {
         logger.error("Exception while generating doc from arc ({}): {}.", arcName, ex);
@@ -60,7 +76,6 @@ class SolrIndexer(config : Config) {
   }
 
   def delete (file : File, removeFields : Map[String,String]) {
-    val server = new SolrDistributedServer(config.indexers());    
     var counter = 0;
     Utility.eachArc(file, { (rec) =>
       val id = "xxx" ; // TODO
