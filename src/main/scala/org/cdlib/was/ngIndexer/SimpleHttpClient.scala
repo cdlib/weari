@@ -58,6 +58,7 @@ class SimpleHttpClient {
       case (301, resp) => followRedir(resp);
       case (302, resp) => followRedir(resp);
       case (303, resp) => followRedir(resp);
+      case (_,   _) => None;
     }
   }
 }
