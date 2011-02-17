@@ -50,7 +50,11 @@ object Daemon {
                                                         SPECIFICATION_FIELD->specification, 
                                                         PROJECT_FIELD->project));
                 tmpFile.delete;
-                return retval;
+                retval;
+              } match {
+                case None        => false;
+                case Some(false) => false;
+                case Some(true)  => true;
               }
             }
           }
