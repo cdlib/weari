@@ -4,6 +4,8 @@ import java.io.File;
 
 import java.net.URI
 
+import org.apache.http.conn.HttpHostConnectException;
+
 import org.apache.zookeeper.recipes.queue.Item
 
 import org.cdlib.ssconf.Configurator
@@ -41,20 +43,25 @@ object Daemon {
             case List("INDEX", uriString, job, specification, project) => {
               val uri = new URI(uriString);
               val ArcRE(arcName) = uriString;
-              httpClient.getUri(uri) { (stream)=>
-                System.err.println("Indexing %s".format(uri));
-                val tmpDir = new File(System.getProperty("java.io.tmpdir"));
-                val tmpFile = new File(tmpDir, arcName);
-                Utility.readStreamIntoFile(tmpFile, stream);
-                val retval = indexer.index(tmpFile, Map(JOB_FIELD->job,
-                                                        SPECIFICATION_FIELD->specification, 
-                                                        PROJECT_FIELD->project));
-                tmpFile.delete;
-                retval;
-              } match {
-                case None        => false;
-                case Some(false) => false;
-                case Some(true)  => true;
+              try {
+                httpClient.getUri(uri) { (stream)=>
+                  System.err.println("Indexing %s".format(uri));
+                  val tmpDir = new File(System.getProperty("java.io.tmpdir"));
+                  val tmpFile = new File(tmpDir, arcName);
+                  Utility.readStreamIntoFile(tmpFile, stream);
+                  val retval = indexer.index(tmpFile, Map(JOB_FIELD->job,
+                                                          SPECIFICATION_FIELD->specification, 
+                                                          PROJECT_FIELD->project));
+                  tmpFile.delete;
+                  retval;
+                } match {
+                  case None        => false;
+                  case Some(false) => false;
+                  case Some(true)  => true;
+                }
+              } catch {
+                case ex : HttpHostConnectException =>
+                  return false;
               }
             }
           }
