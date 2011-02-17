@@ -53,12 +53,12 @@ class SimpleHttpClient {
         return getUri[T](newUri)(f);
       }
     }
-    mkRequest(new HttpGet(uri)) {
+    return mkRequest(new HttpGet(uri)) {
       case (200, resp) => Some(f(resp.getEntity.getContent));
       case (301, resp) => followRedir(resp);
       case (302, resp) => followRedir(resp);
       case (303, resp) => followRedir(resp);
-      case (_,   _) => None;
+      case (_,   _)    => None;
     }
   }
 }
