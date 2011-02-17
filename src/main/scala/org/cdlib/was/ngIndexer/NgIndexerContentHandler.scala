@@ -42,6 +42,11 @@ class NgIndexerContentHandler (useTempFile : Boolean)
     case None    => new StringWriter(262144);
   }
 
+  val WHITESPACE = Array(' ');
+  def addWhitespace {
+    characters(WHITESPACE, 0, 1);
+  }
+
   override def characters (ch : Array[Char], start : Int, length : Int) {
     contentWriter.write(ch, start, length);
   }
@@ -64,7 +69,17 @@ class NgIndexerContentHandler (useTempFile : Boolean)
 
   def startDocument() = ()
 
-  def startElement(namespaceURI : String, localName : String, qName : String, atts : Attributes) = ()
+  def startElement(namespaceURI : String, localName : String, qName : String, atts : Attributes) = {
+    localName.toLowerCase match {
+      case "address" | "blockquote" | "center" | "dir" | "div" | "dl" |
+           "fieldset" | "form" | "h1" | "h2" | "h3" | "h4" | "h5" | 
+           "h6" | "hr" | "isindex" | "menu" | "noframes" | "noscript" |
+           "ol" | "p" | "pre" | "table" | "ul" | "dd" | "dt" | 
+           "frameset" | "li" |"tbody" | "td" | "tfoot" | "th" | "thead" | "tr" =>
+             addWhitespace;
+      case _ => ();
+    }
+  }
     
   def startPrefixMapping(prefix : String, uri : String) = ()
 }
