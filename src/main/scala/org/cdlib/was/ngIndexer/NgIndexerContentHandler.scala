@@ -71,7 +71,7 @@ class NgIndexerContentHandler (useTempFile : Boolean)
 
   def startElement(namespaceURI : String, localName : String, qName : String, atts : Attributes) = {
     localName.toLowerCase match {
-      case "address" | "blockquote" | "center" | "dir" | "div" | "dl" |
+      case "address" | "blockquote" | "br" | "center" | "dir" | "div" | "dl" |
            "fieldset" | "form" | "h1" | "h2" | "h3" | "h4" | "h5" | 
            "h6" | "hr" | "isindex" | "menu" | "noframes" | "noscript" |
            "ol" | "p" | "pre" | "table" | "ul" | "dd" | "dt" | 
