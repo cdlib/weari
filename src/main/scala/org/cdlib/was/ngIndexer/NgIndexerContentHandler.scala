@@ -26,8 +26,9 @@ class NgIndexerContentHandler (useTempFile : Boolean)
 
   def contentString : Option[String] = 
     contentWriter match {
-      case s : StringWriter => Some(s.toString);
-      case w : Writer       => contentReader.map(reader2string(_));
+      /* replace all repeated whitespace with a single space */
+      case s : StringWriter => Some(s.toString.replaceAll("""\s+""", " "));
+      case w : Writer       => contentReader.map(reader2string(_).replaceAll("""\s+""", " "));
     }
 
   val tempFile = if (useTempFile) {
