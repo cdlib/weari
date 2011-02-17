@@ -32,6 +32,7 @@ class QueueProcessor (zooKeeperHosts : String, path : String, workers : Int, han
     override def run {
       while (!finished) {
         try {
+          reconnect;
           val next = q.consume;
           if (next == null) {
             Thread.sleep(100);
@@ -51,17 +52,12 @@ class QueueProcessor (zooKeeperHosts : String, path : String, workers : Int, han
     }
   }
 
-  class Reconnect extends Thread {
-    override def run {
-      while (!finished) {
-        for (n <- 1 to 60) {
-          if (n == 0 && zookeeper.getState == ZooKeeper.States.CLOSED) {
-              zookeeper = new ZooKeeper(zooKeeperHosts, 10000, 
-                                        new DistributedQueue.Ignorer());
-          }
-          if (finished) return;
-          Thread.sleep(1000);
-        }
+  val reconnectSync = new Object;
+  def reconnect {
+    reconnectSync.synchronized {
+      if (zookeeper.getState == ZooKeeper.States.CLOSED) {
+        zookeeper = new ZooKeeper(zooKeeperHosts, 10000, 
+                                  new DistributedQueue.Ignorer());
       }
     }
   }
@@ -73,6 +69,7 @@ class QueueProcessor (zooKeeperHosts : String, path : String, workers : Int, han
           /* every hour, clean up completed items */
           if (n == 1) {
             try { 
+              reconnect;
               q.cleanup(Item.COMPLETED);
             } catch {
               case ex : NoSuchElementException => ();
@@ -91,7 +88,6 @@ class QueueProcessor (zooKeeperHosts : String, path : String, workers : Int, han
     for (n <- 1 to workers)
       (new Worker(handlerFactory.mkHandler)).start;
     (new Cleanup).start;
-    (new Reconnect).start;
   }
   
   def finish {
