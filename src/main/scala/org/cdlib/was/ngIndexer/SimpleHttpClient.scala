@@ -43,9 +43,21 @@ class SimpleHttpClient {
     }
   }
 
-  def getUri[T] (uri : URI) (f : (InputStream)=>T) = {
-    mkRequestExcept(new HttpGet(uri)) {(resp)=>
-      f(resp.getEntity.getContent);
+  def getUri[T] (uri : URI) (f : (InputStream)=>T) : Option[T] = {
+    def followRedir (resp : HttpResponse) : Option[T] = {
+      val header = resp.getFirstHeader("Location");
+      if (header == null) {
+        return None;
+      } else {
+        val newUri = new URI(header.getValue);
+        return getUri[T](newUri)(f);
+      }
+    }
+    mkRequest(new HttpGet(uri)) {
+      case (200, resp) => Some(f(resp.getEntity.getContent));
+      case (301, resp) => followRedir(resp);
+      case (302, resp) => followRedir(resp);
+      case (303, resp) => followRedir(resp);
     }
   }
 }
