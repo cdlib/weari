@@ -12,8 +12,8 @@ import org.apache.solr.common.params.{ModifiableSolrParams,SolrParams};
   * Uses a consistent hash of servers.
   */
 class SolrDistributedServer (serverInit : Seq[Tuple3[String,String,Int]],
-                             queueSize : Int = 50,
-                             queueRunners : Int = 5) {
+                             queueSize : Int = 1000,
+                             queueRunners : Int = 3) {
   val ring = new ConsistentHashRing[CommonsHttpSolrServer];
   var servers = scala.collection.mutable.Map[String,CommonsHttpSolrServer]();
 
@@ -27,7 +27,7 @@ class SolrDistributedServer (serverInit : Seq[Tuple3[String,String,Int]],
     val id = doc.getFieldValue(SolrProcessor.ID_FIELD).asInstanceOf[String];
     val server = ring.getServerFor(id);
     /* we need to store the server this is indexed on */
-    doc.addField(SolrProcessor.SERVER_FIELD, server.getBaseURL);
+    // doc.addField(SolrProcessor.SERVER_FIELD, server.getBaseURL);
     server.add(doc);
   }
 
@@ -62,10 +62,12 @@ class SolrDistributedServer (serverInit : Seq[Tuple3[String,String,Int]],
   }
 
   def deleteById(id : String) {
+    servers.values.map {(server)=>
+      server.deleteById(id);
+      server.commit;
+    }
     // val result = getById(id).get;
     // val serverName = result.getFirstValue(SolrProcessor.SERVER_FIELD).asInstanceOf[String];
     // val server = servers.get(serverName).get;
-    // server.deleteById(id);
-    // server.commit;
   }
 }
