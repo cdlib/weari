@@ -71,8 +71,5 @@ class SolrDistributedServer (serverInit : Seq[Tuple3[String,String,Int]],
       server.deleteById(id);
       server.commit;
     }
-    // val result = getById(id).get;
-    // val serverName = result.getFirstValue(SolrProcessor.SERVER_FIELD).asInstanceOf[String];
-    // val server = servers.get(serverName).get;
   }
 }
