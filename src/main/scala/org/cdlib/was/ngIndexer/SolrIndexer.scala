@@ -60,7 +60,7 @@ class SolrIndexer(config : Config) {
           }
         }
         counter = counter + 1;
-        if (counter > 1000) {
+        if (counter > 10000) {
           server.commit;
           counter = 0;
         }
