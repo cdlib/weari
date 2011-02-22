@@ -7,6 +7,8 @@ import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.{ModifiableSolrParams,SolrParams};
 
+import org.slf4j.LoggerFactory
+
 /** A class for handling a distributed solr system.
   *
   * Uses a consistent hash of servers.
@@ -14,6 +16,8 @@ import org.apache.solr.common.params.{ModifiableSolrParams,SolrParams};
 class SolrDistributedServer (serverInit : Seq[Tuple3[String,String,Int]],
                              queueSize : Int = 1000,
                              queueRunners : Int = 3) {
+  val logger = LoggerFactory.getLogger(classOf[SolrDistributedServer]);
+
   val ring = new ConsistentHashRing[CommonsHttpSolrServer];
   var servers = scala.collection.mutable.Map[String,CommonsHttpSolrServer]();
 
@@ -32,6 +36,7 @@ class SolrDistributedServer (serverInit : Seq[Tuple3[String,String,Int]],
   }
 
   def commit {
+    logger.info("Commiting.");
     for (server <- servers.values) server.commit;
   }
 
