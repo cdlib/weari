@@ -67,7 +67,7 @@ class QueueProcessor (zooKeeperHosts : String, path : String, workers : Int, han
       while (!finished) {
         for (n <- 1 to 3600) {
           /* every hour, clean up completed items */
-          if (n == 1) {
+          if (n == 3600) {
             try { 
               reconnect;
               q.cleanup(Item.COMPLETED);
