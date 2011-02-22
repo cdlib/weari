@@ -83,7 +83,6 @@ class SolrProcessor {
 
   val logger = LoggerFactory.getLogger(classOf[SolrProcessor]);
 
-  val parser : Parser = new AutoDetectParser();
   /* date formatter for solr */
   val dateFormatter = new java.text.SimpleDateFormat("yyyyMMddHHmmssSSS");
   /* regular expression to match against mime types which should have
@@ -135,6 +134,10 @@ class SolrProcessor {
   val MIN_BOOST = 0.1f;
   val MAX_BOOST = 10.0f;
 
+  val parseContext = new ParseContext;
+  val detector = (new TikaConfig).getMimeRepository;
+  val parser = new AutoDetectParser(detector);
+  parseContext.set(classOf[Parser], parser);
   /** Take an archive record & return a solr document, or none if we cannot parse.
     *
     */
@@ -145,16 +148,12 @@ class SolrProcessor {
       return None; 
     }
     val tikaMetadata = new Metadata;
-    val parseContext = new ParseContext;
     val url = rec.getUrl;
     val doc = new SolrInputDocument;
     val indexContentHandler = new NgIndexerContentHandler(rec.getLength  >= 1048576);
     val wgContentHandler = new WebGraphContentHandler(url, rec.getDate);
     val contentHandler = new MultiContentHander(List[ContentHandler](wgContentHandler, indexContentHandler));
-    val detector = (new TikaConfig).getMimeRepository;
-    val parser = new AutoDetectParser(detector);
-    parseContext.set(classOf[Parser], parser);
-    System.err.println("Processing %s".format(url));
+    logger.info("Processing {}", url);
     tikaMetadata.set(HttpHeaders.CONTENT_LOCATION, url);
     tikaMetadata.set(HttpHeaders.CONTENT_TYPE, contentType.get);
     try {
