@@ -153,7 +153,6 @@ class SolrProcessor {
     val indexContentHandler = new NgIndexerContentHandler(rec.getLength  >= 1048576);
     val wgContentHandler = new WebGraphContentHandler(url, rec.getDate);
     val contentHandler = new MultiContentHander(List[ContentHandler](wgContentHandler, indexContentHandler));
-    logger.info("Processing {}", url);
     tikaMetadata.set(HttpHeaders.CONTENT_LOCATION, url);
     tikaMetadata.set(HttpHeaders.CONTENT_TYPE, contentType.get);
     try {
