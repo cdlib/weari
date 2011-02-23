@@ -67,7 +67,7 @@ class WebGraphContentHandler (url : String, date : String)
         if (!href.startsWith("javascript") && !href.startsWith("mailto")) {
           inAnchorText = true;
           outlinkTo = href;
-          outlinkText = new StringWriter(262144);
+          outlinkText = new StringWriter(10);
         }
       }
     }
