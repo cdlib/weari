@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory
   */
 class SolrIndexer(config : Config) {
   val processor = new SolrProcessor;
-  val server = new SolrDistributedServer(config.indexers());    
+  val server = new SolrDistributedServer(config.indexers(), config.queueSize(), config.queueRunners());
 
   val logger = LoggerFactory.getLogger(classOf[SolrIndexer]);
 
@@ -77,7 +77,7 @@ class SolrIndexer(config : Config) {
 
   def delete (file : File, removeFields : Map[String,String]) {
     var counter = 0;
-    Utility.eachArc(file, { (rec) =>
+    Utility.eachArc(file) { (rec) =>
       val id = "xxx" ; // TODO
       server.getById(id) match {
         case None => ();
@@ -96,7 +96,7 @@ class SolrIndexer(config : Config) {
           }
         }
       }
-    });
+    }
   }
 }
 
