@@ -181,8 +181,7 @@
       <url>http://scala-tools.org/repo-releases</url>
     </repository>
 
-<!-- turning this off so we can control which build number we use
-    <repository>
+<!--     <repository>
       <id>builds.archive.org</id>
       <name>builds.archive.org</name>
       <url>http://builds.archive.org:8080/maven2/</url>

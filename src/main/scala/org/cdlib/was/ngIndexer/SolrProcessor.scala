@@ -195,12 +195,12 @@ class SolrProcessor {
   /** For each record in a file, call the function.
     */
   def processFile (file : File) (func : (SolrInputDocument) => Unit) {
-    Utility.eachArc(file, record2doc(_).map(func));
+    Utility.eachArc(file) (record2doc(_).map(func));
   }
 
   def processStream (arcName : String, stream : InputStream) 
                     (func : (SolrInputDocument) => Unit) {
-    Utility.eachArc(stream, arcName, record2doc(_).map(func));
+    Utility.eachArc(stream, arcName) (record2doc(_).map(func));
   }
 
   /** Merge two documents into one, presuming they have the same id.

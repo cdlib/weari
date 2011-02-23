@@ -49,7 +49,7 @@ object Utility {
         out.write(buffer, 0, bytesRead)));
   }
 
-  def eachArc (arcFile : java.io.File, f: (ArchiveRecord)=>Unit) {
+  def eachArc (arcFile : java.io.File) (f: (ArchiveRecord)=>Unit) {
     val reader = ArchiveReaderFactory.get(arcFile)
     val it = reader.iterator;
     while (it.hasNext) {
@@ -60,7 +60,7 @@ object Utility {
     reader.close;
   }
 
-  def eachArc (stream : java.io.InputStream, arcName : String, f: (ArchiveRecord)=>Unit) {
+  def eachArc (stream : java.io.InputStream, arcName : String) (f: (ArchiveRecord)=>Unit) {
     val reader = ArchiveReaderFactory.get(arcName, stream, true);
     val it = reader.iterator;
     while (it.hasNext) {
