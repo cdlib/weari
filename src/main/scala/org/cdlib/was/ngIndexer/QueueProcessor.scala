@@ -16,7 +16,7 @@ trait QueueItemHandler {
 }
 
 trait QueueItemHandlerFactory {
-  def mkHandler : QueueItemHandler;
+  def mkHandler (zooKeeper : ZooKeeper) : QueueItemHandler;
 }
 
 /** Generic work queue processor
@@ -86,7 +86,7 @@ class QueueProcessor (zooKeeperHosts : String, path : String, workers : Int, han
 
   def start {
     for (n <- 1 to workers)
-      (new Worker(handlerFactory.mkHandler)).start;
+      (new Worker(handlerFactory.mkHandler(zookeeper))).start;
     (new Cleanup).start;
   }
   
