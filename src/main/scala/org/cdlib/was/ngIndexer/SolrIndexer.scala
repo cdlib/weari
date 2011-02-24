@@ -19,14 +19,16 @@ import org.slf4j.LoggerFactory
   */
 class SolrIndexer(config : Config) {
   val processor = new SolrProcessor;
-  val server = new SolrDistributedServer(config.indexers(), config.queueSize(), config.queueRunners());
+  val server = new SolrDistributedServer(config.indexers(), 
+                                         config.queueSize(), 
+                                         config.queueRunners(),
+                                         config.commitThreshold());
 
   val logger = LoggerFactory.getLogger(classOf[SolrIndexer]);
 
   /** Index an ARC file. */
-  def index (file : File, extraFields : Map[String, String]) : Boolean = {
-    return index(new FileInputStream(file), file.getName, extraFields);
-  }
+  def index (file : File, extraFields : Map[String, String]) : Boolean = 
+    index(new FileInputStream(file), file.getName, extraFields);
 
   /** Index a single Solr document. If a document with the same ID
     * already exists, the documents will be merged.
@@ -34,8 +36,7 @@ class SolrIndexer(config : Config) {
     * @param server to index with
     * @param doc Document to index.
     */
-  def indexDoc(server : SolrDistributedServer, doc : SolrInputDocument, extraFields : Map[String,String]) {
-    for ((k,v) <- extraFields) { doc.setField(k, v); }
+  def indexDoc(server : SolrDistributedServer, doc : SolrInputDocument) {
     val id = doc.getField(ID_FIELD).getValue.asInstanceOf[String];
     server.getById(id) match {
       case None => server.add(doc);
@@ -54,9 +55,12 @@ class SolrIndexer(config : Config) {
       processor.processStream(arcName, stream) { (doc) =>
         var retryTimes = 0;
         var finished = false;
+
+        for ((k,v) <- extraFields) { doc.setField(k, v); }
+
         while (retryTimes < 3 && !finished) {
           try {
-            indexDoc(server, doc, extraFields);
+            indexDoc(server, doc);
             finished = true;
           } catch {
             case ex : Exception => {
@@ -65,12 +69,9 @@ class SolrIndexer(config : Config) {
             }
           }
         }
-        counter = counter + 1;
-        if (counter > 10000) {
-          server.commit;
-          counter = 0;
-        }
+        server.maybeCommit;
       }
+      /* ensure a commit at the end of the stream */
       server.commit;
     } catch {
       case ex : Exception => {

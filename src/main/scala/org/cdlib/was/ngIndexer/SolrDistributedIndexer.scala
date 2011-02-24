@@ -15,9 +15,12 @@ import org.slf4j.LoggerFactory
   */
 class SolrDistributedServer (serverInit : Seq[Tuple3[String,String,Int]],
                              queueSize : Int = 1000,
-                             queueRunners : Int = 3) {
+                             queueRunners : Int = 3,
+                             commitThreshold : Int = 10000) {
+  val commitLock = new Object;
+  var commitCounter = 0;
   val logger = LoggerFactory.getLogger(classOf[SolrDistributedServer]);
-
+  
   val ring = new ConsistentHashRing[CommonsHttpSolrServer];
   var servers = scala.collection.mutable.Map[String,CommonsHttpSolrServer]();
 
@@ -33,11 +36,25 @@ class SolrDistributedServer (serverInit : Seq[Tuple3[String,String,Int]],
     /* we need to store the server this is indexed on */
     // doc.addField(SolrProcessor.SERVER_FIELD, server.getBaseURL);
     server.add(doc);
+    commitCounter = commitCounter + 1;
   }
 
+  /** Send commit to servers. */
   def commit {
-    logger.info("Commiting.");
-    for (server <- servers.values) server.commit;
+    commitLock.synchronized {
+      logger.info("Commiting.");
+      for (server <- servers.values) server.commit;
+    }
+  }
+
+  /** Commit if threshold met. */
+  def maybeCommit {
+    commitLock.synchronized {
+      if (commitCounter > commitThreshold) {
+        commitCounter = 0;
+        commit;
+      }
+    }
   }
 
   /** Gets the string to use when submitting a shards query param
