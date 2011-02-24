@@ -48,26 +48,20 @@ class SolrIndexer(config : Config) {
     }
   }
         
-  def index (stream : InputStream, arcName : String, extraFields : Map[String, String]) : Boolean = {
+  /** Index an arc file. */
+  def index (stream : InputStream, 
+             arcName : String, 
+             extraFields : Map[String, String]) : Boolean = {
     try {
       processor.processStream(arcName, stream) { (doc) =>
-        var retryTimes = 0;
-        var finished = false;
-
         for ((k,v) <- extraFields) { doc.setField(k, v); }
 
-        while (retryTimes < 3 && !finished) {
-          try {
-            indexDoc(server, doc);
-            finished = true;
-          } catch {
-            case ex : Exception => {
-              logger.error("Exception while indexing document from arc ({}): {}.", arcName, ex);
-              retryTimes = retryTimes + 1;
-            }
-          }
+        Utility.retry (3) {
+          indexDoc(server, doc);
+          server.maybeCommit;
+        } {(ex)=>
+          logger.error("Exception while indexing document from arc ({}): {}.", arcName, ex);
         }
-        server.maybeCommit;
       }
       /* ensure a commit at the end of the stream */
       server.commit;
