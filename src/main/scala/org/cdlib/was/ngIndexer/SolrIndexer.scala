@@ -54,7 +54,7 @@ class SolrIndexer(config : Config) {
              extraFields : Map[String, String]) : Boolean = {
     try {
       processor.processStream(arcName, stream) { (doc) =>
-        for ((k,v) <- extraFields) { doc.setField(k, v); }
+        for ((k,v) <- extraFields) doc.setField(k, v);
 
         Utility.retry (3) {
           indexDoc(server, doc);
@@ -82,9 +82,8 @@ class SolrIndexer(config : Config) {
         case Some(olddoc) => {
           val inputdoc = processor.doc2InputDoc(olddoc);
           processor.removeFieldValue(inputdoc, ARCNAME_FIELD, file.getName);
-          for ((k,v) <- removeFields) {
+          for ((k,v) <- removeFields)
             processor.removeFieldValue(inputdoc, k, v);
-          }
           server.deleteById(id);
           server.add(inputdoc);
           server.maybeCommit;
