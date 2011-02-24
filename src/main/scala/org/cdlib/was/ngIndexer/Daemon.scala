@@ -62,9 +62,10 @@ object Daemon {
                     val tmpDir = new File(System.getProperty("java.io.tmpdir"));
                     val tmpFile = new File(tmpDir, arcName);
                     Utility.readStreamIntoFile(tmpFile, stream);
-                    val retval = indexer.index(tmpFile, Map(JOB_FIELD->job,
-                                                            SPECIFICATION_FIELD->specification, 
-                                                            PROJECT_FIELD->project));
+                    val retval = indexer.index(tmpFile, specification,
+                                               Map(JOB_FIELD->job,
+                                                   SPECIFICATION_FIELD->specification, 
+                                                   PROJECT_FIELD->project));
                     tmpFile.delete;
                     retval;
                   } match {

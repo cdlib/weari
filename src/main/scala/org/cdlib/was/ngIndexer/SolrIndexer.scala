@@ -27,8 +27,8 @@ class SolrIndexer(config : Config) {
   val logger = LoggerFactory.getLogger(classOf[SolrIndexer]);
 
   /** Index an ARC file. */
-  def index (file : File, extraFields : Map[String, String]) : Boolean = 
-    index(new FileInputStream(file), file.getName, extraFields);
+  def index (file : File, extraId : String, extraFields : Map[String, String]) : Boolean = 
+    index(new FileInputStream(file), file.getName, extraId, extraFields);
 
   /** Index a single Solr document. If a document with the same ID
     * already exists, the documents will be merged.
@@ -50,12 +50,14 @@ class SolrIndexer(config : Config) {
         
   /** Index an arc file. */
   def index (stream : InputStream, 
-             arcName : String, 
+             arcName : String,
+             extraId : String,
              extraFields : Map[String, String]) : Boolean = {
     try {
       processor.processStream(arcName, stream) { (doc) =>
         for ((k,v) <- extraFields) doc.setField(k, v);
-
+        val oldId = doc.getFieldValue(ID_FIELD).asInstanceOf[String];
+        doc.setField(ID_FIELD, "%s.%s".format(oldId, extraId));
         Utility.retry (3) {
           indexDoc(server, doc);
           server.maybeCommit;
@@ -126,16 +128,18 @@ object SolrIndexer {
         command match {
           case "delete" => {
             for (path <- args.drop(4)) {
-              indexer.delete(new File(path), Map(JOB_FIELD->job,
-                                                 SPECIFICATION_FIELD->specification,
-                                                 PROJECT_FIELD->project));
+              indexer.delete(new File(path),
+                             Map(JOB_FIELD->job,
+                                 SPECIFICATION_FIELD->specification,
+                                 PROJECT_FIELD->project));
             }
           }
           case "index" => {
             for (path <- args.drop(4)) {
-              indexer.index(new File(path), Map(JOB_FIELD -> job, 
-                                                SPECIFICATION_FIELD -> specification, 
-                                                PROJECT_FIELD -> project))
+              indexer.index(new File(path), specification,
+                            Map(JOB_FIELD -> job, 
+                                SPECIFICATION_FIELD -> specification, 
+                                PROJECT_FIELD -> project))
             }
           }
           case _ => {
