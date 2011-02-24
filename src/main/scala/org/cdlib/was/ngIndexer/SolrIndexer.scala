@@ -15,7 +15,7 @@ import org.cdlib.was.ngIndexer.SolrProcessor.{ARCNAME_FIELD,
 
 import org.slf4j.LoggerFactory
 
-/** For updating a solr index
+/** Class used to index ARC files.
   */
 class SolrIndexer(config : Config) {
   val processor = new SolrProcessor;
@@ -28,6 +28,12 @@ class SolrIndexer(config : Config) {
     return index(new FileInputStream(file), file.getName, extraFields);
   }
 
+  /** Index a single Solr document. If a document with the same ID
+    * already exists, the documents will be merged.
+    *
+    * @param server to index with
+    * @param doc Document to index.
+    */
   def indexDoc(server : SolrDistributedServer, doc : SolrInputDocument, extraFields : Map[String,String]) {
     for ((k,v) <- extraFields) { doc.setField(k, v); }
     val id = doc.getField(ID_FIELD).getValue.asInstanceOf[String];
@@ -140,8 +146,8 @@ object SolrIndexer {
           case "index" => {
             for (path <- args.drop(4)) {
               indexer.index(new File(path), Map(JOB_FIELD -> job, 
-                                                 SPECIFICATION_FIELD -> specification, 
-                                                 PROJECT_FIELD -> project))
+                                                SPECIFICATION_FIELD -> specification, 
+                                                PROJECT_FIELD -> project))
             }
           }
           case _ => {
