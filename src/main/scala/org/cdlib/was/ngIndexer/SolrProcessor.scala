@@ -99,9 +99,9 @@ class SolrProcessor {
     
   /** Update the url & digest fields in a document.
     */
-  def updateDocUrlDigest (doc : SolrInputDocument, 
-                          url : String,
-                          digest : String) {
+  def updateDocMain (doc : SolrInputDocument, 
+                     url : String,
+                     digest : String) {
     val uuri = UURIFactory.getInstance(url);
     val host = uuri.getHost;
     doc.addField(ID_FIELD, "%s.%s".format(uuri.toString, digest));
@@ -172,7 +172,7 @@ class SolrProcessor {
       case null => ""
     }
     updateDocBoost(doc, 1.0f);
-    updateDocUrlDigest(doc, url, rec.getDigestStr);
+    updateDocMain(doc, url, rec.getDigestStr);
     doc.addField(DATE_FIELD, rec.getDate.toLowerCase, 1.0f);
     doc.addField(TYPE_FIELD, tikaMetadata.get(HttpHeaders.CONTENT_TYPE), 1.0f);
     doc.addField(TOPTYPE_FIELD, tikaMetadata.get(HttpHeaders.CONTENT_TYPE).split("/")(0), 1.0f);
