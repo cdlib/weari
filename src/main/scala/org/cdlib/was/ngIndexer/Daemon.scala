@@ -39,7 +39,8 @@ object Daemon {
     val indexer = new SolrIndexer(config);
 
     def obtainLock[T] (zooKeeper : ZooKeeper, lockName : String) (proc : T) : T = {
-      val lock = new WriteLock(zooKeeper, "/arcIndexLock/%s".format(lockName), null);
+      var lock = new WriteLock(zooKeeper, "/arcIndexLock/%s".format(lockName), null);
+      lock.lock();
       while (!lock.isOwner) { Thread.sleep(100); }
       val retval = proc;
       lock.unlock;
