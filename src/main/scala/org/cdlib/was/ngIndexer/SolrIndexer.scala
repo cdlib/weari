@@ -37,12 +37,11 @@ class SolrIndexer(config : Config) {
     * @param doc Document to index.
     */
   def indexDoc(server : SolrDistributedServer, doc : SolrInputDocument) {
-    val id = doc.getField(ID_FIELD).getValue.asInstanceOf[String];
+    val id = doc.getFieldValue(ID_FIELD).asInstanceOf[String];
     server.getById(id) match {
       case None => server.add(doc);
       case Some(olddoc) => {
-        val oldinputdoc = processor.doc2InputDoc(olddoc);
-        val mergedDoc = processor.mergeDocs(oldinputdoc, doc);
+        val mergedDoc = processor.mergeDocs(processor.doc2InputDoc(olddoc), doc);
         server.deleteById(id);
         server.add(mergedDoc);
       }
@@ -50,7 +49,6 @@ class SolrIndexer(config : Config) {
   }
         
   def index (stream : InputStream, arcName : String, extraFields : Map[String, String]) : Boolean = {
-    var counter = 0;
     try {
       processor.processStream(arcName, stream) { (doc) =>
         var retryTimes = 0;
@@ -83,7 +81,6 @@ class SolrIndexer(config : Config) {
   }
 
   def delete (file : File, removeFields : Map[String,String]) {
-    var counter = 0;
     Utility.eachArc(file) { (rec) =>
       val id = "xxx" ; // TODO
       server.getById(id) match {
@@ -96,14 +93,11 @@ class SolrIndexer(config : Config) {
           }
           server.deleteById(id);
           server.add(inputdoc);
-          counter = counter + 1;
-          if (counter > 10) {
-            server.commit;
-            counter = 0;
-          }
+          server.maybeCommit;
         }
       }
     }
+    server.commit;
   }
 }
 
