@@ -25,6 +25,10 @@ class ArchiveRecordWrapper (rec : ArchiveRecord) extends InputStream {
   private var contentType : Option[String] = None;
   private var httpResponse : Boolean = false;
   
+  /** Method to read one line of input from an InputStream. A line
+    * ends in \n or \r\n.
+    *
+    */
   private def readLine (is : InputStream) : CharArrayBuffer = {
     val buff = new CharArrayBuffer(1024);
     var b : Int = 0;
@@ -45,6 +49,15 @@ class ArchiveRecordWrapper (rec : ArchiveRecord) extends InputStream {
     return buff;
   }
 
+  /**
+   * Join together header lines.
+   *
+   * Header lines can have continuation lines, if the following line
+   * starts with a tab or space. This function takes a sequence of
+   * header lines and joins up any continuation lines with the
+   * previous line. It returns the sequence of joined lines.
+   * 
+   */
   private def joinHeaderLines (lines : Seq[CharArrayBuffer]) : Seq[CharArrayBuffer] = {
     var lastLine = new CharArrayBuffer(0);
     var retval = List[CharArrayBuffer]();
@@ -59,6 +72,12 @@ class ArchiveRecordWrapper (rec : ArchiveRecord) extends InputStream {
     return retval;
   }
 
+  /**
+   * Read the header lines from an InputStream.
+   *
+   * Leaves the position of the inputstream at the start of the body
+   * of the message.
+   */
   private def readHeaderLines (is : InputStream) : Seq[CharArrayBuffer] = {
     var lines = List[CharArrayBuffer]();
     var line = readLine(is);
@@ -69,15 +88,22 @@ class ArchiveRecordWrapper (rec : ArchiveRecord) extends InputStream {
     return joinHeaderLines(lines);
   }
 
+  /**
+   * Parse the headers from a WARCRecord.
+   *
+   * Takes a WARCRecord, and returns the statuscode and headers of an HTTP
+   * response message. 
+   *
+   * @returns None if there is an error in parsing, otherwise returns
+   * the status code and a map of the header values.
+   */
   def parseHeaders (rec : WARCRecord) : Option[Pair[Int,Map[String,Header]]] = {
-    val header = rec.getHeader();
-    val firstLine = readLine(rec);
     val lineParser = new BasicLineParser;
+    val firstLine = readLine(rec);
     try {
       val statusLine = lineParser.parseStatusLine(firstLine, new ParserCursor(0, firstLine.length - 1));
       val headers = readHeaderLines(rec).map(lineParser.parseHeader(_));
-      var headerMap = Map[String,Header]();
-      headerMap ++= headers.map { (h)=> h.getName.toLowerCase->h };
+      val headerMap = headers.map {(h)=> h.getName.toLowerCase->h }.toMap;
       return Some((statusLine.getStatusCode, headerMap));
     } catch {
       case ex : ParseException => {
@@ -87,9 +113,10 @@ class ArchiveRecordWrapper (rec : ArchiveRecord) extends InputStream {
     }
   } 
 
-  /** Cue up a record to its start, fill in httpResponse & contentType. */
-  def cueUp {
-    ready = true;
+  /**
+   * Cue up a record to its start, fill in httpResponse & contentType.
+   */
+  private def cueUp {
     rec match {
       case rec1 : WARCRecord => {
         if (rec1.getHeader.getMimetype == "application/http; msgtype=response") {
@@ -117,17 +144,8 @@ class ArchiveRecordWrapper (rec : ArchiveRecord) extends InputStream {
         statusCode = Some(rec1.getStatusCode);
       }
     }
+    ready = true;
   }
-
-  // def getUniqueId (archiveRecord : ArchiveRecord) : String = {
-  //   archiveRecord match {
-  //     case rec : ARCRecord => {
-  //       Utility.skipHttpHeader(rec);
-  //       val uuri = UURIFactory.getInstance(rec.getMetaData.getUrl);
-  //       return "%s.%s".format(uuri.toString, rec.getDigestStr);
-  //     }
-  //   }
-  // }
 
   def getStatusCode : Option[Int] = {
     if (!ready) cueUp;
