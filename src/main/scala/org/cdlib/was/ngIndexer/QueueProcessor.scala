@@ -11,15 +11,29 @@ import org.slf4j.LoggerFactory
 
 import sun.misc.{Signal, SignalHandler};
 
+/**
+ * Subclass this to write handlers for items from the queue.
+ * 
+ */
 trait QueueItemHandler {
+  /**
+   * @returns true if the item was handled sucessfully.
+   */
   def handle (item : Item) : Boolean;
 }
 
+/**
+ * Subclass to create a factory to create items from the queue.
+ *
+ * Factory is used to allow users to define variables in the factory
+ * scope which will be shared by workers.
+ */
 trait QueueItemHandlerFactory {
   def mkHandler (zooKeeper : ZooKeeper) : QueueItemHandler;
 }
 
-/** Generic work queue processor
+/**
+ * A generic work queue processor
  */
 class QueueProcessor (zooKeeperHosts : String, path : String, workers : Int, handlerFactory : QueueItemHandlerFactory) {
   var finished = false;
@@ -53,6 +67,7 @@ class QueueProcessor (zooKeeperHosts : String, path : String, workers : Int, han
   }
 
   val reconnectSync = new Object;
+
   def reconnect {
     reconnectSync.synchronized {
       if (zookeeper.getState == ZooKeeper.States.CLOSED) {
@@ -63,22 +78,22 @@ class QueueProcessor (zooKeeperHosts : String, path : String, workers : Int, han
   }
 
   class Cleanup extends Thread {
+    val MS_BTWN_CLEANUP = 3600000; // 1 hour
     override def run {
+      var lastCleanup = System.currentTimeMillis;
       while (!finished) {
-        for (n <- 1 to 3600) {
-          /* every hour, clean up completed items */
-          if (n == 3600) {
-            try { 
-              reconnect;
-              q.cleanup(Item.COMPLETED);
-            } catch {
-              case ex : NoSuchElementException => ();
-              case ex : Exception => 
-                logger.error("Caught exception {} cleaning up.", ex);
-            }
-          }
-          if (finished) return;
+        if (System.currentTimeMillis < (lastCleanup + MS_BTWN_CLEANUP)) {
           Thread.sleep(1000);
+        } else {
+          try { 
+            reconnect;
+            q.cleanup(Item.COMPLETED);
+            lastCleanup = System.currentTimeMillis;
+          } catch {
+            case ex : NoSuchElementException => ();
+            case ex : Exception => 
+              logger.error("Caught exception {} cleaning up.", ex);
+          }
         }
       }
     }
