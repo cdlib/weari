@@ -13,7 +13,7 @@ import org.cdlib.was.ngIndexer.SolrProcessor.{ARCNAME_FIELD,
                                               SPECIFICATION_FIELD,
                                               URL_FIELD};
 
-import org.slf4j.LoggerFactory
+import org.slf4j.LoggerFactory;
 
 /** Class used to index ARC files.
   */
