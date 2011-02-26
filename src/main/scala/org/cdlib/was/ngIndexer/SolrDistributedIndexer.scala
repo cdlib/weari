@@ -49,10 +49,13 @@ class SolrDistributedServer (serverInit : Seq[Tuple3[String,String,Int]],
 
   /** Commit if threshold met. */
   def maybeCommit {
-    commitLock.synchronized {
-      if (commitCounter > commitThreshold) {
-        commitCounter = 0;
-        commit;
+    if (commitCounter > commitThreshold) {
+      commitLock.synchronized {
+        /* somebody else may have committed while we were waiting, check */
+        if (commitCounter > commitThreshold) {
+          commitCounter = 0;
+          commit;
+        }
       }
     }
   }
