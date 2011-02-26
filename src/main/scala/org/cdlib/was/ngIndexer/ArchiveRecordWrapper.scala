@@ -19,16 +19,21 @@ import org.archive.io.warc.WARCRecord;
 
 import org.apache.http.message.BasicLineParser;
 
+/**
+ * A wrapper for ArchiveRecord objects to provide a more consistent
+ * interface.
+ */
 class ArchiveRecordWrapper (rec : ArchiveRecord) extends InputStream {
   private var statusCode : Option[Int] = None;
   private var ready : Boolean = false;
   private var contentType : Option[String] = None;
   private var httpResponse : Boolean = false;
   
-  /** Method to read one line of input from an InputStream. A line
-    * ends in \n or \r\n.
-    *
-    */
+  /**
+   * Method to read one line of input from an InputStream. A line
+   * ends in \n or \r\n.
+   *
+   */
   private def readLine (is : InputStream) : CharArrayBuffer = {
     val buff = new CharArrayBuffer(1024);
     var b : Int = 0;
@@ -94,7 +99,7 @@ class ArchiveRecordWrapper (rec : ArchiveRecord) extends InputStream {
    * Takes a WARCRecord, and returns the statuscode and headers of an HTTP
    * response message. 
    *
-   * @returns None if there is an error in parsing, otherwise returns
+   * @return None if there is an error in parsing, otherwise returns
    * the status code and a map of the header values.
    */
   def parseHeaders (rec : WARCRecord) : Option[Pair[Int,Map[String,Header]]] = {
@@ -121,11 +126,9 @@ class ArchiveRecordWrapper (rec : ArchiveRecord) extends InputStream {
       case rec1 : WARCRecord => {
         if (rec1.getHeader.getMimetype == "application/http; msgtype=response") {
           httpResponse = true;
-          val header = parseHeaders(rec1);
-          header.map {(header1)=>
-            statusCode = Some(header1._1);
-            val headers = header1._2;
-            contentType = headers.get(HttpHeaders.CONTENT_TYPE.toLowerCase).map(_.getValue);
+          parseHeaders(rec1).map {(headers)=>
+            statusCode = Some(headers._1);
+            contentType = headers._2.get(HttpHeaders.CONTENT_TYPE.toLowerCase).map(_.getValue);
           }
         }
       }
@@ -147,16 +150,27 @@ class ArchiveRecordWrapper (rec : ArchiveRecord) extends InputStream {
     ready = true;
   }
 
+  /**
+   * Return the response code. Returns None if this is not an HTTP response
+   * record, or there was a failure in parsing.
+   */
   def getStatusCode : Option[Int] = {
     if (!ready) cueUp;
     return statusCode;
   }
 
+  /**
+   * Return the content type. Returns None if this is not an HTTP response
+   * record, or there was a failure in parsing.
+   */
   def getContentType : Option[String] = {
     if (!ready) cueUp;
     return contentType;
   }
 
+  /**
+   * Return true if this is an HTTP response record.
+   */
   def isHttpResponse : Boolean = {
     if (!ready) cueUp;
     return httpResponse;

@@ -13,8 +13,7 @@ object Utility {
    *
    * @param stream The InputStream to return from.
    * @param f a function taking two arguments, an Int and Array[byte]. Used for side effects.
-   * @returns Unit
-   * @author egh
+   * @return Unit
    */
   def readBytes (stream : InputStream, f : (Int, Array[Byte]) => Unit) : Unit = {
     var buffer = new Array[Byte](1024);
@@ -31,8 +30,6 @@ object Utility {
    *
    * @param file The File to open.
    * @param f a function taking two arguments, an Int and Array[byte]. Used for side effects.
-   * @returns Unit
-   * @author egh
    */
   def withFileOutputStream[A] (file : File, f : OutputStream => A) : A = {
     val out = new FileOutputStream(file);
