@@ -49,7 +49,7 @@ class QueueProcessor (zooKeeperHosts : String, path : String, workers : Int, han
           reconnect;
           val next = q.consume;
           if (next == null) {
-            Thread.sleep(100);
+            Thread.sleep(1000);
           } else {
             if (handler.handle(next)) {
               /* if it returns true, consider this finished */
@@ -59,8 +59,10 @@ class QueueProcessor (zooKeeperHosts : String, path : String, workers : Int, han
             }
           }
         } catch {
-          case ex : NoSuchElementException => ();
-          case ex : KeeperException => ();
+          case ex : NoSuchElementException =>
+            logger.error("Caught exception {} processing item.", ex);
+          case ex : KeeperException =>
+            logger.error("Caught exception {} processing item.", ex);
         }
       }
     }
@@ -88,11 +90,12 @@ class QueueProcessor (zooKeeperHosts : String, path : String, workers : Int, han
           try { 
             reconnect;
             q.cleanup(Item.COMPLETED);
-            lastCleanup = System.currentTimeMillis;
           } catch {
             case ex : NoSuchElementException => ();
             case ex : Exception => 
               logger.error("Caught exception {} cleaning up.", ex);
+          } finally {
+            lastCleanup = System.currentTimeMillis;
           }
         }
       }
