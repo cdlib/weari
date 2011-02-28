@@ -46,7 +46,7 @@ class QueueProcessor (zooKeeperHosts : String, path : String, workers : Int, han
     override def run {
       while (!finished) {
         try {
-          reconnect;
+          maybeReconnect;
           val next = q.consume;
           if (next == null) {
             Thread.sleep(1000);
@@ -61,6 +61,10 @@ class QueueProcessor (zooKeeperHosts : String, path : String, workers : Int, han
         } catch {
           case ex : NoSuchElementException =>
             logger.error("Caught exception {} processing item.", ex);
+          case ex : KeeperException.SessionExpiredException =>
+            /* Q: why do we need this? I would think maybeReconnect */
+            /* would catch it */
+            reconnect;
           case ex : KeeperException =>
             logger.error("Caught exception {} processing item.", ex);
         }
@@ -72,10 +76,14 @@ class QueueProcessor (zooKeeperHosts : String, path : String, workers : Int, han
 
   def reconnect {
     reconnectSync.synchronized {
-      if (zookeeper.getState == ZooKeeper.States.CLOSED) {
-        zookeeper = new ZooKeeper(zooKeeperHosts, 10000, 
-                                  new DistributedQueue.Ignorer());
-      }
+      zookeeper = new ZooKeeper(zooKeeperHosts, 10000, 
+                                new DistributedQueue.Ignorer());
+    }
+  }
+  
+  def maybeReconnect {
+    if (zookeeper.getState == ZooKeeper.States.CLOSED) {
+      reconnect;
     }
   }
 
@@ -88,7 +96,7 @@ class QueueProcessor (zooKeeperHosts : String, path : String, workers : Int, han
           Thread.sleep(1000);
         } else {
           try { 
-            reconnect;
+            maybeReconnect;
             q.cleanup(Item.COMPLETED);
           } catch {
             case ex : NoSuchElementException => ();
