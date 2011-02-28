@@ -161,6 +161,7 @@ class SolrProcessor {
     } catch {
       case ex : Throwable => {
         logger.error("Error reading {}: {}", rec.getUrl, ex);
+        writeBadDocument(rec);
       }
     }
     /* finish index */
@@ -190,6 +191,14 @@ class SolrProcessor {
       }
     }
     return Some(doc);
+  }
+
+  def writeBadDocument (rec : ArchiveRecordWrapper) {
+    rec.reset;
+    /* create file in working dir */
+    val f = File.createTempFile("bad", "", new File("."));
+    Utility.readStreamIntoFile(f, rec);
+    logger.error("Wrote bad document to {}.", f.getPath);
   }
 
   /** For each record in a file, call the function.
