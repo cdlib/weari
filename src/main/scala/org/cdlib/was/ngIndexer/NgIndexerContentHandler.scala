@@ -32,7 +32,9 @@ class NgIndexerContentHandler (useTempFile : Boolean)
     }
 
   val tempFile = if (useTempFile) {
-    Some(File.createTempFile("ng-indexer", "data"));
+    val f = File.createTempFile("ng-indexer", "data");
+    f.deleteOnExit;
+    Some(f);
   } else {
     None
   }
