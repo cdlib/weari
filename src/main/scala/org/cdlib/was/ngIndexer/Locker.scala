@@ -20,11 +20,22 @@ class Locker (zooKeeperHosts : String, lockRoot : String) {
                      CreateMode.PERSISTENT);
   }
 
-  def obtainLock[T] (lockName : String) (proc : =>T) : T = {
+  def obtainLock[T] (lockName : String) (proc: => T) : T = {
     var l = new WriteLock(zookeeper, "%s/%s".format(lockRoot, lockName), null);
     if (!l.lock) { while (!l.isOwner) { Thread.sleep(100); } }
     val retval = proc;
     l.unlock;
     return retval;
   }  
+
+  def tryToObtainLock[T] (lockName : String) (proc: => T) (orElse: => T) : T = {
+    var l = new WriteLock(zookeeper, "%s/%s".format(lockRoot, lockName), null);
+    val retval = if (l.lock) {
+      proc;
+    } else {
+      orElse;
+    }
+    l.unlock;
+    return retval;
+  }    
 }

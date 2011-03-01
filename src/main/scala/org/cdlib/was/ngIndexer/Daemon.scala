@@ -43,7 +43,7 @@ object Daemon {
           val cmd = new String(item.getData(), "UTF-8").split(" ");
           cmd.toList match {
             case List("INDEX", uriString, job, specification, project) => {
-              locker.obtainLock[Boolean] (specification) {
+              locker.tryToObtainLock (specification) {
                 val uri = new URI(uriString);
                 val ArcRE(arcName) = uriString;
                 try {
@@ -66,6 +66,8 @@ object Daemon {
                   case ex : HttpHostConnectException =>
                     return false;
                 }
+              } /* else failed to obtain lock */ {
+                return false;
               }
             }
           }
