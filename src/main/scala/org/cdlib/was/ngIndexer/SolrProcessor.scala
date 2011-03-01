@@ -155,13 +155,13 @@ class SolrProcessor {
     val contentHandler = new MultiContentHander(List[ContentHandler](wgContentHandler, indexContentHandler));
     tikaMetadata.set(HttpHeaders.CONTENT_LOCATION, url);
     tikaMetadata.set(HttpHeaders.CONTENT_TYPE, contentType.get);
+    val bis = new BufferedInputStream(rec);
     try {
-      val bis = new BufferedInputStream(rec);
       parser.parse(bis, contentHandler, tikaMetadata, parseContext);
     } catch {
       case ex : Throwable => {
         logger.error("Error reading {}: {}", rec.getUrl, ex);
-        writeBadDocument(rec);
+        writeBadDocument(bis);
       }
     }
     /* finish index */
@@ -193,11 +193,11 @@ class SolrProcessor {
     return Some(doc);
   }
 
-  def writeBadDocument (rec : ArchiveRecordWrapper) {
-    rec.reset;
+  def writeBadDocument (is : InputStream) {
+    is.reset;
     /* create file in working dir */
     val f = File.createTempFile("bad", "", new File("."));
-    Utility.readStreamIntoFile(f, rec);
+    Utility.readStreamIntoFile(f, is);
     logger.error("Wrote bad document to {}.", f.getPath);
   }
 
