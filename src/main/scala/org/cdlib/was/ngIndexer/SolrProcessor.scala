@@ -194,11 +194,16 @@ class SolrProcessor {
   }
 
   def writeBadDocument (is : InputStream) {
-    is.reset;
-    /* create file in working dir */
-    val f = File.createTempFile("bad", "", new File("."));
-    Utility.readStreamIntoFile(f, is);
-    logger.error("Wrote bad document to {}.", f.getPath);
+    try {
+      is.reset;
+      /* create file in working dir */
+      val f = File.createTempFile("bad", "", new File("."));
+      Utility.readStreamIntoFile(f, is);
+      logger.error("Wrote bad document to {}.", f.getPath);
+    } catch {
+      case ex : Exception =>
+        logger.error("Error writing bad document to disk: {}", ex);
+    }
   }
 
   /** For each record in a file, call the function.
