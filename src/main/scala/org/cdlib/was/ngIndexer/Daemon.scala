@@ -8,8 +8,6 @@ import org.apache.http.conn.HttpHostConnectException;
 
 import org.apache.zookeeper.ZooKeeper;
 
-import org.apache.zookeeper.recipes.lock.WriteLock;
-
 import org.apache.zookeeper.recipes.queue.Item
 
 import org.cdlib.ssconf.Configurator
@@ -37,15 +35,7 @@ object Daemon {
 
   val handlerFactory = new QueueItemHandlerFactory {
     val indexer = new SolrIndexer(config);
-
-    def obtainLock[T] (zooKeeper : ZooKeeper, lockName : String) (proc : T) : T = {
-      var lock = new WriteLock(zooKeeper, "/arcIndexLock/%s".format(lockName), null);
-      lock.lock();
-      while (!lock.isOwner) { Thread.sleep(100); }
-      val retval = proc;
-      lock.unlock;
-      return retval;
-    }
+    val locker = new Locker(config.zooKeeperHosts(), "/arcIndexLock");
 
     def mkHandler (zooKeeper : ZooKeeper): QueueItemHandler = {
       new QueueItemHandler {
@@ -53,12 +43,11 @@ object Daemon {
           val cmd = new String(item.getData(), "UTF-8").split(" ");
           cmd.toList match {
             case List("INDEX", uriString, job, specification, project) => {
-              obtainLock (zooKeeper, specification) {
+              locker.obtainLock[Boolean] (specification) {
                 val uri = new URI(uriString);
                 val ArcRE(arcName) = uriString;
                 try {
                   httpClient.getUri(uri) { (stream)=>
-                    System.err.println("Indexing %s".format(uri));
                     val tmpDir = new File(System.getProperty("java.io.tmpdir"));
                     val tmpFile = new File(tmpDir, arcName);
                     Utility.readStreamIntoFile(tmpFile, stream);
