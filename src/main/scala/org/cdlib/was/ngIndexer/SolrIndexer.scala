@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 
 /** Class used to index ARC files.
   */
-class SolrIndexer(config : Config) {
+class SolrIndexer(config : Config) extends Retry {
   val processor = new SolrProcessor;
   val server = new SolrDistributedServer(config.indexers(), 
                                          config.queueSize(), 
@@ -63,10 +63,10 @@ class SolrIndexer(config : Config) {
         for ((k,v) <- extraFields) doc.setField(k, v);
         val oldId = doc.getFieldValue(ID_FIELD).asInstanceOf[String];
         doc.setField(ID_FIELD, "%s.%s".format(oldId, extraId));
-        Utility.retry (3) {
+        retry(3) {
           indexDoc(server, doc);
           server.maybeCommit;
-        } /* in case we fail 3 times */ {
+        } {
           case ex : Exception =>
             logger.error("Exception while indexing document from arc ({}): {}.", arcName, ex);
         }

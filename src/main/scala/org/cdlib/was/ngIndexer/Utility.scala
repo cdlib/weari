@@ -68,19 +68,4 @@ object Utility {
     reader.close;
   }
 
-  def retry (times : Int) (what : =>Unit) (except : (Exception)=>Unit) {
-    var i = 0;
-    var finished = false;
-    while (i < times && !finished) {
-      try {
-        what;
-        finished = true;
-      } catch {
-        case ex : Exception => {
-          except(ex);
-          i = i + 1;
-        }
-      }
-    }
-  }
 }
