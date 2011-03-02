@@ -7,8 +7,6 @@ import org.apache.zookeeper.{KeeperException, ZooKeeper};
 
 import org.cdlib.ssconf.Configurator;
 
-import org.slf4j.LoggerFactory
-
 import sun.misc.{Signal, SignalHandler};
 
 /**
@@ -35,12 +33,11 @@ trait QueueItemHandlerFactory {
 /**
  * A generic work queue processor
  */
-class QueueProcessor (zooKeeperHosts : String, path : String, workers : Int, handlerFactory : QueueItemHandlerFactory) {
+class QueueProcessor (zooKeeperHosts : String, path : String, workers : Int, handlerFactory : QueueItemHandlerFactory) extends Logger {
   var finished = false;
   var zookeeper = new ZooKeeper(zooKeeperHosts, 10000, 
                                 new DistributedQueue.Ignorer());
   val q = new DistributedQueue(zookeeper, path, null);
-  val logger = LoggerFactory.getLogger(classOf[QueueProcessor]);
 
   class Worker (handler : QueueItemHandler) extends Thread {    
     override def run {

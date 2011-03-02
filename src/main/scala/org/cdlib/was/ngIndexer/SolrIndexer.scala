@@ -13,18 +13,14 @@ import org.cdlib.was.ngIndexer.SolrProcessor.{ARCNAME_FIELD,
                                               SPECIFICATION_FIELD,
                                               URL_FIELD};
 
-import org.slf4j.LoggerFactory;
-
 /** Class used to index ARC files.
   */
-class SolrIndexer(config : Config) extends Retry {
+class SolrIndexer(config : Config) extends Retry with Logger {
   val processor = new SolrProcessor;
   val server = new SolrDistributedServer(config.indexers(), 
                                          config.queueSize(), 
                                          config.queueRunners(),
                                          config.commitThreshold());
-
-  val logger = LoggerFactory.getLogger(classOf[SolrIndexer]);
 
   /** Index an ARC file. */
   def index (file : File, extraId : String, extraFields : Map[String, String]) : Boolean = 

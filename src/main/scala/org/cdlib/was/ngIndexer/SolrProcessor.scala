@@ -20,8 +20,6 @@ import org.archive.net.UURIFactory
 
 import org.cdlib.was.ngIndexer.webgraph.WebGraphContentHandler
 
-import org.slf4j.LoggerFactory
-
 import org.xml.sax.ContentHandler
 
 import scala.collection.JavaConversions.asScalaIterable;
@@ -75,10 +73,8 @@ object SolrProcessor {
   *
   * @author egh
   */
-class SolrProcessor {
+class SolrProcessor extends Logger {
   import SolrProcessor._;
-
-  val logger = LoggerFactory.getLogger(classOf[SolrProcessor]);
 
   /* date formatter for solr */
   val dateFormatter = new java.text.SimpleDateFormat("yyyyMMddHHmmssSSS");
