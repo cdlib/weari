@@ -1,7 +1,11 @@
 package org.cdlib.was.ngIndexer;
 
-import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.codec.digest.DigestUtils.md5;
+
 import org.cdlib.rabinpoly.RabinPoly;
+
+import org.cdlib.was.ngIndexer.UriUtils.bytearray2long;
+
 import scala.collection.immutable.SortedMap;
 import scala.collection.immutable.TreeMap;
 
@@ -38,7 +42,7 @@ class ConsistentHashRing[T] {
   private var levels : Map[String, Int] = Map[String, Int]();
 
   def hash (bytes : Array[Byte]) : Long = 
-    UriUtils.bytearray2long(DigestUtils.md5(bytes).slice(8,16));
+    bytearray2long(md5(bytes).slice(8,16));
 
   def hash (str : String) : Long = hash(str.getBytes("UTF-8"))
 
