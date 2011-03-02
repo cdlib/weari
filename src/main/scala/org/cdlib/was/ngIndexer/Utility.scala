@@ -46,23 +46,23 @@ object Utility {
         out.write(buffer, 0, bytesRead)));
   }
 
-  def eachArc (arcFile : java.io.File) (f: (ArchiveRecord)=>Unit) {
+  def eachArc (arcFile : java.io.File) (f: (ArchiveRecordWrapper)=>Unit) {
     val reader = ArchiveReaderFactory.get(arcFile)
     val it = reader.iterator;
     while (it.hasNext) {
       val next = it.next;
-      f (next);
+      f (new ArchiveRecordWrapper(next, arcFile.getName));
       next.close;
     }
     reader.close;
   }
 
-  def eachArc (stream : java.io.InputStream, arcName : String) (f: (ArchiveRecord)=>Unit) {
+  def eachArc (stream : java.io.InputStream, arcName : String) (f: (ArchiveRecordWrapper)=>Unit) {
     val reader = ArchiveReaderFactory.get(arcName, stream, true);
     val it = reader.iterator;
     while (it.hasNext) {
       val next = it.next;
-      f (next);
+      f (new ArchiveRecordWrapper(next, arcName));
       next.close;
     }
     reader.close;

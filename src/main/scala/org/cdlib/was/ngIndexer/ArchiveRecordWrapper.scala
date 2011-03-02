@@ -23,7 +23,7 @@ import org.apache.http.message.BasicLineParser;
  * A wrapper for ArchiveRecord objects to provide a more consistent
  * interface.
  */
-class ArchiveRecordWrapper (rec : ArchiveRecord) extends InputStream {
+class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String) extends InputStream {
   private var statusCode : Option[Int] = None;
   private var ready : Boolean = false;
   private var contentType : Option[String] = None;
@@ -183,6 +183,8 @@ class ArchiveRecordWrapper (rec : ArchiveRecord) extends InputStream {
   def getDate = rec.getHeader.getDate;
 
   def getDigestStr = rec.getDigestStr;
+
+  def getFilename = filename;
 
   /* InputStream wrapper */
   override def available = { 

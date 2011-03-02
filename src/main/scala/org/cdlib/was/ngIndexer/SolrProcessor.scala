@@ -78,9 +78,6 @@ object SolrProcessor {
 class SolrProcessor {
   import SolrProcessor._;
 
-  implicit def archiveRecord2Wrapper (rec : ArchiveRecord) = 
-    new ArchiveRecordWrapper(rec);
-
   val logger = LoggerFactory.getLogger(classOf[SolrProcessor]);
 
   /* date formatter for solr */
@@ -159,10 +156,8 @@ class SolrProcessor {
     try {
       parser.parse(bis, contentHandler, tikaMetadata, parseContext);
     } catch {
-      case ex : Throwable => {
-        logger.error("Error reading {}: {}", rec.getUrl, ex);
-        writeBadDocument(bis);
-      }
+      case ex : Throwable => 
+        logger.error("Error reading {} from {}: {}", Array[JObject](rec.getUrl, rec.getFilename, ex));
     }
     /* finish index */
     rec.close;

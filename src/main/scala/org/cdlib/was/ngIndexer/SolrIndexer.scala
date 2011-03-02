@@ -48,7 +48,12 @@ class SolrIndexer(config : Config) {
     }
   }
         
-  /** Index an arc file. */
+  /**
+   * Index an arc file.
+   * @param extraId extra bit to be appended to the document id
+   * @param extraFields Map of extra fields to be added to the document
+   * @return true if indexing succeeded
+   */
   def index (stream : InputStream, 
              arcName : String,
              extraId : String,
@@ -61,8 +66,9 @@ class SolrIndexer(config : Config) {
         Utility.retry (3) {
           indexDoc(server, doc);
           server.maybeCommit;
-        } {(ex)=>
-          logger.error("Exception while indexing document from arc ({}): {}.", arcName, ex);
+        } /* in case we fail 3 times */ {
+          case ex : Exception =>
+            logger.error("Exception while indexing document from arc ({}): {}.", arcName, ex);
         }
       }
       /* ensure a commit at the end of the stream */
@@ -77,21 +83,22 @@ class SolrIndexer(config : Config) {
   }
 
   def delete (file : File, removeFields : Map[String,String]) {
-    Utility.eachArc(file) { (rec) =>
-      val id = "xxx" ; // TODO
-      server.getById(id) match {
-        case None => ();
-        case Some(olddoc) => {
-          val inputdoc = processor.doc2InputDoc(olddoc);
-          processor.removeFieldValue(inputdoc, ARCNAME_FIELD, file.getName);
-          for ((k,v) <- removeFields)
-            processor.removeFieldValue(inputdoc, k, v);
-          server.deleteById(id);
-          server.add(inputdoc);
-          server.maybeCommit;
+    Utility.eachArc(file) { 
+      (rec) =>
+        val id = "xxx" ; // TODO
+        server.getById(id) match {
+            case None => ();
+          case Some(olddoc) => {
+            val inputdoc = processor.doc2InputDoc(olddoc);
+            processor.removeFieldValue(inputdoc, ARCNAME_FIELD, file.getName);
+            for ((k,v) <- removeFields)
+              processor.removeFieldValue(inputdoc, k, v);
+            server.deleteById(id);
+              server.add(inputdoc);
+            server.maybeCommit;
+          }
         }
       }
-    }
     server.commit;
   }
 }
@@ -142,6 +149,15 @@ object SolrIndexer {
                                 PROJECT_FIELD -> project))
             }
           }
+          case "test" => {
+            for (path <- args.drop(4)) {
+              indexer.index(new File(path), specification,
+                            Map(JOB_FIELD -> job, 
+                                SPECIFICATION_FIELD -> specification, 
+                                PROJECT_FIELD -> project))
+            }
+          }
+
           case _ => {
             System.err.println("No command specified!");
             System.exit(1);
