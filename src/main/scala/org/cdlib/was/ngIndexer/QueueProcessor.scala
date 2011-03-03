@@ -27,7 +27,7 @@ trait QueueItemHandler {
  * scope which will be shared by workers.
  */
 trait QueueItemHandlerFactory {
-  def mkHandler (zooKeeper : ZooKeeper) : QueueItemHandler;
+  def mkHandler : QueueItemHandler;
 }
 
 /**
@@ -35,15 +35,12 @@ trait QueueItemHandlerFactory {
  */
 class QueueProcessor (zooKeeperHosts : String, path : String, workers : Int, handlerFactory : QueueItemHandlerFactory) extends Logger {
   var finished = false;
-  var zookeeper = new ZooKeeper(zooKeeperHosts, 10000, 
-                                new DistributedQueue.Ignorer());
-  val q = new DistributedQueue(zookeeper, path, null);
+  val q = new Queue(zooKeeperHosts, path);
 
   class Worker (handler : QueueItemHandler) extends Thread {    
     override def run {
       while (!finished) {
         try {
-          maybeReconnect;
           val next = q.consume;
           if (next == null) {
             Thread.sleep(1000);
@@ -56,31 +53,10 @@ class QueueProcessor (zooKeeperHosts : String, path : String, workers : Int, han
             }
           }
         } catch {
-          case ex : NoSuchElementException =>
-            logger.error("Caught exception {} processing item.", ex);
-          case ex : KeeperException.SessionExpiredException =>
-            /* Q: why do we need this? I would think maybeReconnect */
-            /* would catch it */
-            reconnect;
-          case ex : KeeperException =>
+          case ex : Exception =>
             logger.error("Caught exception {} processing item.", ex);
         }
       }
-    }
-  }
-
-  val reconnectSync = new Object;
-
-  def reconnect {
-    reconnectSync.synchronized {
-      zookeeper = new ZooKeeper(zooKeeperHosts, 10000, 
-                                new DistributedQueue.Ignorer());
-    }
-  }
-  
-  def maybeReconnect {
-    if (zookeeper.getState == ZooKeeper.States.CLOSED) {
-      reconnect;
     }
   }
 
@@ -93,7 +69,6 @@ class QueueProcessor (zooKeeperHosts : String, path : String, workers : Int, han
           Thread.sleep(1000);
         } else {
           try { 
-            maybeReconnect;
             q.cleanup(Item.COMPLETED);
           } catch {
             case ex : NoSuchElementException => ();
@@ -109,7 +84,7 @@ class QueueProcessor (zooKeeperHosts : String, path : String, workers : Int, han
 
   def start {
     for (n <- 1 to workers)
-      (new Worker(handlerFactory.mkHandler(zookeeper))).start;
+      (new Worker(handlerFactory.mkHandler)).start;
     (new Cleanup).start;
   }
   

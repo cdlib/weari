@@ -1,5 +1,6 @@
 package org.cdlib.was.ngIndexer;
 
+
 import java.io.File;
 
 import java.net.URI
@@ -37,38 +38,28 @@ object Daemon {
     val indexer = new SolrIndexer(config);
     val locker = new Locker(config.zooKeeperHosts(), "/arcIndexLock");
 
-    def mkHandler (zooKeeper : ZooKeeper): QueueItemHandler = {
-      new QueueItemHandler {
-        def handle (item : Item) : Boolean = {
-          val cmd = new String(item.getData(), "UTF-8").split(" ");
-          cmd.toList match {
-            case List("INDEX", uriString, job, specification, project) => {
-              locker.tryToObtainLock (specification) {
-                val uri = new URI(uriString);
-                val ArcRE(arcName) = uriString;
-                try {
-                  httpClient.getUri(uri) { (stream)=>
-                    val tmpDir = new File(System.getProperty("java.io.tmpdir"));
-                    val tmpFile = new File(tmpDir, arcName);
-                    Utility.readStreamIntoFile(tmpFile, stream);
-                    val retval = indexer.index(tmpFile, specification,
-                                               Map(JOB_FIELD->job,
-                                                   SPECIFICATION_FIELD->specification, 
-                                                   PROJECT_FIELD->project));
-                    tmpFile.delete;
-                    retval;
-                  } match {
-                    case None        => false;
-                    case Some(false) => false;
-                    case Some(true)  => true;
-                  }
-                } catch {
-                  case ex : HttpHostConnectException =>
-                    return false;
-                }
-              } /* else failed to obtain lock */ {
-                return false;
+    def mkHandler = new QueueItemHandler {
+      def handle (item : Item) : Boolean = {
+        val cmd = new String(item.getData(), "UTF-8").split(" ");
+        cmd.toList match {
+          case List("INDEX", uriString, job, specification, project) => {
+            locker.tryToObtainLock (specification) {
+              val uri = new URI(uriString);
+              val ArcRE(arcName) = uriString;
+              try {
+                httpClient.getUri(uri) {
+                  (stream)=>
+                    indexer.index(stream, arcName, specification,
+                                  Map(JOB_FIELD->job,
+                                      SPECIFICATION_FIELD->specification, 
+                                      PROJECT_FIELD->project));
+                }.getOrElse(false);
+              } catch {
+                case ex : HttpHostConnectException =>
+                  return false;
               }
+            } /* else failed to obtain lock */ {
+              return false;
             }
           }
         }
