@@ -5,8 +5,8 @@ import org.apache.zookeeper.{KeeperException, ZooKeeper};
 
 /** Helper class to retry ZK operations */
 
-class Queue(zookeeperHosts : String, path : String) extends Retry {
-  var zookeeper = new ZooKeeper(zookeeperHosts, 10000, 
+class Queue(zookeeperHosts : String, path : String) {
+  var zookeeper = new ZooKeeper(zookeeperHosts, 10000,
                                 new DistributedQueue.Ignorer());
 
   val q = new DistributedQueue(zookeeper, path, null);
@@ -15,7 +15,7 @@ class Queue(zookeeperHosts : String, path : String) extends Retry {
 
   def reconnect {
     reconnectSync.synchronized {
-      zookeeper = new ZooKeeper(zookeeperHosts, 10000, 
+      zookeeper = new ZooKeeper(zookeeperHosts, 10000,
                                 new DistributedQueue.Ignorer());
     }
   }
@@ -25,13 +25,19 @@ class Queue(zookeeperHosts : String, path : String) extends Retry {
       reconnect;
     }
   }
-  
+
+  def submit (bytes : Array[Byte]) = {
+    retry {
+      q.submit(bytes);
+    }
+  }
+
   def consume : Item = {
     retry {
       q.consume;
     }
   }
-  
+
   def requeue (id : String) {
     retry {
       q.requeue(id);
