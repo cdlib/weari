@@ -24,7 +24,11 @@ import org.xml.sax.ContentHandler
 
 import scala.collection.JavaConversions.asScalaIterable;
 
-object SolrProcessor {
+/** Object for processing (W)ARC files into Solr documents.
+  *
+  * @author egh
+  */
+object SolrProcessor extends Logger {
   val ARCNAME_FIELD        = "arcname";
   val BOOST_FIELD          = "boost";
   val CANONICALURL_FIELD   = "canonicalurl";
@@ -67,14 +71,6 @@ object SolrProcessor {
          JOB_FIELD,
          PROJECT_FIELD,
          SPECIFICATION_FIELD);
-}
-
-/** Class for processing (W)ARC files into Solr documents.
-  *
-  * @author egh
-  */
-class SolrProcessor extends Logger {
-  import SolrProcessor._;
 
   /* date formatter for solr */
   val dateFormatter = new java.text.SimpleDateFormat("yyyyMMddHHmmssSSS");

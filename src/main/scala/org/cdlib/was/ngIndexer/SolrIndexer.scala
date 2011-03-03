@@ -13,10 +13,11 @@ import org.cdlib.was.ngIndexer.SolrProcessor.{ARCNAME_FIELD,
                                               SPECIFICATION_FIELD,
                                               URL_FIELD};
 
+import org.cdlib.was.ngIndexer.SolrProcessor.{doc2InputDoc,mergeDocs,processStream,removeFieldValue};
+
 /** Class used to index ARC files.
   */
 class SolrIndexer(config : Config) extends Retry with Logger {
-  val processor = new SolrProcessor;
   val server = new SolrDistributedServer(config.indexers(), 
                                          config.queueSize(), 
                                          config.queueRunners(),
@@ -37,7 +38,7 @@ class SolrIndexer(config : Config) extends Retry with Logger {
     server.getById(id) match {
       case None => server.add(doc);
       case Some(olddoc) => {
-        val mergedDoc = processor.mergeDocs(processor.doc2InputDoc(olddoc), doc);
+        val mergedDoc = mergeDocs(doc2InputDoc(olddoc), doc);
         server.deleteById(id);
         server.add(mergedDoc);
       }
@@ -55,7 +56,7 @@ class SolrIndexer(config : Config) extends Retry with Logger {
              extraId : String,
              extraFields : Map[String, String]) : Boolean = {
     try {
-      processor.processStream(arcName, stream) { (doc) =>
+      processStream(arcName, stream) { (doc) =>
         for ((k,v) <- extraFields) doc.setField(k, v);
         val oldId = doc.getFieldValue(ID_FIELD).asInstanceOf[String];
         doc.setField(ID_FIELD, "%s.%s".format(oldId, extraId));
@@ -85,10 +86,10 @@ class SolrIndexer(config : Config) extends Retry with Logger {
         server.getById(id) match {
             case None => ();
           case Some(olddoc) => {
-            val inputdoc = processor.doc2InputDoc(olddoc);
-            processor.removeFieldValue(inputdoc, ARCNAME_FIELD, file.getName);
+            val inputdoc = doc2InputDoc(olddoc);
+            removeFieldValue(inputdoc, ARCNAME_FIELD, file.getName);
             for ((k,v) <- removeFields)
-              processor.removeFieldValue(inputdoc, k, v);
+              removeFieldValue(inputdoc, k, v);
             server.deleteById(id);
               server.add(inputdoc);
             server.maybeCommit;
