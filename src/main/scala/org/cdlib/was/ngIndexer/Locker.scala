@@ -9,11 +9,11 @@ import org.apache.zookeeper.recipes.queue.DistributedQueue;
 import org.apache.zookeeper.recipes.lock.LockListener;
 import org.apache.zookeeper.recipes.lock.WriteLock;
 
-import org.menagerie.{DefaultZkSessionManager,ZkSessionManager};
+import org.menagerie.ZkSessionManager;
+
 import org.menagerie.locks.ReentrantZkLock;
 
-class Locker (zooKeeperHosts : String, lockRoot : String) extends Retry {
-  val session = new DefaultZkSessionManager(zooKeeperHosts, 10000);
+class Locker (session : ZkSessionManager, lockRoot : String) extends Retry {
   
   retry (3) {
     if (session.getZooKeeper.exists(lockRoot, false) == null) {
@@ -35,6 +35,4 @@ class Locker (zooKeeperHosts : String, lockRoot : String) extends Retry {
     val l = new ReentrantZkLock("%s/%s".format(lockRoot, lockName), session);
     return if (l.tryLock) proc; else otherwise;
   }
-  
-  def finish { session.closeSession; }
 }

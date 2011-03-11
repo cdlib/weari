@@ -17,6 +17,8 @@ import org.cdlib.was.ngIndexer.SolrProcessor.{JOB_FIELD,
                                               PROJECT_FIELD,
                                               SPECIFICATION_FIELD};
 
+import org.menagerie.{DefaultZkSessionManager,ZkSessionManager};
+
 import scala.util.matching.Regex;
 
 import sun.misc.{Signal, SignalHandler};
@@ -34,12 +36,14 @@ object Daemon {
 
   val ArcRE = new Regex(""".*?([A-Za-z0-9\.-]+arc.gz).*""");
 
+  val session = new DefaultZkSessionManager(zkHosts, 10000);
+
   val handlerFactory = new QueueItemHandlerFactory {
     val indexer = new SolrIndexer(config);
 
     def mkHandler = new QueueItemHandler {
       def handle (item : Item) : Boolean = {
-        val locker = new Locker(config.zooKeeperHosts(), "/arcIndexLock");
+        val locker = new Locker(session, "/arcIndexLock");
         val cmd = new String(item.getData(), "UTF-8").split(" ");
         try {
           cmd.toList match {
@@ -65,16 +69,20 @@ object Daemon {
             }
           }
         } finally {
-          locker.finish;
+          session.closeSession;
         }
       }
     }
   };
 
-  val queueProcessor = new QueueProcessor(zkHosts, zkPath, threadCount, handlerFactory);
+  val queueProcessor = 
+    new QueueProcessor(session, zkPath, threadCount, handlerFactory);
 
   object handler extends SignalHandler {
-    def handle (signal : Signal) { queueProcessor.finish; }
+    def handle (signal : Signal) { 
+      queueProcessor.finish;
+      session.closeSession;
+    }
   }
 
   def main (args : Array[String]) {   
