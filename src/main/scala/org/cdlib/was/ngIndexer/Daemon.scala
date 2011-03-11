@@ -45,31 +45,27 @@ object Daemon {
       def handle (item : Item) : Boolean = {
         val locker = new Locker(session, "/arcIndexLock");
         val cmd = new String(item.getData(), "UTF-8").split(" ");
-        try {
-          cmd.toList match {
-            case List("INDEX", uriString, job, specification, project) => {
-              locker.tryToObtainLock (specification) {
-                val uri = new URI(uriString);
-                val ArcRE(arcName) = uriString;
-                try {
-                  httpClient.getUri(uri) {
-                    (stream)=>
-                      indexer.index(stream, arcName, specification,
-                                    Map(JOB_FIELD->job,
+        cmd.toList match {
+          case List("INDEX", uriString, job, specification, project) => {
+            locker.tryToObtainLock (specification) {
+              val uri = new URI(uriString);
+              val ArcRE(arcName) = uriString;
+              try {
+                httpClient.getUri(uri) {
+                  (stream)=>
+                    indexer.index(stream, arcName, specification,
+                                  Map(JOB_FIELD->job,
                                         SPECIFICATION_FIELD->specification, 
-                                        PROJECT_FIELD->project));
-                  }.getOrElse(false);
-                } catch {
-                  case ex : HttpHostConnectException =>
-                    return false;
-                }
-              } /* else failed to obtain lock */ {
-                return false;
+                                      PROJECT_FIELD->project));
+                }.getOrElse(false);
+              } catch {
+                case ex : HttpHostConnectException =>
+                  return false;
               }
+            } /* else failed to obtain lock */ {
+              return false;
             }
           }
-        } finally {
-          session.closeSession;
         }
       }
     }
