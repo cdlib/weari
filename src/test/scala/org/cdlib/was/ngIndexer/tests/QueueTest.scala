@@ -14,8 +14,8 @@ class QueueTest extends FeatureSpec {
   val q = new Queue(zkhosts, "/test");
   feature ("We need to ensure that our queue is robust.") {
     scenario ("Ensure that we can enqueue an item.") {
-      q.zookeeper = new ZooKeeper(zkhosts, 10,
-                                  new DistributedQueue.Ignorer());
+      // q.zookeeper = new ZooKeeper(zkhosts, 10,
+      //                             new DistributedQueue.Ignorer());
       for (i <- 1 to 10) {
         q.submit(Array[Byte](0, 1, 2, 3));
         Thread.sleep(50);

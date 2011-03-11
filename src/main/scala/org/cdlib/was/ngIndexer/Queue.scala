@@ -1,76 +1,35 @@
 package org.cdlib.was.ngIndexer;
+
 import org.apache.zookeeper.recipes.queue.DistributedQueue;
 import org.apache.zookeeper.recipes.queue.Item;
 import org.apache.zookeeper.{KeeperException, ZooKeeper};
 
+import org.menagerie.{DefaultZkSessionManager,ZkSessionManager};
+
 /** Helper class to retry ZK operations */
 
-class Queue(zookeeperHosts : String, path : String) {
-  var zookeeper = new ZooKeeper(zookeeperHosts, 10000,
-                                new DistributedQueue.Ignorer());
+class Queue(zooKeeperHosts : String, path : String) {
+  val session = new DefaultZkSessionManager(zooKeeperHosts, 10000);
 
-  val q = new DistributedQueue(zookeeper, path, null);
+  def q : DistributedQueue = new DistributedQueue(session.getZooKeeper, path, null);
 
-  val reconnectSync = new Object;
+  def submit (bytes : Array[Byte]) { retry { q.submit(bytes); } }
 
-  def reconnect {
-    reconnectSync.synchronized {
-      zookeeper = new ZooKeeper(zookeeperHosts, 10000,
-                                new DistributedQueue.Ignorer());
-    }
-  }
+  def consume : Item = { retry { q.consume; } }
+
+  def requeue (id : String) { retry { q.requeue(id); } }
+
+  def complete (id : String) { retry { q.complete(id); } }
   
-  def maybeReconnect {
-    if (zookeeper.getState == ZooKeeper.States.CLOSED) {
-      reconnect;
-    }
-  }
+  def cleanup (b : Byte) { retry { q.cleanup(b); } }
 
-  def submit (bytes : Array[Byte]) = {
-    retry {
-      q.submit(bytes);
-    }
-  }
-
-  def consume : Item = {
-    retry {
-      q.consume;
-    }
-  }
-
-  def requeue (id : String) {
-    retry {
-      q.requeue(id);
-    }
-  }
-
-  def complete (id : String) {
-    retry {
-      q.complete(id);
-    }
-  }
-  
-  def cleanup (b : Byte) {
-    retry {
-      q.cleanup(b);
-    }
-  }
-
-  def retry[T] (what: => T) : T = {
+  private def retry[T] (what: => T) : T = {
     var i = 0;
     while (i < 3) {
       try {
-        maybeReconnect;
         return what;
       } catch {
-        case ex : KeeperException.SessionExpiredException =>
-          /* Q: why do we need this? I would think maybeReconnect */
-          /* would catch it */
-          reconnect;
-          i = i + 1;
-          if (i >= 3) throw ex;
         case ex : KeeperException.ConnectionLossException =>
-          reconnect;
           i = i + 1;
           if (i >= 3) throw ex;
       }

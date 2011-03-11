@@ -12,14 +12,16 @@ import org.apache.zookeeper.recipes.lock.WriteLock;
 import org.menagerie.{DefaultZkSessionManager,ZkSessionManager};
 import org.menagerie.locks.ReentrantZkLock;
 
-class Locker (zooKeeperHosts : String, lockRoot : String) {
+class Locker (zooKeeperHosts : String, lockRoot : String) extends Retry {
   val session = new DefaultZkSessionManager(zooKeeperHosts, 10000);
   
-  if (session.getZooKeeper.exists(lockRoot, false) == null) {
-    session.getZooKeeper.create(lockRoot, Array[Byte](),
-                                Ids.OPEN_ACL_UNSAFE,
-                                CreateMode.PERSISTENT);
-  }
+  retry (3) {
+    if (session.getZooKeeper.exists(lockRoot, false) == null) {
+      session.getZooKeeper.create(lockRoot, Array[Byte](),
+                                  Ids.OPEN_ACL_UNSAFE,
+                                  CreateMode.PERSISTENT);
+    }
+  } {(ex)=>}
 
   def obtainLock[T] (lockName : String) (proc: => T) : T = {
     val l = new ReentrantZkLock("%s/%s".format(lockRoot, lockName), session);
@@ -35,5 +37,4 @@ class Locker (zooKeeperHosts : String, lockRoot : String) {
   }
   
   def finish { session.closeSession; }
-
 }
