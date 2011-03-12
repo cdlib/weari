@@ -9,9 +9,12 @@ import org.apache.zookeeper.recipes.queue.DistributedQueue;
 import org.apache.zookeeper.recipes.queue.Item;
 import org.apache.zookeeper.{KeeperException, ZooKeeper};
 
+import org.menagerie.{DefaultZkSessionManager,ZkSessionManager};
+
 class QueueTest extends FeatureSpec {
   val zkhosts = "localhost:2181"
-  val q = new Queue(zkhosts, "/test");
+  val session = new DefaultZkSessionManager(zkhosts, 10000);
+  val q = new Queue(session, "/test");
   feature ("We need to ensure that our queue is robust.") {
     scenario ("Ensure that we can enqueue an item.") {
       // q.zookeeper = new ZooKeeper(zkhosts, 10,

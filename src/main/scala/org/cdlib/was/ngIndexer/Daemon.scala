@@ -35,7 +35,6 @@ object Daemon {
   val threadCount = config.threadCount();
 
   val ArcRE = new Regex(""".*?([A-Za-z0-9\.-]+arc.gz).*""");
-
   val session = new DefaultZkSessionManager(zkHosts, 10000);
 
   val handlerFactory = new QueueItemHandlerFactory {
@@ -43,11 +42,11 @@ object Daemon {
 
     def mkHandler = new QueueItemHandler {
       def handle (item : Item) : Boolean = {
-        val locker = new Locker(session, "/arcIndexLock");
+        val locker = new Locker(zkHosts);
         val cmd = new String(item.getData(), "UTF-8").split(" ");
         cmd.toList match {
           case List("INDEX", uriString, job, specification, project) => {
-            locker.tryToObtainLock (specification) {
+            locker.tryToObtainLock ("/arcIndexLock/%s".format(specification)) {
               val uri = new URI(uriString);
               val ArcRE(arcName) = uriString;
               try {
