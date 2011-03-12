@@ -12,14 +12,14 @@ import org.apache.zookeeper.recipes.lock.WriteLock;
 import org.menagerie.{DefaultZkSessionManager,ZkSessionManager};
 
 import org.menagerie.locks.ReentrantZkLock;
+import org.menagerie.ZkUtils;
 
 class Locker (zkhosts : String) extends Retry {
   private def mkLockDir (session : ZkSessionManager, path : String) {
-    if (session.getZooKeeper.exists(path, false) == null) {
-      session.getZooKeeper.create(path, Array[Byte](),
-                                  Ids.OPEN_ACL_UNSAFE,
-                                  CreateMode.PERSISTENT);
-    }
+    ZkUtils.safeCreate(session.getZooKeeper, path, 
+                       Array[Byte](),
+                       Ids.OPEN_ACL_UNSAFE,
+                       CreateMode.PERSISTENT);
   }
 
   def obtainLock[T] (lockName : String) (proc: => T) : T = {
