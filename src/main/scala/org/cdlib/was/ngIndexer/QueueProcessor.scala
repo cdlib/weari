@@ -7,8 +7,6 @@ import org.apache.zookeeper.{KeeperException, ZooKeeper};
 
 import org.cdlib.ssconf.Configurator;
 
-import org.menagerie.ZkSessionManager;
-
 import sun.misc.{Signal, SignalHandler};
 
 /**
@@ -35,9 +33,9 @@ trait QueueItemHandlerFactory {
 /**
  * A generic work queue processor
  */
-class QueueProcessor (session : ZkSessionManager, path : String, workers : Int, handlerFactory : QueueItemHandlerFactory) extends Logger {
+class QueueProcessor (hosts : String, path : String, workers : Int, handlerFactory : QueueItemHandlerFactory) extends Logger {
   var finished = false;
-  val q = new Queue(session, path);
+  val q = new Queue(hosts, path);
 
   class Worker (handler : QueueItemHandler) extends Thread {    
     override def run {
@@ -84,13 +82,22 @@ class QueueProcessor (session : ZkSessionManager, path : String, workers : Int, 
     }
   }
 
+  var threads = List[Thread]();
+
   def start {
-    for (n <- 1 to workers)
-      (new Worker(handlerFactory.mkHandler)).start;
-    (new Cleanup).start;
+    for (n <- 1 to workers) {
+      val thread = new Worker(handlerFactory.mkHandler);
+      thread.start;
+      threads = thread :: threads;
+    }
+    val cleanupThread = new Cleanup;
+    cleanupThread.start;
+    threads = cleanupThread :: threads;
   }
   
   def finish {
     finished = true;
+    for (t <- threads) t.join;
+    q.close;
   }
 }

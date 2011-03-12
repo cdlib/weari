@@ -4,11 +4,13 @@ import org.apache.zookeeper.recipes.queue.DistributedQueue;
 import org.apache.zookeeper.recipes.queue.Item;
 import org.apache.zookeeper.{KeeperException, ZooKeeper};
 
-import org.menagerie.ZkSessionManager;
+import org.menagerie.{DefaultZkSessionManager,ZkSessionManager};
 
 /** Helper class to retry ZK operations */
 
-class Queue(session : ZkSessionManager, path : String) {
+class Queue(hosts : String, path : String) {
+
+  val session = new DefaultZkSessionManager(hosts, 10000);
 
   def q : DistributedQueue = new DistributedQueue(session.getZooKeeper, path, null);
 
@@ -36,4 +38,6 @@ class Queue(session : ZkSessionManager, path : String) {
     /* should be unreachable */
     return null.asInstanceOf[T];
   }
+
+  def close = { session.closeSession; }
 }

@@ -13,8 +13,7 @@ import org.menagerie.{DefaultZkSessionManager,ZkSessionManager};
 
 class QueueTest extends FeatureSpec {
   val zkhosts = "localhost:2181"
-  val session = new DefaultZkSessionManager(zkhosts, 10000);
-  val q = new Queue(session, "/test");
+  val q = new Queue(zkhosts, "/test");
   feature ("We need to ensure that our queue is robust.") {
     scenario ("Ensure that we can enqueue an item.") {
       // q.zookeeper = new ZooKeeper(zkhosts, 10,
@@ -25,6 +24,7 @@ class QueueTest extends FeatureSpec {
         val item = q.consume;
         q.complete(item.getId);
       }
+      q.close;
       //causes exception
       //      q.cleanup(Item.COMPLETED);
     }

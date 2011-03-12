@@ -35,7 +35,6 @@ object Daemon {
   val threadCount = config.threadCount();
 
   val ArcRE = new Regex(""".*?([A-Za-z0-9\.-]+arc.gz).*""");
-  val session = new DefaultZkSessionManager(zkHosts, 10000);
 
   val handlerFactory = new QueueItemHandlerFactory {
     val indexer = new SolrIndexer(config);
@@ -71,12 +70,11 @@ object Daemon {
   };
 
   val queueProcessor = 
-    new QueueProcessor(session, zkPath, threadCount, handlerFactory);
+    new QueueProcessor(zkHosts, zkPath, threadCount, handlerFactory);
 
   object handler extends SignalHandler {
     def handle (signal : Signal) { 
       queueProcessor.finish;
-      session.closeSession;
     }
   }
 
