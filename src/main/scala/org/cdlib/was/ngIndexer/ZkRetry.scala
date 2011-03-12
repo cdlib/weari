@@ -14,11 +14,15 @@ trait ZkRetry {
         val retval = what;
         return what;
       } catch {
-        case ex : KeeperException.ConnectionLossException => {
+        case ex : KeeperException.ConnectionLossException =>
           i = i + 1;
           if (i >= 10) throw ex;
-        }
-        case ex : Throwable => throw ex;
+        case ex : RuntimeException =>
+          /* assuming a ZK exception */
+          i = i + 1;
+          if (i >= 10) throw ex;          
+        case ex : Throwable => 
+          throw ex;
       }
     }
     /* should be unreachable */
