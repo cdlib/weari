@@ -17,7 +17,7 @@ import org.menagerie.ZkUtils;
 class Locker (zkhosts : String) extends ZkRetry {
   def obtainLock[T] (lockName : String) (proc: => T) : T = {
     val session = new DefaultZkSessionManager(zkhosts, 10000);
-    val l = new ReentrantZkLock(lockName, session);
+    val l = retry { new ReentrantZkLock(lockName, session); }
     retry { l.lock; }
     val retval = proc;
     retry { l.unlock; }
@@ -27,7 +27,7 @@ class Locker (zkhosts : String) extends ZkRetry {
 
   def tryToObtainLock[T] (lockName : String) (proc: => T) (otherwise: => T) : T = {
     val session = new DefaultZkSessionManager(zkhosts, 10000);
-    val l = new ReentrantZkLock(lockName, session);
+    val l = retry { new ReentrantZkLock(lockName, session); }
     val retval = retry { if (l.tryLock) proc; else otherwise; }
     session.closeSession;
     return retval;
