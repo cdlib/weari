@@ -17,7 +17,7 @@ trait ZkRetry {
         case ex : KeeperException.ConnectionLossException =>
           i = i + 1;
           if (i >= 10) throw ex;
-        case ex : RuntimeException =>
+        case ex : java.lang.RuntimeException =>
           /* assuming a ZK exception */
           i = i + 1;
           if (i >= 10) throw ex;          

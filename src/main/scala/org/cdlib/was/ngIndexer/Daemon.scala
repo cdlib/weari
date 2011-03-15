@@ -38,10 +38,10 @@ object Daemon {
 
   val handlerFactory = new QueueItemHandlerFactory {
     val indexer = new SolrIndexer(config);
+    val locker = new Locker(zkHosts);
 
     def mkHandler = new QueueItemHandler {
       def handle (item : Item) : Boolean = {
-        val locker = new Locker(zkHosts);
         val cmd = new String(item.getData(), "UTF-8").split(" ");
         cmd.toList match {
           case List("INDEX", uriString, job, specification, project) => {
@@ -67,6 +67,7 @@ object Daemon {
         }
       }
     }
+    def finish = { locker.finish; }
   };
 
   val queueProcessor = 
@@ -75,6 +76,7 @@ object Daemon {
   object handler extends SignalHandler {
     def handle (signal : Signal) { 
       queueProcessor.finish;
+      handlerFactory.finish;
     }
   }
 

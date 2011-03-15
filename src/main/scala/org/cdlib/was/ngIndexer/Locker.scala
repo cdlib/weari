@@ -15,21 +15,36 @@ import org.menagerie.locks.ReentrantZkLock;
 import org.menagerie.ZkUtils;
 
 class Locker (zkhosts : String) extends ZkRetry {
+  var lockers = scala.collection.mutable.Map[String, ReentrantZkLock]();
+  val session = new DefaultZkSessionManager(zkhosts, 100000);
+  val sync = new Object;
+
+  def getLock (lockName : String) : ReentrantZkLock = {
+    lockers.get(lockName) match {
+      case Some(lock) => lock;
+      case None => {
+        sync.synchronized {
+          val lock = new ReentrantZkLock(lockName, session);
+          lockers.put(lockName, lock);
+          lock;
+        }
+      }
+    }
+  }
+
   def obtainLock[T] (lockName : String) (proc: => T) : T = {
-    val session = new DefaultZkSessionManager(zkhosts, 10000);
-    val l = retry { new ReentrantZkLock(lockName, session); }
-    retry { l.lock; }
+    val l = getLock(lockName);
+    l.lock;
     val retval = proc;
-    retry { l.unlock; }
-    session.closeSession;
+    l.unlock;
     return retval;
   }
 
   def tryToObtainLock[T] (lockName : String) (proc: => T) (otherwise: => T) : T = {
-    val session = new DefaultZkSessionManager(zkhosts, 10000);
-    val l = retry { new ReentrantZkLock(lockName, session); }
-    val retval = retry { if (l.tryLock) proc; else otherwise; }
-    session.closeSession;
+    val l = getLock(lockName);
+    val retval = if (l.tryLock) proc; else otherwise;
     return retval;
   }
+  
+  def finish { session.closeSession; }
 }
