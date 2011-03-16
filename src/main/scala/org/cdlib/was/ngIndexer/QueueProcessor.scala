@@ -1,8 +1,7 @@
 package org.cdlib.was.ngIndexer;
 
 import java.util.NoSuchElementException;
-import org.apache.zookeeper.recipes.queue.DistributedQueue;
-import org.apache.zookeeper.recipes.queue.Item;
+import org.cdlib.mrt.queue.Item;
 import org.apache.zookeeper.{KeeperException, ZooKeeper};
 
 import org.cdlib.ssconf.Configurator;
@@ -35,10 +34,10 @@ trait QueueItemHandlerFactory {
  */
 class QueueProcessor (hosts : String, path : String, workers : Int, handlerFactory : QueueItemHandlerFactory) extends Logger {
   var finished = false;
-  val q = new Queue(hosts, path);
 
   class Worker (handler : QueueItemHandler) extends Thread {    
     override def run {
+      val q = new Queue(hosts, path);
       while (!finished) {
         try {
           val next = q.consume;
@@ -49,7 +48,7 @@ class QueueProcessor (hosts : String, path : String, workers : Int, handlerFacto
               /* if it returns true, consider this finished */
               q.complete(next.getId);
             } else {
-              q.requeue(next.getId);
+              q.requeue(next);
             }
           }
         } catch {
@@ -57,6 +56,7 @@ class QueueProcessor (hosts : String, path : String, workers : Int, handlerFacto
             logger.error("Caught exception {} processing item.", ex);
         }
       }
+      q.close;
     }
   }
 
@@ -64,6 +64,7 @@ class QueueProcessor (hosts : String, path : String, workers : Int, handlerFacto
     val MS_BTWN_CLEANUP = 3600000; // 1 hour
     override def run {
       var lastCleanup = System.currentTimeMillis;
+      val q = new Queue(hosts, path);
       while (!finished) {
         if (System.currentTimeMillis < (lastCleanup + MS_BTWN_CLEANUP)) {
           Thread.sleep(1000);
@@ -79,6 +80,7 @@ class QueueProcessor (hosts : String, path : String, workers : Int, handlerFacto
           }
         }
       }
+      q.close;
     }
   }
 
@@ -97,7 +99,5 @@ class QueueProcessor (hosts : String, path : String, workers : Int, handlerFacto
   
   def finish {
     finished = true;
-    for (t <- threads) t.join;
-    q.close;
   }
 }

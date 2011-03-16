@@ -7,11 +7,6 @@ import org.cdlib.was.ngIndexer._;
 
 import org.apache.zookeeper.{KeeperException,ZooKeeper};
 
-import org.apache.zookeeper.recipes.queue.DistributedQueue;
-
-import org.apache.zookeeper.recipes.lock.LockListener;
-import org.apache.zookeeper.recipes.lock.WriteLock;
-
 import java.lang.Math.{random,round};
 
 class LockerTest extends FeatureSpec {

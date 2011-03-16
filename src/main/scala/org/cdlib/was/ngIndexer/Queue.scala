@@ -1,7 +1,6 @@
 package org.cdlib.was.ngIndexer;
 
-import org.apache.zookeeper.recipes.queue.DistributedQueue;
-import org.apache.zookeeper.recipes.queue.Item;
+import org.cdlib.mrt.queue.{DistributedQueue,Item};
 import org.apache.zookeeper.{KeeperException, ZooKeeper};
 
 import org.menagerie.{DefaultZkSessionManager,ZkSessionManager};
@@ -18,7 +17,7 @@ class Queue(hosts : String, path : String) {
 
   def consume : Item = { retry { q.consume; } }
 
-  def requeue (id : String) { retry { q.requeue(id); } }
+  def requeue (item : Item) { retry { q.requeue(item); } }
 
   def complete (id : String) { retry { q.complete(id); } }
   

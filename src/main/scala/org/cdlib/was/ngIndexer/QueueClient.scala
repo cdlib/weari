@@ -1,7 +1,6 @@
 package org.cdlib.was.ngIndexer;
 
-import org.apache.zookeeper.recipes.queue.DistributedQueue;
-import org.apache.zookeeper.recipes.queue.Item;
+import org.cdlib.mrt.queue.{DistributedQueue,Item};
 import org.apache.zookeeper.ZooKeeper;
 
 object QueueClient {

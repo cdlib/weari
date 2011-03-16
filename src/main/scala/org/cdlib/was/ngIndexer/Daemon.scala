@@ -9,9 +9,9 @@ import org.apache.http.conn.HttpHostConnectException;
 
 import org.apache.zookeeper.ZooKeeper;
 
-import org.apache.zookeeper.recipes.queue.Item
+import org.cdlib.mrt.queue.Item;
 
-import org.cdlib.ssconf.Configurator
+import org.cdlib.ssconf.Configurator;
 
 import org.cdlib.was.ngIndexer.SolrProcessor.{JOB_FIELD,
                                               PROJECT_FIELD,
@@ -53,7 +53,7 @@ object Daemon {
                   (stream)=>
                     indexer.index(stream, arcName, specification,
                                   Map(JOB_FIELD->job,
-                                        SPECIFICATION_FIELD->specification, 
+                                      SPECIFICATION_FIELD->specification, 
                                       PROJECT_FIELD->project));
                 }.getOrElse(false);
               } catch {

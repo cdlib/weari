@@ -168,9 +168,9 @@
       <version>3.3.1</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.zookeeper</groupId>
-      <artifactId>zookeeper-recipes-queue</artifactId>
-      <version>3.3.1-CDL</version>
+      <groupId>org.cdlib.mrt</groupId>
+      <artifactId>cdl-zk-queue</artifactId>
+      <version>0.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.cdlib</groupId>

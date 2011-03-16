@@ -4,8 +4,6 @@ import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.ZooDefs.Ids;
 import org.apache.zookeeper.{KeeperException,ZooKeeper};
 
-import org.apache.zookeeper.recipes.queue.DistributedQueue;
-
 import org.apache.zookeeper.recipes.lock.LockListener;
 import org.apache.zookeeper.recipes.lock.WriteLock;
 
