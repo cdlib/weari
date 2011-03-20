@@ -177,6 +177,11 @@
       <artifactId>ssconf</artifactId>
       <version>0.1-SNAPSHOT</version>
     </dependency>
+    <dependency>
+      <groupId>net.liftweb</groupId>
+      <artifactId>lift-json_2.8.1</artifactId>
+      <version>2.3-RC2</version>
+    </dependency>
   </dependencies>
 
   <repositories>
