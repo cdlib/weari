@@ -32,10 +32,13 @@ object SolrProcessor extends Logger {
   val ARCNAME_FIELD        = "arcname";
   val BOOST_FIELD          = "boost";
   val CANONICALURL_FIELD   = "canonicalurl";
+  val CHARSET_FIELD        = "charset";
   val CONTENT_FIELD        = "content";
   val CONTENT_LENGTH_FIELD = "contentLength";
   val DATE_FIELD           = "date";
   val DIGEST_FIELD         = "digest";
+  val HTTP_TOP_TYPE_FIELD  = "httpTopType";
+  val HTTP_TYPE_FIELD      = "httpType";
   val HOST_FIELD           = "host";
   val ID_FIELD             = "id";
   val JOB_FIELD            = "job";
@@ -44,7 +47,7 @@ object SolrProcessor extends Logger {
   val SITE_FIELD           = "site";
   val SPECIFICATION_FIELD  = "specification";
   val TITLE_FIELD          = "title";
-  val TOPTYPE_FIELD        = "topType";
+  val TOP_TYPE_FIELD       = "topType";
   val TSTAMP_FIELD         = "tstamp";
   val TYPE_FIELD           = "type";
   val URLFP_FIELD          = "urlfp";
@@ -101,6 +104,23 @@ object SolrProcessor extends Logger {
     doc.addField(TSTAMP_FIELD, dateFormatter.format(new java.util.Date(System.currentTimeMillis())), 1.0f);
     doc.addField(URLFP_FIELD, UriUtils.fingerprint(uuri));
     doc.addField(CANONICALURL_FIELD, uuri.toString, 1.0f);
+  }
+  
+  def updateMimeTypes (doc : SolrInputDocument,
+                       httpTypeStr : String,
+                       tikaTypeStr : String) {
+    val (httpType, httpCharset) = ArchiveRecordWrapper.parseContentType(httpTypeStr);
+    val (tikaType, tikaCharset) = ArchiveRecordWrapper.parseContentType(tikaTypeStr);
+    
+    httpType.map {(p)=>
+      doc.addField(HTTP_TOP_TYPE_FIELD, p._1, 1.0f);
+      doc.addField(HTTP_TYPE_FIELD, "%s/%s".format(p._1, p._2), 1.0f);
+    }
+    httpCharset.map(doc.addField(CHARSET_FIELD, _, 1.0f));
+    tikaType.map {(p)=>
+      doc.addField(TOP_TYPE_FIELD, p._1, 1.0f);
+      doc.addField(TYPE_FIELD, "%s/%s".format(p._1, p._2), 1.0f);
+    }
   }
 
   /** Turn an existing SolrDocument into a SolrInputDocument suitable
@@ -162,8 +182,7 @@ object SolrProcessor extends Logger {
     updateDocBoost(doc, 1.0f);
     updateDocMain(doc, url, rec.getDigestStr);
     doc.addField(DATE_FIELD, rec.getDate.toLowerCase, 1.0f);
-    doc.addField(TYPE_FIELD, tikaMetadata.get(HttpHeaders.CONTENT_TYPE), 1.0f);
-    doc.addField(TOPTYPE_FIELD, tikaMetadata.get(HttpHeaders.CONTENT_TYPE).split("/")(0), 1.0f);
+    updateMimeTypes(doc, tikaMetadata.get(HttpHeaders.CONTENT_TYPE), contentType.get);
     doc.addField(TITLE_FIELD, title, 1.0f);
     doc.addField(CONTENT_LENGTH_FIELD, rec.getLength, 1.0f);
     /* finish webgraph */
