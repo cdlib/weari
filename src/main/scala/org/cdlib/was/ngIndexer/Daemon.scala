@@ -1,6 +1,5 @@
 package org.cdlib.was.ngIndexer;
 
-
 import java.io.File;
 
 import java.net.URI
@@ -22,8 +21,6 @@ import org.cdlib.was.ngIndexer.SolrProcessor.{JOB_FIELD,
 
 import org.menagerie.{DefaultZkSessionManager,ZkSessionManager};
 
-import scala.util.matching.Regex;
-
 import sun.misc.{Signal, SignalHandler};
 
 object Daemon {
@@ -37,7 +34,6 @@ object Daemon {
   val zkPath =  config.zooKeeperPath();
   val threadCount = config.threadCount();
 
-  val ArcRE = new Regex(""".*?([A-Za-z0-9\.-]+arc.gz).*""");
 
   val handlerFactory = new QueueItemHandlerFactory {
     val indexer = new SolrIndexer(config);
@@ -45,26 +41,16 @@ object Daemon {
 
     def mkHandler = new QueueItemHandler {
       def handle (item : Item) : Boolean = {
-        val cmd = JsonParser.parse(new String(item.getData(), "UTF-8"));
-        // TODO - Make this typesafe
-        (cmd \ "command").values.asInstanceOf[String] match {
-          case "INDEX" => {
-            val uriString = (cmd \ "uri").values.asInstanceOf[String];
-            val uri = new URI(uriString);
-            val ArcRE(arcName) = uriString;
-            val job = (cmd \ "job").values.asInstanceOf[String];
-            val specification = (cmd \ "specification").values.asInstanceOf[String];
-            val project = (cmd \ "project").values.asInstanceOf[String];
-            val tags = (cmd \ "tags").values.asInstanceOf[List[String]];
-            httpClient.getUri(uri) {
+        Command.parseCommand(new String(item.getData(), "UTF-8")) match {
+          case Some(cmd : IndexCommand) => 
+            httpClient.getUri(cmd.uri) {
               (stream)=>
-                indexer.index(stream, arcName, specification,
-                              Map(JOB_FIELD->job,
-                                  TAG_FIELD->tags,
-                                  SPECIFICATION_FIELD->specification, 
-                                  PROJECT_FIELD->project));
+                indexer.index(stream, cmd.arcName, cmd.specification,
+                              Map(JOB_FIELD->cmd.job,
+                                  TAG_FIELD->cmd.tags,
+                                  SPECIFICATION_FIELD->cmd.specification, 
+                                  PROJECT_FIELD->cmd.project));
             }.getOrElse(false);
-          }
           case _ => false // Unknown command
         }
       }
