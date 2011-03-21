@@ -82,6 +82,7 @@
         <!-- application, audio, text, video, etc. -->
         <field name="topType" type="string" stored="true" indexed="true"/>
         <field name="charset" type="string" stored="true" indexed="true"/>
+        <!-- types as asserted in Content-Type header -->
         <field name="httpTopType" type="string" stored="true" indexed="true"/>
         <field name="httpType" type="string" stored="true" indexed="true"/>
         <field name="contentLength" type="long" stored="true"
@@ -121,6 +122,8 @@
                multiValued="true"/>
         <field name="arcname" type="string" stored="true" indexed="true"
                multiValued="true" omitNorms="true"/>
+        <field name="tag" type="string" stored="true" indexed="true"
+               multiValued="true"/>
     </fields>
     <uniqueKey>id</uniqueKey>
     <defaultSearchField>content</defaultSearchField>
