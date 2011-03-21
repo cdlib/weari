@@ -5,6 +5,8 @@ import java.io.File;
 
 import java.net.URI
 
+import net.liftweb.json.JsonParser;
+
 import org.apache.http.conn.HttpHostConnectException;
 
 import org.apache.zookeeper.ZooKeeper;
@@ -15,7 +17,8 @@ import org.cdlib.ssconf.Configurator;
 
 import org.cdlib.was.ngIndexer.SolrProcessor.{JOB_FIELD,
                                               PROJECT_FIELD,
-                                              SPECIFICATION_FIELD};
+                                              SPECIFICATION_FIELD,
+                                              TAG_FIELD};
 
 import org.menagerie.{DefaultZkSessionManager,ZkSessionManager};
 
@@ -42,28 +45,27 @@ object Daemon {
 
     def mkHandler = new QueueItemHandler {
       def handle (item : Item) : Boolean = {
-        val cmd = new String(item.getData(), "UTF-8").split(" ");
-        cmd.toList match {
-          case List("INDEX", uriString, job, specification, project) => {
-            locker.tryToObtainLock ("/arcIndexLock/%s".format(specification)) {
-              val uri = new URI(uriString);
-              val ArcRE(arcName) = uriString;
-              try {
-                httpClient.getUri(uri) {
-                  (stream)=>
-                    indexer.index(stream, arcName, specification,
-                                  Map(JOB_FIELD->job,
-                                      SPECIFICATION_FIELD->specification, 
-                                      PROJECT_FIELD->project));
-                }.getOrElse(false);
-              } catch {
-                case ex : HttpHostConnectException =>
-                  return false;
-              }
-            } /* else failed to obtain lock */ {
-              return false;
-            }
+        val cmd = JsonParser.parse(new String(item.getData(), "UTF-8"));
+        // TODO - Make this typesafe
+        (cmd \ "command").values.asInstanceOf[String] match {
+          case "INDEX" => {
+            val uriString = (cmd \ "uri").values.asInstanceOf[String];
+            val uri = new URI(uriString);
+            val ArcRE(arcName) = uriString;
+            val job = (cmd \ "job").values.asInstanceOf[String];
+            val specification = (cmd \ "specification").values.asInstanceOf[String];
+            val project = (cmd \ "project").values.asInstanceOf[String];
+            val tags = (cmd \ "tags").values.asInstanceOf[List[String]];
+            httpClient.getUri(uri) {
+              (stream)=>
+                indexer.index(stream, arcName, specification,
+                              Map(JOB_FIELD->job,
+                                  TAG_FIELD->tags,
+                                  SPECIFICATION_FIELD->specification, 
+                                  PROJECT_FIELD->project));
+            }.getOrElse(false);
           }
+          case _ => false // Unknown command
         }
       }
     }

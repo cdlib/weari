@@ -24,7 +24,7 @@ class SolrIndexer(config : Config) extends Retry with Logger {
                                          config.commitThreshold());
 
   /** Index an ARC file. */
-  def index (file : File, extraId : String, extraFields : Map[String, String]) : Boolean = 
+  def index (file : File, extraId : String, extraFields : Map[String, Any]) : Boolean = 
     index(new FileInputStream(file), file.getName, extraId, extraFields);
 
   /** Index a single Solr document. If a document with the same ID
@@ -54,10 +54,13 @@ class SolrIndexer(config : Config) extends Retry with Logger {
   def index (stream : InputStream, 
              arcName : String,
              extraId : String,
-             extraFields : Map[String, String]) : Boolean = {
+             extraFields : Map[String, Any]) : Boolean = {
     try {
       processStream(arcName, stream) { (doc) =>
-        for ((k,v) <- extraFields) doc.setField(k, v);
+        for ((k,v) <- extraFields) v match {
+          case l : List[Any] => l.map(v2=>doc.addField(k, v2));
+          case o : Any => doc.setField(k, o);
+        }
         val oldId = doc.getFieldValue(ID_FIELD).asInstanceOf[String];
         doc.setField(ID_FIELD, "%s.%s".format(oldId, extraId));
         retry(3) {

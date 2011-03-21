@@ -46,6 +46,7 @@ object SolrProcessor extends Logger {
   val SERVER_FIELD         = "server";
   val SITE_FIELD           = "site";
   val SPECIFICATION_FIELD  = "specification";
+  val TAG_FIELD            = "tag";
   val TITLE_FIELD          = "title";
   val TOP_TYPE_FIELD       = "topType";
   val TSTAMP_FIELD         = "tstamp";
