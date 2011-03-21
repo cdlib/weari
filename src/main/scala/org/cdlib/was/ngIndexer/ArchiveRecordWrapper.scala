@@ -2,12 +2,12 @@ package org.cdlib.was.ngIndexer;
 
 import java.io.InputStream;
 
-import org.apache.http.Header;
+import org.apache.http.{Header,HeaderElement,NameValuePair};
 import org.apache.http.ParseException;
 import org.apache.http.impl.DefaultHttpResponseFactory;
 import org.apache.http.impl.io.AbstractSessionInputBuffer;
 import org.apache.http.impl.io.{AbstractMessageParser,HttpResponseParser};
-import org.apache.http.message.ParserCursor;
+import org.apache.http.message.{BasicHeaderValueParser,HeaderValueParser,ParserCursor};
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.util.CharArrayBuffer;
 
@@ -18,6 +18,8 @@ import org.archive.io.arc.ARCRecord;
 import org.archive.io.warc.WARCRecord;
 
 import org.apache.http.message.BasicLineParser;
+
+import scala.util.matching.Regex;
 
 /**
  * A wrapper for ArchiveRecord objects to provide a more consistent
@@ -226,3 +228,30 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String) extends Inpu
     rec.skip(n);
   }
 }
+
+object ArchiveRecordWrapper {
+  val MIME_RE = new Regex("""(application|audio|image|text|video)/([a-zA-Z0-9-]+)""");
+
+  val headerValueParser = new BasicHeaderValueParser;
+  
+  def parseContentType (line : String) : Pair[Option[Pair[String,String]], Option[String]] = {
+    try {
+      val buff = new CharArrayBuffer(80);
+      buff.append(line);
+      val parsed = headerValueParser.parseElements(buff, new ParserCursor(0, buff.length));
+      val contentType = parsed(0).getName match {
+        case null => None;
+        case MIME_RE(topType, subType) => Some(Pair(topType, subType));
+        case _ => None;
+      }
+      val charset = parsed(0).getParameterByName("charset") match {
+        case null => None;
+        case p : NameValuePair => Some(p.getValue);
+      }
+      return (contentType, charset);
+    } catch {
+      case ex : Exception => (None, None);
+    }
+  }
+}
+    
