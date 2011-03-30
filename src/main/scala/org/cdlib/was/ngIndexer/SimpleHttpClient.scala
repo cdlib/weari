@@ -8,6 +8,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.params.{BasicHttpParams,HttpConnectionParams,HttpProtocolParams};
 import org.apache.http.{HttpException,HttpResponse,HttpVersion};
+import org.apache.http.util.EntityUtils;
 
 import java.io.InputStream;
 
@@ -16,13 +17,14 @@ import java.net.URI;
 class SimpleHttpClient {
   val schemeRegistry = new SchemeRegistry();
   schemeRegistry.register(
-    new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
+    new Scheme("http", 80, PlainSocketFactory.getSocketFactory()));
   /* setup params */
   val params = new BasicHttpParams();
-  ConnManagerParams.setMaxTotalConnections(params, 100);
   HttpConnectionParams.setConnectionTimeout(params, 20 * 1000);
   HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
-  val cm = new ThreadSafeClientConnManager(params, schemeRegistry);
+  val cm = new ThreadSafeClientConnManager(schemeRegistry);
+  cm.setDefaultMaxPerRoute(100);
+  cm.setMaxTotal(100);
   var httpClient = new DefaultHttpClient(cm, params);
 
   def mkRequest[T] (request : HttpUriRequest) (f : (Pair[Int, HttpResponse]) => T) : T = {
@@ -32,7 +34,7 @@ class SimpleHttpClient {
       return f ((response.getStatusLine.getStatusCode, response));
     } finally {
       if ((response != null) && (response.getEntity != null))
-        { response.getEntity.consumeContent; }
+        { EntityUtils.consume(response.getEntity); }
     }      
   }
 
