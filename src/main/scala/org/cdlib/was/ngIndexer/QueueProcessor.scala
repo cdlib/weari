@@ -35,7 +35,7 @@ trait QueueItemHandlerFactory {
 class QueueProcessor (hosts : String, path : String, workers : Int, handlerFactory : QueueItemHandlerFactory) extends Logger {
   var finished = false;
 
-  class Worker (handler : QueueItemHandler) extends Thread {    
+  class Worker (handler : QueueItemHandler) extends Thread ("QueueWorker") {    
     override def run {
       val q = new Queue(hosts, path);
       while (!finished) {
