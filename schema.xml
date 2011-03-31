@@ -57,13 +57,9 @@
     </types>
     <fields>
         <field name="id" type="string" stored="true" indexed="true"/>
-
-        <!-- core fields -->
-        <!-- <field name="segment" type="string" stored="true" indexed="false"/> -->
         <field name="digest" type="string" stored="true" indexed="false"/>
         <field name="boost" type="float" stored="true" indexed="false"/>
 
-        <!-- fields for index-basic plugin -->
         <field name="host" type="url" stored="true" indexed="true"/>
         <field name="site" type="string" stored="true" indexed="true"/>
         <field name="url" type="url" stored="true" indexed="true"
@@ -73,11 +69,6 @@
         <field name="cache" type="string" stored="true" indexed="false"/>
         <field name="tstamp" type="long" stored="true" indexed="false"/>
 
-        <!-- fields for index-anchor plugin -->
-        <!-- <field name="anchor" type="string" stored="true" indexed="true"
-            multiValued="true"/> -->
-
-        <!-- fields for index-more plugin -->
         <field name="type" type="string" stored="true" indexed="true"/>
         <!-- application, audio, text, video, etc. -->
         <field name="topType" type="string" stored="true" indexed="true"/>
@@ -94,19 +85,6 @@
 
         <!-- fields for languageidentifier plugin -->
         <field name="lang" type="string" stored="true" indexed="true"/>
-
-        <!-- fields for subcollection plugin -->
-        <!-- <field name="subcollection" type="string" stored="true"
-            indexed="true"/> -->
-
-        <!-- fields for feed plugin -->
-        <!-- <field name="author" type="string" stored="true" indexed="true"/>
-        <field name="tag" type="string" stored="true" indexed="true"/>
-        <field name="feed" type="string" stored="true" indexed="true"/>
-        <field name="publishedDate" type="string" stored="true"
-            indexed="true"/>
-        <field name="updatedDate" type="string" stored="true"
-            indexed="true"/> -->
         
         <!-- my fields -egh -->
         <field name="outlinks" type="long" stored="true" indexed="false"
