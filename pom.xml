@@ -186,6 +186,12 @@
       <url>http://scala-tools.org/repo-releases</url>
     </repository>
 
+    <repository>
+      <id>cdl-snapshots</id>
+      <name>CDL Snapshots</name>
+      <url>http://builds.cdlib.org/repo/content/repositories/cdl-snapshots</url>
+    </repository>
+
 <!--     <repository>
       <id>builds.archive.org</id>
       <name>builds.archive.org</name>
