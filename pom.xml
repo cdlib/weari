@@ -165,7 +165,7 @@
     <dependency>
       <groupId>org.cdlib.mrt</groupId>
       <artifactId>cdl-zk-queue</artifactId>
-      <version>0.1-SNAPSHOT</version>
+      <version>0.1</version>
     </dependency>
     <dependency>
       <groupId>org.cdlib</groupId>
@@ -187,9 +187,8 @@
     </repository>
 
     <repository>
-      <id>cdl-snapshots</id>
-      <name>CDL Snapshots</name>
-      <url>http://builds.cdlib.org/repo/content/repositories/cdl-snapshots</url>
+      <id>cdl-releases</id>
+      <url>http://builds.cdlib.org/repo/content/repositories/cdl-releases</url>
     </repository>
 
 <!--     <repository>
