@@ -66,7 +66,6 @@ class SolrIndexer(config : Config) extends Retry with Logger {
         doc.setField(ID_FIELD, "%s.%s".format(oldId, extraId));
         retry(3) {
           indexDoc(server, doc);
-          server.maybeCommit;
         } {
           case ex : Exception =>
             logger.error("Exception while indexing document from arc ({}): {}.", arcName, ex);
@@ -96,7 +95,6 @@ class SolrIndexer(config : Config) extends Retry with Logger {
               removeFieldValue(inputdoc, k, v);
             server.deleteById(id);
               server.add(inputdoc);
-            server.maybeCommit;
           }
         }
       }
