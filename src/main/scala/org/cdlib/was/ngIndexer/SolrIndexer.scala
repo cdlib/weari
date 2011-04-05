@@ -24,8 +24,8 @@ class SolrIndexer(config : Config) extends Retry with Logger {
                                          config.commitThreshold());
 
   /** Index an ARC file. */
-  def index (file : File, extraId : String, extraFields : Map[String, Any]) : Boolean = 
-    index(new FileInputStream(file), file.getName, extraId, extraFields);
+  def index (file : File, extraId : String, extraFields : Map[String, Any], config : Config) : Boolean = 
+    index(new FileInputStream(file), file.getName, extraId, extraFields, config);
 
   /** Index a single Solr document. If a document with the same ID
     * already exists, the documents will be merged.
@@ -54,9 +54,10 @@ class SolrIndexer(config : Config) extends Retry with Logger {
   def index (stream : InputStream, 
              arcName : String,
              extraId : String,
-             extraFields : Map[String, Any]) : Boolean = {
+             extraFields : Map[String, Any],
+             config : Config) : Boolean = {
     try {
-      processStream(arcName, stream) { (doc) =>
+      processStream(arcName, stream, config) { (doc) =>
         for ((k,v) <- extraFields) v match {
           case l : List[Any] => l.map(v2=>doc.addField(k, v2));
           case o : Any => doc.setField(k, o);
@@ -146,7 +147,8 @@ object SolrIndexer {
               indexer.index(new File(path), specification,
                             Map(JOB_FIELD -> job, 
                                 SPECIFICATION_FIELD -> specification, 
-                                PROJECT_FIELD -> project))
+                                PROJECT_FIELD -> project),
+                            config)
             }
           }
           case "test" => {
@@ -154,7 +156,8 @@ object SolrIndexer {
               indexer.index(new File(path), specification,
                             Map(JOB_FIELD -> job, 
                                 SPECIFICATION_FIELD -> specification, 
-                                PROJECT_FIELD -> project))
+                                PROJECT_FIELD -> project),
+                            config)
             }
           }
 

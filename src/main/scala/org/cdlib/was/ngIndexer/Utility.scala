@@ -68,4 +68,28 @@ object Utility {
     reader.close;
   }
 
+  def timeout[T] (msec : Int) (f: => T) : Option[T] = {
+    class TimeoutThread extends Thread {
+      var retval : Option[T] = None;
+      override def run {
+        try {
+          retval = Some(f);
+        } catch {
+          /* finished, do nothing */ 
+          case ex : InterruptedException => ()
+        }
+      }
+    }
+    val thread = new TimeoutThread;
+    thread.start();
+    var endTimeMillis = System.currentTimeMillis + msec;
+    while (thread.isAlive) {
+      if (System.currentTimeMillis > endTimeMillis) {
+        thread.interrupt;
+      }
+      try { Thread.sleep(50); }
+      catch { case ex : InterruptedException => () }
+    }
+    return thread.retval;
+  }
 }

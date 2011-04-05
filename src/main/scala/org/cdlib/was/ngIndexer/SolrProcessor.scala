@@ -151,7 +151,7 @@ object SolrProcessor extends Logger {
   /** Take an archive record & return a solr document, or none if we cannot parse.
     *
     */
-  def record2doc(rec : ArchiveRecordWrapper) : Option[SolrInputDocument] = {
+  def record2doc(rec : ArchiveRecordWrapper, config : Config) : Option[SolrInputDocument] = {
     val contentType = rec.getContentType;
     if (!rec.isHttpResponse || !rec.getStatusCode.exists(_==200)) {
       rec.close; 
@@ -167,9 +167,11 @@ object SolrProcessor extends Logger {
     tikaMetadata.set(HttpHeaders.CONTENT_TYPE, contentType.get);
     val bis = new BufferedInputStream(rec);
     try {
-      parser.parse(bis, contentHandler, tikaMetadata, parseContext);
+      Utility.timeout(config.parseTimeout()) {
+        parser.parse(bis, contentHandler, tikaMetadata, parseContext);
+      }
     } catch {
-      case ex : Throwable => 
+      case ex : Throwable =>
         logger.error("Error reading {} from {}: {}", Array[JObject](rec.getUrl, rec.getFilename, ex));
     }
     /* finish index */
@@ -202,13 +204,13 @@ object SolrProcessor extends Logger {
 
   /** For each record in a file, call the function.
     */
-  def processFile (file : File) (func : (SolrInputDocument) => Unit) {
-    Utility.eachArc(file) (record2doc(_).map(func));
+  def processFile (file : File, config : Config) (func : (SolrInputDocument) => Unit) {
+    Utility.eachArc(file) (record2doc(_, config).map(func));
   }
 
-  def processStream (arcName : String, stream : InputStream) 
+  def processStream (arcName : String, stream : InputStream, config : Config) 
                     (func : (SolrInputDocument) => Unit) {
-    Utility.eachArc(stream, arcName) (record2doc(_).map(func));
+    Utility.eachArc(stream, arcName) (record2doc(_, config).map(func));
   }
 
   /** Merge two documents into one, presuming they have the same id.

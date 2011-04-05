@@ -49,7 +49,8 @@ object Daemon {
                               Map(JOB_FIELD->cmd.job,
                                   TAG_FIELD->cmd.tags,
                                   SPECIFICATION_FIELD->cmd.specification, 
-                                  PROJECT_FIELD->cmd.project));
+                                  PROJECT_FIELD->cmd.project),
+                              config);
             }.getOrElse(false);
           case _ => false // Unknown command
         }

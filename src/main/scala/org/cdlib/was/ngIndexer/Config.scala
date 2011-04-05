@@ -12,4 +12,5 @@ trait Config extends SSConfig {
   val queueSize       = new Value(1000);
   val queueRunners    = new Value(3);
   val commitThreshold = new Value(10000);
+  val parseTimeout    = new Value(30000); /* 30 sec */
 }
