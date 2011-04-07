@@ -71,12 +71,17 @@ object Utility {
   def timeout[T] (msec : Int) (f: => T) : Option[T] = {
     class TimeoutThread extends Thread {
       var retval : Option[T] = None;
+      var ex : Option[Throwable] = None;
       override def run {
         try {
           retval = Some(f);
         } catch {
           /* finished, do nothing */ 
-          case ex : InterruptedException => ()
+          case t : InterruptedException => ()
+          case t : java.io.InterruptedIOException => ()
+          case t : Throwable => {
+            ex = Some(t);
+          }
         }
       }
     }
@@ -90,6 +95,10 @@ object Utility {
       try { Thread.sleep(50); }
       catch { case ex : InterruptedException => () }
     }
-    return thread.retval;
+    if (thread.retval.isEmpty && thread.ex.isDefined) {
+      throw new Exception("%s in timeout block.".format(thread.ex.toString), thread.ex.get);
+    } else {
+      return thread.retval;
+    }
   }
 }
