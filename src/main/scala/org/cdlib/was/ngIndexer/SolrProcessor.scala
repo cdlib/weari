@@ -164,7 +164,7 @@ object SolrProcessor extends Logger {
     val wgContentHandler = new WebGraphContentHandler(url, rec.getDate);
     val contentHandler = new MultiContentHander(List[ContentHandler](wgContentHandler, indexContentHandler));
     tikaMetadata.set(HttpHeaders.CONTENT_LOCATION, url);
-    tikaMetadata.set(HttpHeaders.CONTENT_TYPE, contentType.get);
+    tikaMetadata.set(HttpHeaders.CONTENT_TYPE, contentType.getOrElse("application/octet-stream"));
     val bis = new BufferedInputStream(rec);
     try {
       Utility.timeout(config.parseTimeout()) {
