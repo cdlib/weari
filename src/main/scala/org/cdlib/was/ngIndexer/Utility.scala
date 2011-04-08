@@ -96,7 +96,7 @@ object Utility {
       catch { case ex : InterruptedException => () }
     }
     if (thread.retval.isEmpty && thread.ex.isDefined) {
-      throw new Exception("%s in timeout block.".format(thread.ex.toString), thread.ex.get);
+      throw new Exception("%s in timeout block.".format(thread.ex.get.toString), thread.ex.get);
     } else {
       return thread.retval;
     }
