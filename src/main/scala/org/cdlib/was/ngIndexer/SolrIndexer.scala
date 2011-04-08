@@ -68,14 +68,14 @@ class SolrIndexer(config : Config) extends Retry with Logger {
           indexDoc(server, doc);
         } {
           case ex : Exception =>
-            logger.error("Exception while indexing document from arc ({}): {}.", arcName, ex);
+            logger.error("Exception while indexing document from arc ({}).", arcName, ex);
         }
       }
       /* ensure a commit at the end of the stream */
       server.commit;
     } catch {
       case ex : Exception => {
-        logger.error("Exception while generating doc from arc ({}): {}.", arcName, ex);
+        logger.error("Exception while generating doc from arc ({}).", arcName, ex);
         return false;
       }
     }
