@@ -24,16 +24,12 @@ object Command {
     val cmd = JsonParser.parse(json);
     return (cmd \ "command").values.asInstanceOf[String] match {
       case "INDEX" => {
-        val uriString = (cmd \ "uri").values.asInstanceOf[String];
-        val job = (cmd \ "job").values.asInstanceOf[String];
-        val specification = (cmd \ "specification").values.asInstanceOf[String];
-        val project = (cmd \ "project").values.asInstanceOf[String];
-        val tags = (cmd \ "tags").values.asInstanceOf[List[String]];
-        Some(new IndexCommand (uri=new URI(uriString),
-                               job=job,
-                               specification=specification,
-                               project=project,
-                               tags=tags));
+        Some(new IndexCommand
+             (uri=new URI((cmd \ "uri").values.asInstanceOf[String]),
+              job=(cmd \ "job").values.asInstanceOf[String],
+              specification=(cmd \ "specification").values.asInstanceOf[String],
+              project=(cmd \ "project").values.asInstanceOf[String],
+              tags=(cmd \ "tags").values.asInstanceOf[List[String]]));
       }
       case _ => None;
     }
