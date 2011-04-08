@@ -1,3 +1,4 @@
+
 package org.cdlib.was.ngIndexer;
 
 import java.io.{BufferedInputStream,InputStream, File}
@@ -185,7 +186,7 @@ object SolrProcessor extends Logger {
     updateDocBoost(doc, 1.0f);
     updateDocMain(doc, url, rec.getDigestStr);
     doc.addField(DATE_FIELD, rec.getDate.toLowerCase, 1.0f);
-    updateMimeTypes(doc, tikaMetadata.get(HttpHeaders.CONTENT_TYPE), contentType.get);
+    updateMimeTypes(doc, tikaMetadata.get(HttpHeaders.CONTENT_TYPE), contentType.getOrElse("application/octet-stream"));
     doc.addField(TITLE_FIELD, title, 1.0f);
     doc.addField(CONTENT_LENGTH_FIELD, rec.getLength, 1.0f);
     /* finish webgraph */
