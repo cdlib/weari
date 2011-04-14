@@ -1,7 +1,10 @@
 package org.cdlib.was.ngIndexer;
 
-import org.cdlib.mrt.queue.{DistributedQueue,Item};
+import java.util.NoSuchElementException;
+
 import org.apache.zookeeper.{KeeperException, ZooKeeper};
+
+import org.cdlib.mrt.queue.{DistributedQueue,Item};
 
 import org.menagerie.{DefaultZkSessionManager,ZkSessionManager};
 
@@ -21,7 +24,16 @@ class Queue(hosts : String, path : String) {
 
   def complete (id : String) { retry { q.complete(id); } }
   
-  def cleanup (b : Byte) { retry { q.cleanup(b); } }
+  def cleanup (b : Byte) { 
+    retry { 
+      try {
+        q.cleanup(b);
+      } catch {
+        /* always throw at the end */
+        case ex : NoSuchElementException => ()
+      }
+    }
+  }
 
   private def retry[T] (what: => T) : T = {
     var i = 0;

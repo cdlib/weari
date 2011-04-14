@@ -1,8 +1,8 @@
 package org.cdlib.was.ngIndexer;
 
-import java.util.NoSuchElementException;
-import org.cdlib.mrt.queue.Item;
 import org.apache.zookeeper.{KeeperException, ZooKeeper};
+
+import org.cdlib.mrt.queue.Item;
 
 import org.cdlib.ssconf.Configurator;
 
@@ -72,7 +72,6 @@ class QueueProcessor (hosts : String, path : String, workers : Int, handlerFacto
           try { 
             q.cleanup(Item.COMPLETED);
           } catch {
-            case ex : NoSuchElementException => ();
             case ex : Exception => 
               logger.error("Caught exception {} cleaning up.", ex);
           } finally {
