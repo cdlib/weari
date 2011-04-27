@@ -134,8 +134,8 @@
     </dependency>
     <dependency>
       <groupId>org.apache.solr</groupId>
-      <artifactId>apache-solr-solrj</artifactId>
-      <version>4.0-SHAPSHOT</version>
+      <artifactId>solr-solrj</artifactId>
+      <version>3.1.0</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
