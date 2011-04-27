@@ -187,15 +187,15 @@
     </repository>
 
     <repository>
-      <id>cdl-releases</id>
-      <url>http://builds.cdlib.org/repo/content/repositories/cdl-releases</url>
+      <id>cdl-public</id>
+      <url>http://mvn.cdlib.org/content/repositories/public</url>
     </repository>
 
-<!--     <repository>
+    <repository>
       <id>builds.archive.org</id>
       <name>builds.archive.org</name>
       <url>http://builds.archive.org:8080/maven2/</url>
-    </repository> -->
+    </repository>
   </repositories>
 
   <pluginRepositories>
