@@ -3,9 +3,11 @@
 package org.cdlib.was.ngIndexer.tests;
 
 import org.scalatest.{FeatureSpec,GivenWhenThen};
-import org.cdlib.was.ngIndexer._;
+import org.scalatest.junit.JUnitRunner;
 
 import org.cdlib.mrt.queue.Item;
+
+import org.cdlib.was.ngIndexer._;
 
 import org.apache.zookeeper.{KeeperException, ZooKeeper};
 

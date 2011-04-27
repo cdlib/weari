@@ -2,9 +2,14 @@
 
 package org.cdlib.was.ngIndexer.tests;
 
+import org.junit.runner.RunWith;
+
 import org.scalatest.{FeatureSpec,GivenWhenThen};
+import org.scalatest.junit.JUnitRunner;
+
 import org.cdlib.was.ngIndexer._;
 
+@RunWith(classOf[JUnitRunner])
 class ConsistentHashRingSpec extends FeatureSpec with GivenWhenThen {
   feature ("We need to order longs according to their bits.") {
     scenario ("Check ring ordering.") {
