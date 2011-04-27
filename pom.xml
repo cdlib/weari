@@ -19,7 +19,7 @@
     <dependency>
       <groupId>org.menagerie</groupId>
       <artifactId>menagerie</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <version>1.0-CDL-bbf622a3b67d2edd41262d8c256c7523431fa730</version>
     </dependency>
     <dependency>
       <groupId>commons-codec</groupId>
