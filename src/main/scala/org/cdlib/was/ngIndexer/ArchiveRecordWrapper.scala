@@ -30,7 +30,9 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String) extends Inpu
   private var ready : Boolean = false;
   private var contentType : Option[String] = None;
   private var httpResponse : Boolean = false;
-  
+  private var mediaType : Option[Pair[String, String]] = None;
+  private var charset : Option[String] = None;
+
   /**
    * Method to read one line of input from an InputStream. A line
    * ends in \n or \r\n.
@@ -149,6 +151,11 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String) extends Inpu
         statusCode = Some(rec1.getStatusCode);
       }
     }
+    if (contentType.isDefined) {
+      val (mediaType1 : Option[Pair[String,String]], charset1) = 
+        ArchiveRecordWrapper.parseContentType(contentType.get);
+      mediaType = mediaType1; charset = charset1;
+    }
     ready = true;
   }
 
@@ -161,15 +168,26 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String) extends Inpu
     return statusCode;
   }
 
-  /**
-   * Return the content type. Returns None if this is not an HTTP response
-   * record, or there was a failure in parsing.
-   */
-  def getContentType : Option[String] = {
+  def getMediaType : String = {
     if (!ready) cueUp;
-    return contentType;
+    return "%s/%s".format(getMediaTopType, getMediaSubType);
+  }
+  
+  def getMediaTopType : String = {
+    if (!ready) cueUp;
+    return mediaType.map(_._1).getOrElse("application")
   }
 
+  def getMediaSubType : String = {
+    if (!ready) cueUp;
+    return mediaType.map(_._2).getOrElse("octet-stream")
+  }
+
+  def getCharset : Option[String] = {
+    if (!ready) cueUp;
+    return charset;
+  }
+    
   /**
    * Return true if this is an HTTP response record.
    */
@@ -234,12 +252,17 @@ object ArchiveRecordWrapper {
 
   val headerValueParser = new BasicHeaderValueParser;
   
+  /**
+   * Parse a Content-Type header.
+   *
+   * @return The optional media type, as a pair (type, subtype), and an optional charset
+   */
   def parseContentType (line : String) : Pair[Option[Pair[String,String]], Option[String]] = {
     try {
       val buff = new CharArrayBuffer(80);
       buff.append(line);
       val parsed = headerValueParser.parseElements(buff, new ParserCursor(0, buff.length));
-      val contentType = parsed(0).getName match {
+      val mediaType = parsed(0).getName match {
         case null => None;
         case MIME_RE(topType, subType) => Some(Pair(topType, subType));
         case _ => None;
@@ -248,10 +271,9 @@ object ArchiveRecordWrapper {
         case null => None;
         case p : NameValuePair => Some(p.getValue);
       }
-      return (contentType, charset);
+      return (mediaType, charset);
     } catch {
       case ex : Exception => (None, None);
     }
   }
 }
-    

@@ -79,20 +79,23 @@ object SolrProcessor extends Logger {
 
   /* date formatter for solr */
   val dateFormatter = new java.text.SimpleDateFormat("yyyyMMddHHmmssSSS");
+
   /* regular expression to match against mime types which should have
      outlinks indexed */
   val webGraphTypeRE = Pattern.compile("^(.*html.*|application/pdf)$");
 
-  /** Update the boost in a document.
-    */
+  /**
+   * Update the boost in a document.
+   */
   def updateDocBoost (doc : SolrInputDocument,
                       boost : Float) {
     doc.setDocumentBoost(boost);
     doc.addField(BOOST_FIELD, boost);
   }
     
-  /** Update the url & digest fields in a document.
-    */
+  /**
+   * Update the url & digest fields in a document.
+   */
   def updateDocMain (doc : SolrInputDocument, 
                      url : String,
                      digest : String) {
@@ -114,12 +117,12 @@ object SolrProcessor extends Logger {
     val (httpType, httpCharset) = ArchiveRecordWrapper.parseContentType(httpTypeStr);
     val (tikaType, tikaCharset) = ArchiveRecordWrapper.parseContentType(tikaTypeStr);
     
-    httpType.map {(p)=>
+    httpType.map { p =>
       doc.addField(HTTP_TOP_TYPE_FIELD, p._1, 1.0f);
       doc.addField(HTTP_TYPE_FIELD, "%s/%s".format(p._1, p._2), 1.0f);
     }
     httpCharset.map(doc.addField(CHARSET_FIELD, _, 1.0f));
-    tikaType.map {(p)=>
+    tikaType.map { p =>
       doc.addField(TOP_TYPE_FIELD, p._1, 1.0f);
       doc.addField(TYPE_FIELD, "%s/%s".format(p._1, p._2), 1.0f);
     }
@@ -153,10 +156,9 @@ object SolrProcessor extends Logger {
     *
     */
   def record2doc(rec : ArchiveRecordWrapper, config : Config) : Option[SolrInputDocument] = {
-    val contentType = rec.getContentType;
     if (!rec.isHttpResponse || !rec.getStatusCode.exists(_==200)) {
       rec.close; 
-      return None; 
+      return None;
     }
     val tikaMetadata = new Metadata;
     val url = rec.getUrl;
@@ -165,7 +167,7 @@ object SolrProcessor extends Logger {
     val wgContentHandler = new WebGraphContentHandler(url, rec.getDate);
     val contentHandler = new MultiContentHander(List[ContentHandler](wgContentHandler, indexContentHandler));
     tikaMetadata.set(HttpHeaders.CONTENT_LOCATION, url);
-    tikaMetadata.set(HttpHeaders.CONTENT_TYPE, contentType.getOrElse("application/octet-stream"));
+    tikaMetadata.set(HttpHeaders.CONTENT_TYPE, rec.getMediaType);
     val bis = new BufferedInputStream(rec);
     try {
       Utility.timeout(config.parseTimeout()) {
@@ -186,7 +188,9 @@ object SolrProcessor extends Logger {
     updateDocBoost(doc, 1.0f);
     updateDocMain(doc, url, rec.getDigestStr);
     doc.addField(DATE_FIELD, rec.getDate.toLowerCase, 1.0f);
-    updateMimeTypes(doc, tikaMetadata.get(HttpHeaders.CONTENT_TYPE), contentType.getOrElse("application/octet-stream"));
+    updateMimeTypes(doc, 
+                    tikaMetadata.get(HttpHeaders.CONTENT_TYPE), 
+                    rec.getMediaType);
     doc.addField(TITLE_FIELD, title, 1.0f);
     doc.addField(CONTENT_LENGTH_FIELD, rec.getLength, 1.0f);
     /* finish webgraph */
