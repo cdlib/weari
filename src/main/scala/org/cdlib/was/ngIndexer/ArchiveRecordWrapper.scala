@@ -163,9 +163,13 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String) extends Inpu
    * Return the response code. Returns None if this is not an HTTP response
    * record, or there was a failure in parsing.
    */
-  def getStatusCode : Option[Int] = {
+  def getStatusCode : Int = {
     if (!ready) cueUp;
-    return statusCode;
+    if (statusCode.isEmpty) {
+      throw new Exception();
+    } else {
+      return statusCode.get;
+    }
   }
 
   def getMediaType : String = {

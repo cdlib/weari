@@ -152,11 +152,13 @@ object SolrProcessor extends Logger {
   val detector = (new TikaConfig).getMimeRepository;
   val parser = new AutoDetectParser(detector);
   parseContext.set(classOf[Parser], parser);
-  /** Take an archive record & return a solr document, or none if we cannot parse.
-    *
-    */
+
+  /**
+   * Take an archive record & return a solr document, or none if we
+   * cannot parse.
+   */
   def record2doc(rec : ArchiveRecordWrapper, config : Config) : Option[SolrInputDocument] = {
-    if (!rec.isHttpResponse || !rec.getStatusCode.exists(_==200)) {
+    if (!rec.isHttpResponse || (rec.getStatusCode != 200)) {
       rec.close; 
       return None;
     }
