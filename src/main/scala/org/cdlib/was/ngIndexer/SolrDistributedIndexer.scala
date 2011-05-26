@@ -82,11 +82,4 @@ class SolrDistributedServer (serverInit : Seq[Tuple3[String,String,Int]],
       }
     }
   }
-
-  def deleteById(id : String) {
-    servers.values.map {(server)=>
-      server.deleteById(id);
-      server.commit;
-    }
-  }
 }

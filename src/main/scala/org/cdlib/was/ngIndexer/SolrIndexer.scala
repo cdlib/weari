@@ -45,7 +45,6 @@ class SolrIndexer(config : Config) extends Retry with Logger {
       case None => server.add(doc);
       case Some(olddoc) => {
         val mergedDoc = mergeDocs(doc2InputDoc(olddoc), doc);
-        server.deleteById(id);
         server.add(mergedDoc);
       }
     }
@@ -113,25 +112,6 @@ class SolrIndexer(config : Config) extends Retry with Logger {
       }
     }
   }
-
-  def delete (file : File, removeFields : Map[String,String]) {
-    Utility.eachArc(file) { 
-      (rec) =>
-        val id = "xxx" ; // TODO
-        server.getById(id) match {
-            case None => ();
-          case Some(olddoc) => {
-            val inputdoc = doc2InputDoc(olddoc);
-            removeFieldValue(inputdoc, ARCNAME_FIELD, file.getName);
-            for ((k,v) <- removeFields)
-              removeFieldValue(inputdoc, k, v);
-            server.deleteById(id);
-              server.add(inputdoc);
-          }
-        }
-      }
-    server.commit;
-  }
 }
 
 object SolrIndexer {
@@ -165,19 +145,11 @@ object SolrIndexer {
               indexer.dryrun(new File(path), config);
             }
           }
-        case "delete" | "index" => {
+        case "index" => {
           val job = args(1);
           val specification = args(2);
           val project = args(3)
           command match {
-            case "delete" => {
-              for (path <- args.drop(4)) {
-                indexer.delete(new File(path),
-                               Map(JOB_FIELD->job,
-                                   SPECIFICATION_FIELD->specification,
-                                   PROJECT_FIELD->project));
-              }
-            }
             case "index" => {
               for (path <- args.drop(4)) {
                 indexer.index(new File(path), specification,
