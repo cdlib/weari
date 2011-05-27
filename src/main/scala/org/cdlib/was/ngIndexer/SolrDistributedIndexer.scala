@@ -27,11 +27,8 @@ class SolrDistributedServer (serverInit : Seq[Tuple3[String,String,Int]],
     servers += (server.getBaseURL -> server);
   }
   
-  def add (doc : SolrInputDocument) {
-    val id = doc.getFieldValue(SolrProcessor.ID_FIELD).asInstanceOf[String];
-    val server = ring.getServerFor(id);
-    /* we need to store the server this is indexed on */
-    // doc.addField(SolrProcessor.SERVER_FIELD, server.getBaseURL);
+  def add (doc : SolrInputDocument, key : String) {
+    val server = ring.getServerFor(key);
     server.add(doc);
     commitCounter = commitCounter + 1;
   }

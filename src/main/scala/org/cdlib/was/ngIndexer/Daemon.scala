@@ -8,6 +8,8 @@ import net.liftweb.json.JsonParser;
 
 import org.apache.http.conn.HttpHostConnectException;
 
+import org.apache.solr.client.solrj.impl.StreamingUpdateSolrServer;
+
 import org.apache.zookeeper.ZooKeeper;
 
 import org.cdlib.mrt.queue.Item;
@@ -45,11 +47,16 @@ object Daemon {
           case Some(cmd : IndexCommand) => 
             httpClient.getUri(cmd.uri) {
               (stream)=>
-                indexer.index(stream, cmd.arcName, cmd.specification,
+                indexer.index(stream, 
+                              cmd.arcName, 
+                              cmd.specification,
                               Map(JOB_FIELD->cmd.job,
                                   TAG_FIELD->cmd.tags,
                                   SPECIFICATION_FIELD->cmd.specification, 
                                   PROJECT_FIELD->cmd.project),
+                              new StreamingUpdateSolrServer(cmd.solrUri.toString,
+                                                            config.queueSize(),
+                                                            config.threadCount()),
                               config);
             }.getOrElse(false);
           case _ => false // Unknown command

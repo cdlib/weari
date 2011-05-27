@@ -4,7 +4,11 @@ import java.io.{File,FileInputStream,FileNotFoundException,InputStream,IOExcepti
 
 import java.net.URI;
 
-import org.apache.solr.common.SolrInputDocument;
+import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
+
+import org.apache.solr.client.solrj.impl.StreamingUpdateSolrServer;
+import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.common.{SolrDocument, SolrInputDocument};
 
 import org.cdlib.ssconf.Configurator;
 
@@ -19,29 +23,43 @@ import org.cdlib.was.ngIndexer.SolrProcessor.{doc2InputDoc,mergeDocs,processStre
 
 import scala.util.matching.Regex;
 
-/** Class used to index ARC files.
-  */
+/**
+ * Class used to index ARC files.
+ */
 class SolrIndexer(config : Config) extends Retry with Logger {
   val httpClient = new SimpleHttpClient;
 
-  val server = new SolrDistributedServer(config.indexers(), 
-                                         config.queueSize(), 
-                                         config.queueRunners(),
-                                         config.commitThreshold());
+  def getById(id : String, server : CommonsHttpSolrServer) : Option[SolrDocument] = {
+    val q = new SolrQuery;
+    q.setQuery("id:\"%s\"".format(id));
+    try {
+      return Some((new SolrDocumentCollection(server, q)).head);
+    } catch {
+      case ex : NoSuchElementException => {
+        return None;
+      }
+    }
+  }
 
   /** Index an ARC file. */
-  def index (file : File, extraId : String, extraFields : Map[String, Any], config : Config) : Boolean = 
-    index(new FileInputStream(file), file.getName, extraId, extraFields, config);
+  def index (file : File, 
+             extraId : String, 
+             extraFields : Map[String, Any],
+             server : CommonsHttpSolrServer,
+             config : Config) : Boolean = 
+    index(new FileInputStream(file), file.getName, extraId, extraFields, server, config);
 
-  /** Index a single Solr document. If a document with the same ID
-    * already exists, the documents will be merged.
-    *
-    * @param server to index with
-    * @param doc Document to index.
-    */
-  def indexDoc(server : SolrDistributedServer, doc : SolrInputDocument) {
+  /**
+   * Index a single Solr document. If a document with the same ID
+   * already exists, the documents will be merged.
+   *
+   * @param server to index with
+   * @param doc Document to index.
+   */
+  def indexDoc(doc : SolrInputDocument,
+               server : CommonsHttpSolrServer) {
     val id = doc.getFieldValue(ID_FIELD).asInstanceOf[String];
-    server.getById(id) match {
+    getById(id, server) match {
       case None => server.add(doc);
       case Some(olddoc) => {
         val mergedDoc = mergeDocs(doc2InputDoc(olddoc), doc);
@@ -56,10 +74,11 @@ class SolrIndexer(config : Config) extends Retry with Logger {
    * @param extraFields Map of extra fields to be added to the document
    * @return true if indexing succeeded
    */
-  def index (stream : InputStream, 
+  def index (stream : InputStream,
              arcName : String,
              extraId : String,
              extraFields : Map[String, Any],
+             server : CommonsHttpSolrServer,             
              config : Config) : Boolean = {
     try {
       processStream(arcName, stream, config) { (doc) =>
@@ -70,7 +89,7 @@ class SolrIndexer(config : Config) extends Retry with Logger {
         val oldId = doc.getFieldValue(ID_FIELD).asInstanceOf[String];
         doc.setField(ID_FIELD, "%s.%s".format(oldId, extraId));
         retry(3) {
-          indexDoc(server, doc);
+          indexDoc(doc, server);
         } {
           case ex : Exception =>
             logger.error("Exception while indexing document from arc ({}).", arcName, ex);
@@ -149,13 +168,18 @@ object SolrIndexer {
           val job = args(1);
           val specification = args(2);
           val project = args(3)
+          val server = new StreamingUpdateSolrServer(args(4),
+                                                     config.queueSize(),
+                                                     config.threadCount());
+
           command match {
             case "index" => {
-              for (path <- args.drop(4)) {
+              for (path <- args.drop(5)) {
                 indexer.index(new File(path), specification,
                               Map(JOB_FIELD -> job, 
                                     SPECIFICATION_FIELD -> specification, 
                                   PROJECT_FIELD -> project),
+                              server,
                               config)
               }
             }

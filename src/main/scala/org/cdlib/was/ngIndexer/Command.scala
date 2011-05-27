@@ -8,7 +8,8 @@ import scala.util.matching.Regex;
 
 class Command;
 
-case class IndexCommand (val uri : URI, 
+case class IndexCommand (val uri : URI,
+                         val solrUri : URI,
                          val job : String, 
                          val specification : String,
                          val project : String,
@@ -25,11 +26,12 @@ object Command {
     return (cmd \ "command").values.asInstanceOf[String] match {
       case "INDEX" => {
         Some(new IndexCommand
-             (uri=new URI((cmd \ "uri").values.asInstanceOf[String]),
-              job=(cmd \ "job").values.asInstanceOf[String],
-              specification=(cmd \ "specification").values.asInstanceOf[String],
-              project=(cmd \ "project").values.asInstanceOf[String],
-              tags=(cmd \ "tags").values.asInstanceOf[List[String]]));
+             (uri           = new URI((cmd \ "uri").values.asInstanceOf[String]),
+              solrUri       = new URI((cmd \ "solrUri").values.asInstanceOf[String]),
+              job           = (cmd \ "job").values.asInstanceOf[String],
+              specification = (cmd \ "specification").values.asInstanceOf[String],
+              project       = (cmd \ "project").values.asInstanceOf[String],
+              tags          = (cmd \ "tags").values.asInstanceOf[List[String]]));
       }
       case _ => None;
     }
