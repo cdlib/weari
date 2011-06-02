@@ -189,7 +189,11 @@ object SolrProcessor extends Logger {
     }
     updateDocBoost(doc, 1.0f);
     updateDocMain(doc, url, rec.getDigestStr);
-    doc.addField(DATE_FIELD, rec.getDate.toLowerCase, 1.0f);
+
+    val dateFormatter = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+    dateFormatter.setTimeZone(java.util.TimeZone.getTimeZone("UTC"))
+
+    doc.addField(DATE_FIELD, rec.getDate, 1.0f);
     updateMimeTypes(doc, 
                     tikaMetadata.get(HttpHeaders.CONTENT_TYPE), 
                     rec.getMediaType);

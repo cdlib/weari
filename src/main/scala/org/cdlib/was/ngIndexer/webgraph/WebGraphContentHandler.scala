@@ -1,12 +1,16 @@
 package org.cdlib.was.ngIndexer.webgraph;
 
-import org.xml.sax.{Attributes,ContentHandler,Locator};
-import scala.collection.mutable.ArrayBuffer;
 import java.io.StringWriter;
+import java.util.Date;
+
 import org.archive.net.UURIFactory;
 import org.archive.util.ArchiveUtils;
 
-class WebGraphContentHandler (url : String, date : String)
+import org.xml.sax.{Attributes,ContentHandler,Locator};
+
+import scala.collection.mutable.ArrayBuffer;
+
+class WebGraphContentHandler (url : String, date : Date)
   extends ContentHandler {
     
   var outlinks = new ArrayBuffer[Outlink]();
@@ -28,7 +32,7 @@ class WebGraphContentHandler (url : String, date : String)
       try {
         outlinks += new Outlink(UURIFactory.getInstance(url), 
                                 UURIFactory.getInstance(outlinkTo),
-                                ArchiveUtils.getDate(date),
+                                date,
                                 outlinkText.toString);
         inAnchorText = false;
       } catch {

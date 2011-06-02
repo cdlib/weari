@@ -16,6 +16,7 @@ import org.apache.tika.metadata.HttpHeaders;
 import org.archive.io.{ArchiveReaderFactory,ArchiveRecord};
 import org.archive.io.arc.ARCRecord;
 import org.archive.io.warc.WARCRecord;
+import org.archive.util.ArchiveUtils;
 
 import org.apache.http.message.BasicLineParser;
 
@@ -200,15 +201,28 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String) extends Inpu
     return httpResponse;
   }
 
-  def getUrl = rec.getHeader.getUrl;
+  lazy val getUrl = rec.getHeader.getUrl;
 
-  def getLength = rec.getHeader.getLength;
+  lazy val getLength = rec.getHeader.getLength;
 
-  def getDate = rec.getHeader.getDate;
+  val dateFormatter = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+  dateFormatter.setTimeZone(java.util.TimeZone.getTimeZone("UTC"))
 
-  def getDigestStr = rec.getDigestStr;
+  lazy val getDate : java.util.Date = {
+    val dateString = rec.getHeader.getDate;
+    if (dateString.length == 14) {
+      ArchiveUtils.parse14DigitDate(dateString);
+    } else if (dateString.length == 20) {
+      dateFormatter.parse(dateString);
+    } else {
+      System.err.println("Unparseable date: %s".format(dateString));
+      null;
+    }
+  }
 
-  def getFilename = filename;
+  lazy val getDigestStr = rec.getDigestStr;
+
+  lazy val getFilename = filename;
 
   /* InputStream wrapper */
   override def available = { 
