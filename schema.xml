@@ -26,6 +26,8 @@
             sortMissingLast="true" omitNorms="true"/>
         <fieldType name="long" class="solr.LongField"
             omitNorms="true"/>
+        <fieldType name="date" class="solr.DateField"
+            omitNorms="true"/>
         <fieldType name="float" class="solr.FloatField"
             omitNorms="true"/>
         <fieldType name="text" class="solr.TextField"
@@ -67,7 +69,6 @@
         <field name="content" type="text" stored="true" indexed="true" compressed="true"/>
         <field name="title" type="text" stored="true" indexed="true"/>
         <field name="cache" type="string" stored="true" indexed="false"/>
-        <field name="tstamp" type="long" stored="true" indexed="false"/>
 
         <field name="type" type="string" stored="true" indexed="true"/>
         <!-- application, audio, text, video, etc. -->
@@ -80,7 +81,7 @@
             indexed="false"/>
         <field name="lastModified" type="long" stored="true"
             indexed="false"/>
-        <field name="date" type="string" stored="true" indexed="true"
+        <field name="date" type="date" stored="true" indexed="true"
                multiValued="true"/>
 
         <!-- fields for languageidentifier plugin -->

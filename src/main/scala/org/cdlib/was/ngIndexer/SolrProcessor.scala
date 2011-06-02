@@ -50,7 +50,6 @@ object SolrProcessor extends Logger {
   val TAG_FIELD            = "tag";
   val TITLE_FIELD          = "title";
   val TOP_TYPE_FIELD       = "topType";
-  val TSTAMP_FIELD         = "tstamp";
   val TYPE_FIELD           = "type";
   val URLFP_FIELD          = "urlfp";
   val URL_FIELD            = "url";
@@ -65,7 +64,6 @@ object SolrProcessor extends Logger {
            ID_FIELD, 
            SITE_FIELD,
            TITLE_FIELD,
-           TSTAMP_FIELD,
            TYPE_FIELD,
            URLFP_FIELD,
            URL_FIELD);
@@ -106,7 +104,6 @@ object SolrProcessor extends Logger {
     doc.addField(HOST_FIELD, host);
     doc.addField(SITE_FIELD, host);
     doc.addField(URL_FIELD, url, 1.0f);
-    doc.addField(TSTAMP_FIELD, dateFormatter.format(new java.util.Date(System.currentTimeMillis())), 1.0f);
     doc.addField(URLFP_FIELD, UriUtils.fingerprint(uuri));
     doc.addField(CANONICALURL_FIELD, uuri.toString, 1.0f);
   }
