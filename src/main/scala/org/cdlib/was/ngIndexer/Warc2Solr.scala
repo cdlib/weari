@@ -1,4 +1,3 @@
-
 package org.cdlib.was.ngIndexer;
 
 import java.io.{BufferedInputStream,InputStream, File}

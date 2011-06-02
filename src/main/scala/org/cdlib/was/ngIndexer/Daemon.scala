@@ -16,10 +16,10 @@ import org.cdlib.mrt.queue.Item;
 
 import org.cdlib.ssconf.Configurator;
 
-import org.cdlib.was.ngIndexer.SolrProcessor.{JOB_FIELD,
-                                              PROJECT_FIELD,
-                                              SPECIFICATION_FIELD,
-                                              TAG_FIELD};
+import org.cdlib.was.ngIndexer.Warc2Solr.{JOB_FIELD,
+                                          PROJECT_FIELD,
+                                          SPECIFICATION_FIELD,
+                                          TAG_FIELD};
 
 import org.menagerie.{DefaultZkSessionManager,ZkSessionManager};
 

@@ -12,14 +12,14 @@ import org.apache.solr.common.{SolrDocument, SolrInputDocument};
 
 import org.cdlib.ssconf.Configurator;
 
-import org.cdlib.was.ngIndexer.SolrProcessor.{ARCNAME_FIELD,
-                                              ID_FIELD,
-                                              JOB_FIELD,
-                                              PROJECT_FIELD,
-                                              SPECIFICATION_FIELD,
-                                              URL_FIELD};
+import org.cdlib.was.ngIndexer.Warc2Solr.{ARCNAME_FIELD,
+                                          ID_FIELD,
+                                          JOB_FIELD,
+                                          PROJECT_FIELD,
+                                          SPECIFICATION_FIELD,
+                                          URL_FIELD};
 
-import org.cdlib.was.ngIndexer.SolrProcessor.{doc2InputDoc,mergeDocs,processStream,removeFieldValue};
+import org.cdlib.was.ngIndexer.Warc2Solr.{doc2InputDoc,mergeDocs,processStream,removeFieldValue};
 
 import scala.util.matching.Regex;
 
