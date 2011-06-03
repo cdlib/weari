@@ -28,7 +28,7 @@ import scala.collection.JavaConversions.asScalaIterable;
   *
   * @author egh
   */
-object SolrProcessor extends Logger {
+object Warc2Solr extends Logger {
   val ARCNAME_FIELD        = "arcname";
   val BOOST_FIELD          = "boost";
   val CANONICALURL_FIELD   = "canonicalurl";
