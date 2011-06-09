@@ -67,16 +67,4 @@ class SolrDistributedServer (serverInit : Seq[Tuple3[String,String,Int]],
     }
     return servers.values.head.query(q2);
   }
-
-  def getById(id : String) : Option[SolrDocument] = {
-    val q = new SolrQuery;
-    q.setQuery("id:\"%s\"".format(id));
-    try {
-      return Some((new SolrDocumentCollection(this, q)).head);
-    } catch {
-      case ex : NoSuchElementException => {
-        return None;
-      }
-    }
-  }
 }
