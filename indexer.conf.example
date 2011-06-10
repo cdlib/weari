@@ -1,4 +1,2 @@
-indexers := Array(("1", "http://server1.example.org:8983/solr", 1000),
-                  ("2", "http://server2.example.org:8983/solr", 1000))
 zooKeeperHosts := "localhost:2181";
 zooKeeperPath := "/arcIndexerQueue";
