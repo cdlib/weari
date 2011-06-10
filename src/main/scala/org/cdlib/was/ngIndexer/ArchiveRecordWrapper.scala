@@ -13,11 +13,10 @@ import org.apache.http.util.CharArrayBuffer;
 
 import org.apache.tika.metadata.HttpHeaders;
 
-import org.archive.io.{ArchiveReaderFactory,ArchiveRecord};
+import org.archive.io.{ArchiveReaderFactory,ArchiveRecord,ArchiveRecordHeader};
 import org.archive.io.arc.ARCRecord;
-import org.archive.io.warc.WARCRecord;
+import org.archive.io.warc.{WARCConstants,WARCRecord};
 import org.archive.util.ArchiveUtils;
-
 import org.apache.http.message.BasicLineParser;
 
 import scala.util.matching.Regex;
@@ -33,7 +32,8 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String) extends Inpu
   private var httpResponse : Boolean = false;
   private var mediaType : Option[Pair[String, String]] = None;
   private var charset : Option[String] = None;
-
+  private var closed : Boolean = false;
+  
   /**
    * Method to read one line of input from an InputStream. A line
    * ends in \n or \r\n.
@@ -107,7 +107,7 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String) extends Inpu
    * @return None if there is an error in parsing, otherwise returns
    * the status code and a map of the header values.
    */
-  def parseHeaders (rec : WARCRecord) : Option[Pair[Int,Map[String,Header]]] = {
+  def parseHttpHeaders (rec : WARCRecord) : Option[Pair[Int,Map[String,Header]]] = {
     val lineParser = new BasicLineParser;
     val firstLine = readLine(rec);
     try {
@@ -131,7 +131,7 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String) extends Inpu
       case rec1 : WARCRecord => {
         if (rec1.getHeader.getMimetype == "application/http; msgtype=response") {
           httpResponse = true;
-          parseHeaders(rec1).map {(headers)=>
+          parseHttpHeaders(rec1).map {(headers)=>
             statusCode = Some(headers._1);
             contentType = headers._2.get(HttpHeaders.CONTENT_TYPE.toLowerCase).map(_.getValue);
           }
@@ -192,7 +192,7 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String) extends Inpu
     if (!ready) cueUp;
     return charset;
   }
-    
+
   /**
    * Return true if this is an HTTP response record.
    */
@@ -220,7 +220,26 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String) extends Inpu
     }
   }
 
-  lazy val getDigestStr = rec.getDigestStr;
+  val SHA1_RE = new Regex("""^sha1:([a-zA-Z0-9]+)$""");
+
+  lazy val getDigestStr : Option[String] = {
+    if (!ready) cueUp;
+    rec match {
+      case arc : ARCRecord => {
+        if (!this.closed) {
+            /* must wait until finished */
+          None;
+        }
+        Some(rec.getDigestStr);
+      }
+      case warc : WARCRecord => {
+        warc.getHeader.getHeaderValue(WARCConstants.HEADER_KEY_PAYLOAD_DIGEST) match {
+          case SHA1_RE(s) => Some(s);
+          case _          => None;
+        }
+      }
+    }
+  }
 
   lazy val getFilename = filename;
 
@@ -230,8 +249,11 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String) extends Inpu
     rec.available; 
   }
   
-  override def close = rec.close;
-  
+  override def close = {
+    this.closed = true;
+    rec.close;
+  }
+
   override def mark (readlimit : Int) = {
     if (!ready) cueUp; 
     rec.mark(readlimit);
