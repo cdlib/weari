@@ -51,7 +51,10 @@ object Utility {
     val it = reader.iterator;
     while (it.hasNext) {
       val next = it.next;
-      f (new ArchiveRecordWrapper(next, arcFile.getName));
+      val rec = new ArchiveRecordWrapper(next, arcFile.getName);
+      if (rec.isHttpResponse) {
+        f (rec);
+      }
       next.close;
     }
     reader.close;
@@ -62,7 +65,10 @@ object Utility {
     val it = reader.iterator;
     while (it.hasNext) {
       val next = it.next;
-      f (new ArchiveRecordWrapper(next, arcName));
+      val rec = new ArchiveRecordWrapper(next, arcName);
+      if (rec.isHttpResponse) {
+        f (rec);
+      }
       next.close;
     }
     reader.close;
