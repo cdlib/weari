@@ -57,6 +57,7 @@ object Daemon {
                               new StreamingUpdateSolrServer(cmd.solrUri.toString,
                                                             config.queueSize(),
                                                             config.threadCount()),
+                              None,
                               config);
             }.getOrElse(false);
           case _ => false // Unknown command

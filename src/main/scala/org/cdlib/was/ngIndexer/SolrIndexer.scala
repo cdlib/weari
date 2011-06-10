@@ -5,22 +5,23 @@ import java.io.{File,FileInputStream,FileNotFoundException,InputStream,IOExcepti
 import java.net.URI;
 
 import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
-
 import org.apache.solr.client.solrj.impl.StreamingUpdateSolrServer;
+import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.common.{SolrDocument, SolrInputDocument};
 
 import org.cdlib.ssconf.Configurator;
 
 import org.cdlib.was.ngIndexer.Warc2Solr.{ARCNAME_FIELD,
+                                          DIGEST_FIELD,
                                           ID_FIELD,
                                           JOB_FIELD,
                                           PROJECT_FIELD,
                                           SPECIFICATION_FIELD,
                                           URL_FIELD};
 
-import org.cdlib.was.ngIndexer.Warc2Solr.{doc2InputDoc,mergeDocs,processStream,removeFieldValue};
-
+import org.cdlib.was.ngIndexer.Warc2Solr.{mergeDocs,processStream};
+import org.cdlib.was.ngIndexer.SolrDocumentModifier.doc2InputDoc;
 import scala.util.matching.Regex;
 
 /**
@@ -29,7 +30,7 @@ import scala.util.matching.Regex;
 class SolrIndexer(config : Config) extends Retry with Logger {
   val httpClient = new SimpleHttpClient;
 
-  def getById(id : String, server : CommonsHttpSolrServer) : Option[SolrDocument] = {
+  def getById(id : String, server : SolrServer) : Option[SolrDocument] = {
     val q = new SolrQuery;
     q.setQuery("id:\"%s\"".format(id));
     try {
@@ -45,9 +46,10 @@ class SolrIndexer(config : Config) extends Retry with Logger {
   def index (file : File, 
              extraId : String, 
              extraFields : Map[String, Any],
-             server : CommonsHttpSolrServer,
+             server : SolrServer,
+             filter : Option[QuickIdFilter],
              config : Config) : Boolean = 
-    index(new FileInputStream(file), file.getName, extraId, extraFields, server, config);
+    index(new FileInputStream(file), file.getName, extraId, extraFields, server, filter, config);
 
   /**
    * Index a single Solr document. If a document with the same ID
@@ -57,13 +59,20 @@ class SolrIndexer(config : Config) extends Retry with Logger {
    * @param doc Document to index.
    */
   def indexDoc(doc : SolrInputDocument,
-               server : CommonsHttpSolrServer) {
+               server : SolrServer,
+               filter : Option[QuickIdFilter]) {
     val id = doc.getFieldValue(ID_FIELD).asInstanceOf[String];
-    getById(id, server) match {
-      case None => server.add(doc);
-      case Some(olddoc) => {
+    if (filter.isDefined && filter.get.contains(id)) {
+      filter.get.add(id);
+      server.add(doc);
+    } else {
+      getById(id, server) match {
+        /* it could still be a false positive */
+        case None => server.add(doc);
+        case Some(olddoc) => {
         val mergedDoc = mergeDocs(doc2InputDoc(olddoc), doc);
-        server.add(mergedDoc);
+          server.add(mergedDoc);
+        }
       }
     }
   }
@@ -78,7 +87,8 @@ class SolrIndexer(config : Config) extends Retry with Logger {
              arcName : String,
              extraId : String,
              extraFields : Map[String, Any],
-             server : CommonsHttpSolrServer,             
+             server : SolrServer,
+             filter : Option[QuickIdFilter],
              config : Config) : Boolean = {
     try {
       processStream(arcName, stream, config) { (doc) =>
@@ -89,7 +99,7 @@ class SolrIndexer(config : Config) extends Retry with Logger {
         val oldId = doc.getFieldValue(ID_FIELD).asInstanceOf[String];
         doc.setField(ID_FIELD, "%s.%s".format(oldId, extraId));
         retry(3) {
-          indexDoc(doc, server);
+          indexDoc(doc, server, filter);
         } {
           case ex : Exception =>
             logger.error("Exception while indexing document from arc ({}).", arcName, ex);
@@ -124,6 +134,7 @@ class SolrIndexer(config : Config) extends Retry with Logger {
               config : Config) {
     try {
       processStream(arcName, stream, config) { (doc) =>
+        System.err.println("%s = %s".format(doc.getFieldValue(URL_FIELD), doc.getFieldValue(DIGEST_FIELD)));
         /* noop */
       }
     } catch {
@@ -172,7 +183,7 @@ object SolrIndexer {
           val server = new StreamingUpdateSolrServer(args(4),
                                                      config.queueSize(),
                                                      config.threadCount());
-
+          val filter = new QuickIdFilter("specification:%s".format(specification), server);
           command match {
             case "index" => {
               for (path <- args.drop(5)) {
@@ -181,6 +192,7 @@ object SolrIndexer {
                                     SPECIFICATION_FIELD -> specification, 
                                   PROJECT_FIELD -> project),
                               server,
+                              Some(filter),
                               config)
               }
             }

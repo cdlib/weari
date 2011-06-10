@@ -62,6 +62,7 @@ object Warc2Solr extends Logger {
            HOST_FIELD,
            ID_FIELD, 
            SITE_FIELD,
+           TAG_FIELD,
            TITLE_FIELD,
            TYPE_FIELD,
            URLFP_FIELD,
@@ -124,23 +125,6 @@ object Warc2Solr extends Logger {
     }
   }
 
-  /** Turn an existing SolrDocument into a SolrInputDocument suitable
-    * for sending back to solr.
-    */
-  def doc2InputDoc (doc : SolrDocument) : SolrInputDocument = {
-    val idoc = new SolrInputDocument();
-    for (fieldName <- SINGLE_VALUED_FIELDS) {
-      idoc.addField(fieldName, doc.getFirstValue(fieldName));
-    }
-    for (fieldName <- MULTI_VALUED_FIELDS) {
-      val values = doc.getFieldValues(fieldName);
-      if (values != null) {
-        for (value <- values) { idoc.addField(fieldName, value); }
-      }
-    }
-    return idoc;
-  }
-
   val MIN_BOOST = 0.1f;
   val MAX_BOOST = 10.0f;
 
@@ -184,29 +168,34 @@ object Warc2Solr extends Logger {
       case null => ""
     }
     updateDocBoost(doc, 1.0f);
-    updateDocMain(doc, url, rec.getDigestStr);
-
-    val dateFormatter = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-    dateFormatter.setTimeZone(java.util.TimeZone.getTimeZone("UTC"))
-
-    doc.addField(DATE_FIELD, rec.getDate, 1.0f);
-    updateMimeTypes(doc, 
-                    tikaMetadata.get(HttpHeaders.CONTENT_TYPE), 
-                    rec.getMediaType);
-    doc.addField(TITLE_FIELD, title, 1.0f);
-    doc.addField(CONTENT_LENGTH_FIELD, rec.getLength, 1.0f);
-    /* finish webgraph */
-    if (webGraphTypeRE.matcher(tikaMetadata.get(HttpHeaders.CONTENT_TYPE)).matches) {
-      val outlinks = wgContentHandler.outlinks;
-      if (outlinks.size > 0) {
-        val outlinkFps = for (l <- outlinks) 
-                         yield UriUtils.fingerprint(l.to);
-        for (fp <- outlinkFps.toList.distinct.sortWith((a,b)=>(a < b))) {
-          doc.addField("outlinks", fp);
+    val digest = rec.getDigestStr;
+    if (digest.isEmpty) {
+      return None;
+    } else {
+      updateDocMain(doc, url, rec.getDigestStr.get);
+      
+      val dateFormatter = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+      dateFormatter.setTimeZone(java.util.TimeZone.getTimeZone("UTC"))
+      
+      doc.addField(DATE_FIELD, rec.getDate, 1.0f);
+      updateMimeTypes(doc, 
+                      tikaMetadata.get(HttpHeaders.CONTENT_TYPE), 
+                      rec.getMediaType);
+      doc.addField(TITLE_FIELD, title, 1.0f);
+      doc.addField(CONTENT_LENGTH_FIELD, rec.getLength, 1.0f);
+      /* finish webgraph */
+      if (webGraphTypeRE.matcher(tikaMetadata.get(HttpHeaders.CONTENT_TYPE)).matches) {
+        val outlinks = wgContentHandler.outlinks;
+        if (outlinks.size > 0) {
+          val outlinkFps = for (l <- outlinks) 
+                           yield UriUtils.fingerprint(l.to);
+          for (fp <- outlinkFps.toList.distinct.sortWith((a,b)=>(a < b))) {
+            doc.addField("outlinks", fp);
+          }
         }
       }
+      return Some(doc);
     }
-    return Some(doc);
   }
 
   /** For each record in a file, call the function.
@@ -247,36 +236,4 @@ object Warc2Solr extends Logger {
     }
     return retval;
   }
-
-  /** Remove a single value from a document's field.
-    */
-  def removeFieldValue (doc : SolrInputDocument, key : String, value : Any) {
-    val oldValues = doc.getFieldValues(key);
-    doc.removeField(key);
-    for (value <- oldValues.filter(_==value)) {
-      doc.addField(key, value);
-    }
-  }
-
-  // def updateBoosts (g : RankedWebGraph) = {
-  //   var fp2boost = new scala.collection.mutable.HashMap[Long, Float]();
-  //   val it = g.nodeIterator;
-  //   while (it.hasNext) {
-  //     it.next;
-  //     fp2boost.update(UriUtils.fingerprint(it.url), it.boost);
-  //   }
-  //   def updateBoost (doc : SolrDocument) : SolrInputDocument = {
-  //     val idoc = doc2InputDoc(doc);
-  //     val urlfp = doc.getFirstValue(SolrIndexer.URLFP_FIELD).asInstanceOf[Long];
-  //     val boost1 = fp2boost.get(urlfp).getOrElse(doc.getFirstValue("boost").asInstanceOf[Float]);
-  //     val boost = Math.min(MAX_BOOST, Math.max(MIN_BOOST, boost1));
-  //     if (boost > 11.0f) throw new RuntimeException();
-  //     idoc.setDocumentBoost(boost);
-  //     idoc.removeField(SolrIndexer.BOOST_FIELD);
-  //     idoc.setField(SolrIndexer.BOOST_FIELD, boost);
-  //     idoc;
-  //   }
-  //   val q = new SolrQuery().setQuery("*:*").setRows(500);
-  //   updateDocs(q, updateBoost);
-  // }
 }
