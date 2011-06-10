@@ -17,7 +17,7 @@ class WarcSpec extends FeatureSpec {
     scenario ("We are reading a WARC file.") {
       val arcName = "IAH-20080430204825-00000-blackbook.warc.gz";
       val is = cl.getResourceAsStream(arcName);
-      Utility.eachArc (is, arcName) { (rec)=>
+      Utility.eachRecord (is, arcName) { (rec)=>
         if (rec.getUrl == "http://www.archive.org/images/logoc.jpg") {
           assert (rec.getDigestStr === Some("UZY6ND6CCHXETFVJD2MSS7ZENMWF7KQ2"));
         }

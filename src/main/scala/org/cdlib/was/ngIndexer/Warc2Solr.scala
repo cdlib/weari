@@ -201,12 +201,12 @@ object Warc2Solr extends Logger {
   /** For each record in a file, call the function.
     */
   def processFile (file : File, config : Config) (func : (SolrInputDocument) => Unit) {
-    Utility.eachArc(file) (record2doc(_, config).map(func));
+    Utility.eachRecord(file) (record2doc(_, config).map(func));
   }
 
   def processStream (arcName : String, stream : InputStream, config : Config) 
                     (func : (SolrInputDocument) => Unit) {
-    Utility.eachArc(stream, arcName) (record2doc(_, config).map(func));
+    Utility.eachRecord(stream, arcName) (record2doc(_, config).map(func));
   }
 
   /** Merge two documents into one, presuming they have the same id.
