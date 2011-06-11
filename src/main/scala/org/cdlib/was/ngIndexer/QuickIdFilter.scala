@@ -4,6 +4,13 @@ import org.apache.solr.client.solrj.{SolrQuery,SolrServer};
 
 import org.archive.util.BloomFilter64bit;
 
+/**
+ * A class that wraps a bloom filter s that we can quickly look up
+ * whether or not an item with a given ID is in the index without
+ * needing to query each and every item.
+ *
+ * @author Erik Hetzner <erik.hetzner@ucop.edu>
+ */
 class QuickIdFilter (q : String , server : SolrServer, n : Int) {
   def this (q : String, server : SolrServer) = this(q, server, 100000);
   val docs = new SolrDocumentCollection(server, new SolrQuery(q).setParam("fl", "id").setRows(1000));
