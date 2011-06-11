@@ -33,123 +33,55 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String) extends Inpu
   private var mediaType : Option[Pair[String, String]] = None;
   private var charset : Option[String] = None;
   private var closed : Boolean = false;
-  
-  /**
-   * Method to read one line of input from an InputStream. A line
-   * ends in \n or \r\n.
-   *
-   */
-  private def readLine (is : InputStream) : CharArrayBuffer = {
-    val buff = new CharArrayBuffer(1024);
-    var b : Int = 0;
-    b = is.read;
-    while (b != -1) {
-      if (b == 13) {
-        // CR - now read LF
-        is.read;
-        return buff;
-      } else if (b == 10) {
-        // LF
-        return buff;
-      } else {
-        buff.append(b.asInstanceOf[Char]);
-      }
-      b = is.read;
-    }
-    return buff;
-  }
-
-  /**
-   * Join together header lines.
-   *
-   * Header lines can have continuation lines, if the following line
-   * starts with a tab or space. This function takes a sequence of
-   * header lines and joins up any continuation lines with the
-   * previous line. It returns the sequence of joined lines.
-   * 
-   */
-  private def joinHeaderLines (lines : Seq[CharArrayBuffer]) : Seq[CharArrayBuffer] = {
-    var lastLine = new CharArrayBuffer(0);
-    var retval = List[CharArrayBuffer]();
-    for (line <- lines) {
-      if ((line.charAt(0) == ' ') || (line.charAt(0) == '\t')) {
-        lastLine.append(line);
-      } else {
-        retval = line :: retval;
-        lastLine = line;
-      }
-    }
-    return retval;
-  }
-
-  /**
-   * Read the header lines from an InputStream.
-   *
-   * Leaves the position of the inputstream at the start of the body
-   * of the message.
-   */
-  private def readHeaderLines (is : InputStream) : Seq[CharArrayBuffer] = {
-    var lines = List[CharArrayBuffer]();
-    var line = readLine(is);
-    while (!line.isEmpty) {
-      lines = line :: lines;
-      line = readLine(is);
-    }
-    return joinHeaderLines(lines);
-  }
 
   /**
    * Parse the headers from a WARCRecord.
-   *
-   * Takes a WARCRecord, and returns the statuscode and headers of an HTTP
-   * response message. 
-   *
-   * @return None if there is an error in parsing, otherwise returns
-   * the status code and a map of the header values.
    */
-  def parseHttpHeaders (rec : WARCRecord) : Option[Pair[Int,Map[String,Header]]] = {
-    val lineParser = new BasicLineParser;
-    val firstLine = readLine(rec);
-    try {
-      val statusLine = lineParser.parseStatusLine(firstLine, new ParserCursor(0, firstLine.length - 1));
-      val headers = readHeaderLines(rec).map(lineParser.parseHeader(_));
-      val headerMap = headers.map {(h)=> h.getName.toLowerCase->h }.toMap;
-      return Some((statusLine.getStatusCode, headerMap));
-    } catch {
-      case ex : ParseException => {
-        ex.printStackTrace(System.err);
-        return None;
+  def parseWarcHttpHeaders {
+    rec match {
+      case warcRec : WARCRecord => {
+        val lineParser = new BasicLineParser;
+        val firstLine = ArchiveRecordWrapper.readLine(warcRec);
+        try {
+          val statusLine = lineParser.parseStatusLine(firstLine, new ParserCursor(0, firstLine.length - 1));
+          val headers = ArchiveRecordWrapper.readHeaderLines(warcRec).map(lineParser.parseHeader(_));
+          val headerMap = headers.map {(h)=> h.getName.toLowerCase->h }.toMap;
+          statusCode = Some(statusLine.getStatusCode);
+          contentType = headerMap.get(HttpHeaders.CONTENT_TYPE.toLowerCase).map(_.getValue);
+        } catch {
+          case ex : ParseException => {
+            ex.printStackTrace(System.err);
+          }
+        }
       }
+      case _ => ()
     }
-  } 
-
+  }
+  
   /**
    * Cue up a record to its start, fill in httpResponse & contentType.
    */
   private def cueUp {
     rec match {
-      case rec1 : WARCRecord => {
-        if (rec1.getHeader.getMimetype == "application/http; msgtype=response") {
+      case warcRec : WARCRecord => {
+        if (warcRec.getHeader.getMimetype == "application/http; msgtype=response") {
           httpResponse = true;
-          parseHttpHeaders(rec1).map {(headers)=>
-            statusCode = Some(headers._1);
-            contentType = headers._2.get(HttpHeaders.CONTENT_TYPE.toLowerCase).map(_.getValue);
-          }
+          parseWarcHttpHeaders;
         }
       }
-      case rec1 : ARCRecord => {
-        val contentBegin = rec1.getMetaData.getContentBegin;
+      case arcRec : ARCRecord => {
+        val contentBegin = arcRec.getMetaData.getContentBegin;
         var totalbytesread = 0;
         var bytesread = 0;
         var buffer = new Array[Byte](1024);
         while (bytesread != -1 && totalbytesread + bytesread < contentBegin) {
           totalbytesread += bytesread;
-          bytesread = rec1.read(buffer, 0, scala.math.min(1024, contentBegin - totalbytesread));
+          bytesread = arcRec.read(buffer, 0, scala.math.min(1024, contentBegin - totalbytesread));
         }
-        val url = rec1.getMetaData.getUrl;
+        val url = arcRec.getMetaData.getUrl;
         httpResponse = !url.startsWith("filedesc:") && !url.startsWith("dns:");
-        contentType = Some(rec1.getHeader.getMimetype.toLowerCase);
-        statusCode = Some(rec1.getStatusCode);
+        contentType = Some(arcRec.getHeader.getMimetype.toLowerCase);
+        statusCode = Some(arcRec.getStatusCode);
       }
     }
     if (contentType.isDefined) {
@@ -173,32 +105,32 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String) extends Inpu
     }
   }
 
-  def getMediaType : String = {
+  lazy val getMediaType : String = {
     if (!ready) cueUp;
-    return "%s/%s".format(getMediaTopType, getMediaSubType);
+    "%s/%s".format(getMediaTopType, getMediaSubType);
   }
   
-  def getMediaTopType : String = {
+  lazy val getMediaTopType : String = {
     if (!ready) cueUp;
-    return mediaType.map(_._1).getOrElse("application")
+    mediaType.map(_._1).getOrElse("application")
   }
 
-  def getMediaSubType : String = {
+  lazy val getMediaSubType : String = {
     if (!ready) cueUp;
-    return mediaType.map(_._2).getOrElse("octet-stream")
+    mediaType.map(_._2).getOrElse("octet-stream")
   }
 
-  def getCharset : Option[String] = {
+  lazy val getCharset : Option[String] = {
     if (!ready) cueUp;
-    return charset;
+    charset;
   }
 
   /**
    * Return true if this is an HTTP response record.
    */
-  def isHttpResponse : Boolean = {
+  lazy val isHttpResponse : Boolean = {
     if (!ready) cueUp;
-    return httpResponse;
+    httpResponse;
   }
 
   lazy val getUrl = rec.getHeader.getUrl;
@@ -288,7 +220,7 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String) extends Inpu
 }
 
 object ArchiveRecordWrapper {
-  val MIME_RE = new Regex("""(application|audio|image|text|video)/([a-zA-Z0-9-]+)""");
+  val MIME_RE = new Regex("""(application|audio|image|text|video)/([a-zA-Z0-9\.-]+)""");
 
   val headerValueParser = new BasicHeaderValueParser;
   
@@ -315,5 +247,69 @@ object ArchiveRecordWrapper {
     } catch {
       case ex : Exception => (None, None);
     }
+  }
+
+  /**
+   * Method to read one line of input from an InputStream. A line
+   * ends in \n or \r\n.
+   *
+   */
+  private def readLine (is : InputStream) : CharArrayBuffer = {
+    val buff = new CharArrayBuffer(1024);
+    var b : Int = 0;
+    b = is.read;
+    while (b != -1) {
+      if (b == 13) {
+        // CR - now read LF
+        is.read;
+        return buff;
+      } else if (b == 10) {
+        // LF
+        return buff;
+      } else {
+        buff.append(b.asInstanceOf[Char]);
+      }
+      b = is.read;
+    }
+    return buff;
+  }
+
+  /**
+   * Join together header lines.
+   *
+   * Header lines can have continuation lines, if the following line
+   * starts with a tab or space. This function takes a sequence of
+   * header lines and joins up any continuation lines with the
+   * previous line. It returns the sequence of joined lines.
+   * 
+   */
+  private def joinHeaderLines (lines : Seq[CharArrayBuffer]) : Seq[CharArrayBuffer] = {
+    var lastLine = new CharArrayBuffer(0);
+    var retval = List[CharArrayBuffer]();
+    for (line <- lines) {
+      if ((line.charAt(0) == ' ') || (line.charAt(0) == '\t')) {
+        lastLine.append(line);
+      } else {
+        retval = line :: retval;
+        lastLine = line;
+      }
+    }
+    return retval;
+  }
+
+  /**
+   * Read the header lines from an InputStream.
+   *
+   * Leaves the position of the inputstream at the start of the body
+   * of the message.
+   */
+  private def readHeaderLines (is : InputStream) : Seq[CharArrayBuffer] = {
+    var lines = List[CharArrayBuffer]();
+    var line = readLine(is);
+    while (!line.isEmpty) {
+      lines = line :: lines;
+      line = readLine(is);
+    }
+    return joinHeaderLines(lines);
   }
 }
