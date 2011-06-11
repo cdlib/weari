@@ -47,7 +47,7 @@ class SolrIndexer(config : Config) extends Retry with Logger {
              extraId : String, 
              extraFields : Map[String, Any],
              server : SolrServer,
-             filter : Option[QuickIdFilter],
+             filter : QuickIdFilter,
              config : Config) : Boolean = 
     index(new FileInputStream(file), file.getName, extraId, extraFields, server, filter, config);
 
@@ -60,10 +60,10 @@ class SolrIndexer(config : Config) extends Retry with Logger {
    */
   def indexDoc(doc : SolrInputDocument,
                server : SolrServer,
-               filter : Option[QuickIdFilter]) {
+               filter : QuickIdFilter) {
     val id = doc.getFieldValue(ID_FIELD).asInstanceOf[String];
-    if (filter.isDefined && filter.get.contains(id)) {
-      filter.get.add(id);
+    if (filter.contains(id)) {
+      filter.add(id);
       server.add(doc);
     } else {
       getById(id, server) match {
@@ -88,7 +88,7 @@ class SolrIndexer(config : Config) extends Retry with Logger {
              extraId : String,
              extraFields : Map[String, Any],
              server : SolrServer,
-             filter : Option[QuickIdFilter],
+             filter : QuickIdFilter,
              config : Config) : Boolean = {
     try {
       processStream(arcName, stream, config) { (doc) =>
@@ -192,7 +192,7 @@ object SolrIndexer {
                                     SPECIFICATION_FIELD -> specification, 
                                   PROJECT_FIELD -> project),
                               server,
-                              Some(filter),
+                              filter,
                               config)
               }
             }
