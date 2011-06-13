@@ -12,16 +12,9 @@ import org.apache.solr.common.{SolrDocument, SolrInputDocument};
 
 import org.cdlib.ssconf.Configurator;
 
-import org.cdlib.was.ngIndexer.Warc2Solr.{ARCNAME_FIELD,
-                                          DIGEST_FIELD,
-                                          ID_FIELD,
-                                          JOB_FIELD,
-                                          PROJECT_FIELD,
-                                          SPECIFICATION_FIELD,
-                                          URL_FIELD};
+import org.cdlib.was.ngIndexer.SolrFields._;
 
-import org.cdlib.was.ngIndexer.Warc2Solr.{mergeDocs,processStream};
-import org.cdlib.was.ngIndexer.SolrDocumentModifier.doc2InputDoc;
+import org.cdlib.was.ngIndexer.SolrDocumentModifier.{doc2InputDoc,makeDocument,mergeDocs};
 import scala.util.matching.Regex;
 
 /**
@@ -30,6 +23,23 @@ import scala.util.matching.Regex;
 class SolrIndexer(config : Config) extends Retry with Logger {
   val httpClient = new SimpleHttpClient;
 
+  val parser = new MyParser;
+
+  /**
+   * Take an archive record & return a solr document, or none if we
+   * cannot parse.
+   */
+  def record2doc(is : InputStream, rec : IndexArchiveRecord, config : Config) : 
+      Option[SolrInputDocument] = {
+    if (!rec.isHttpResponse || (rec.getStatusCode != 200)) {
+      is.close; 
+      return None;
+    }
+    val result = parser.parse(is, rec.getMediaTypeStr, rec.getUrl, rec.getDate)
+    is.close;
+    return makeDocument(rec, result);
+  }
+  
   def getById(id : String, server : SolrServer) : Option[SolrDocument] = {
     val q = new SolrQuery;
     q.setQuery("id:\"%s\"".format(id));
@@ -142,6 +152,17 @@ class SolrIndexer(config : Config) extends Retry with Logger {
         logger.error("Exception while generating doc from arc ({}).", arcName, ex);
       }
     }
+  }
+   /**
+    * For each record in a file, call the function.
+    */
+  def processFile (file : File, config : Config) (func : (SolrInputDocument) => Unit) {
+    Utility.eachRecord(file) (r=>record2doc(r, r, config).map(func));
+  }
+
+  def processStream (arcName : String, stream : InputStream, config : Config) 
+  (func : (SolrInputDocument) => Unit) {
+    Utility.eachRecord(stream, arcName) (r=>record2doc(r, r, config).map(func));
   }
 }
 

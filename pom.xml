@@ -16,6 +16,11 @@
   </properties>
 
   <dependencies>
+    <dependency> 
+      <groupId>se.scalablesolutions.akka</groupId> 
+      <artifactId>akka-remote</artifactId> 
+      <version>1.1.2</version> 
+    </dependency> 
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -91,11 +96,11 @@
       <artifactId>law</artifactId>
       <version>1.4</version>
     </dependency>
-    <dependency>
+<!--    <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
-      <version>2.8.1</version>
-    </dependency>
+      <version>2.9.0</version>
+    </dependency> -->
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
@@ -159,8 +164,8 @@
     </dependency>
     <dependency>
       <groupId>org.scalatest</groupId>
-      <artifactId>scalatest</artifactId>
-      <version>1.3</version>
+      <artifactId>scalatest_2.9.0</artifactId>
+      <version>1.6.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.zookeeper</groupId>
@@ -175,12 +180,12 @@
     <dependency>
       <groupId>org.cdlib</groupId>
       <artifactId>ssconf</artifactId>
-      <version>0.1-SNAPSHOT</version>
+      <version>0.1-SNAPSHOT_2.9.0</version>
     </dependency>
     <dependency>
       <groupId>net.liftweb</groupId>
-      <artifactId>lift-json_2.8.1</artifactId>
-      <version>2.3-RC2</version>
+      <artifactId>lift-json_2.9.0</artifactId>
+      <version>2.4-M2</version>
     </dependency>
   </dependencies>
 
@@ -201,6 +206,12 @@
       <name>builds.archive.org</name>
       <url>http://builds.archive.org:8080/maven2/</url>
     </repository>
+
+    <repository> 
+      <id>akka.repository</id> 
+      <name>Akka Maven Repository</name> 
+      <url>http://akka.io/repository</url> 
+    </repository> 
   </repositories>
 
   <pluginRepositories>

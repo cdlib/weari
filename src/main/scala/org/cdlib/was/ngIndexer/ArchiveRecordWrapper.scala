@@ -25,7 +25,9 @@ import scala.util.matching.Regex;
  * A wrapper for ArchiveRecord objects to provide a more consistent
  * interface.
  */
-class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String) extends InputStream {
+class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String) 
+  extends InputStream with IndexArchiveRecord {
+
   private var statusCode : Option[Int] = None;
   private var ready : Boolean = false;
   private var contentType : Option[String] = None;
@@ -105,19 +107,9 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String) extends Inpu
     }
   }
 
-  lazy val getMediaType : String = {
+  lazy val getMediaType = {
     if (!ready) cueUp;
-    "%s/%s".format(getMediaTopType, getMediaSubType);
-  }
-  
-  lazy val getMediaTopType : String = {
-    if (!ready) cueUp;
-    mediaType.map(_._1).getOrElse("application")
-  }
-
-  lazy val getMediaSubType : String = {
-    if (!ready) cueUp;
-    mediaType.map(_._2).getOrElse("octet-stream")
+    mediaType;
   }
 
   lazy val getCharset : Option[String] = {

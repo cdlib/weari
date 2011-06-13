@@ -7,8 +7,16 @@ import org.archive.io.{ArchiveReaderFactory,ArchiveRecord};
 import scala.util.matching.Regex;
 
 object Utility {
+  
+  def elseIfNull[T](what : T, default : T) : T = {
+    if (what == null) {
+      return what;
+    } else {
+      return default;
+    }
+  }
+
   /**
-   *
    * Read a set of bytes from an input stream and pass them on to a function.
    *
    * @param stream The InputStream to return from.
@@ -44,6 +52,11 @@ object Utility {
     withFileOutputStream (file, (out) =>
       readBytes(in, (bytesRead, buffer) =>
         out.write(buffer, 0, bytesRead)));
+  }
+
+  def flushStream (in : InputStream, out : OutputStream) : Unit = {
+    readBytes(in, (bytesRead, buffer) =>
+      out.write(buffer, 0, bytesRead));
   }
 
   def eachRecord (arcFile : java.io.File) (f: (ArchiveRecordWrapper)=>Unit) {
