@@ -62,7 +62,7 @@ class SolrIndexer(config : Config) extends Retry with Logger {
                server : SolrServer,
                filter : Option[QuickIdFilter]) {
     val id = doc.getFieldValue(ID_FIELD).asInstanceOf[String];
-    if (filter.isDefined && filter.get.contains(id)) {
+    if (filter.isDefined && !filter.get.contains(id)) {
       filter.get.add(id);
       server.add(doc);
     } else {
@@ -100,7 +100,7 @@ class SolrIndexer(config : Config) extends Retry with Logger {
         doc.setField(ID_FIELD, "%s.%s".format(oldId, extraId));
         retry(3) {
           indexDoc(doc, server, filter);
-        } {
+        } { 
           case ex : Exception =>
             logger.error("Exception while indexing document from arc ({}).", arcName, ex);
         }
@@ -183,7 +183,7 @@ object SolrIndexer {
           val server = new StreamingUpdateSolrServer(args(4),
                                                      config.queueSize(),
                                                      config.threadCount());
-          val filter = new QuickIdFilter("specification:%s".format(specification), server);
+          val filter = new QuickIdFilter("specification:\"%s\"".format(specification), server);
           command match {
             case "index" => {
               for (path <- args.drop(5)) {
