@@ -77,6 +77,7 @@
         <!-- types as asserted in Content-Type header -->
         <field name="httpTopType" type="string" stored="true" indexed="true"/>
         <field name="httpType" type="string" stored="true" indexed="true"/>
+        <field name="typeGroup" type="string" stored="true" indexed="true"/>
         <field name="contentLength" type="long" stored="true"
             indexed="false"/>
         <field name="lastModified" type="long" stored="true"
@@ -95,6 +96,8 @@
         <field name="server" type="string" stored="true" indexed="false"/>
         <field name="job" type="string" stored="true" indexed="true"
                multiValued="true" />
+        <field name="institution" type="string" stored="true" indexed="true"
+               multiValued="true"/>
         <field name="specification" type="string" stored="true" indexed="true"
                multiValued="true"/>
         <field name="project" type="string" stored="true" indexed="true"
