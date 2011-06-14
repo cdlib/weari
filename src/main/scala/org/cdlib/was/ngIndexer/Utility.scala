@@ -7,6 +7,13 @@ import org.archive.io.{ArchiveReaderFactory,ArchiveRecord};
 import scala.util.matching.Regex;
 
 object Utility {
+
+  def writeStreamToTempFile (prefix : String, in : InputStream) : File = { 
+    val tempFile = File.createTempFile(prefix, null);
+    readStreamIntoFile(tempFile, in);
+    tempFile.deleteOnExit();
+    return tempFile;
+  }
   
   def elseIfNull[T](what : T, default : T) : T = {
     if (what == null) {
