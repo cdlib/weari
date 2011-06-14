@@ -17,6 +17,7 @@ import org.cdlib.mrt.queue.Item;
 import org.cdlib.ssconf.Configurator;
 
 import org.cdlib.was.ngIndexer.Warc2Solr.{JOB_FIELD,
+                                          INSTITUTION_FIELD,
                                           PROJECT_FIELD,
                                           SPECIFICATION_FIELD,
                                           TAG_FIELD};
@@ -54,6 +55,7 @@ object Daemon {
                               cmd.arcName, 
                               cmd.specification,
                               Map(JOB_FIELD->cmd.job,
+                                  INSTITUTION_FIELD->cmd.institution,
                                   TAG_FIELD->cmd.tags,
                                   SPECIFICATION_FIELD->cmd.specification, 
                                   PROJECT_FIELD->cmd.project),

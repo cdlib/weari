@@ -15,6 +15,7 @@ import org.cdlib.ssconf.Configurator;
 import org.cdlib.was.ngIndexer.Warc2Solr.{ARCNAME_FIELD,
                                           DIGEST_FIELD,
                                           ID_FIELD,
+                                          INSTITUTION_FIELD,
                                           JOB_FIELD,
                                           PROJECT_FIELD,
                                           SPECIFICATION_FIELD,
@@ -180,7 +181,8 @@ object SolrIndexer {
           val job = args(1);
           val specification = args(2);
           val project = args(3)
-          val server = new StreamingUpdateSolrServer(args(4),
+          val institution = args(4)
+          val server = new StreamingUpdateSolrServer(args(5),
                                                      config.queueSize(),
                                                      config.threadCount());
           val filter = new QuickIdFilter("specification:\"%s\"".format(specification), server);
@@ -189,7 +191,8 @@ object SolrIndexer {
               for (path <- args.drop(5)) {
                 indexer.index(new File(path), specification,
                               Map(JOB_FIELD -> job, 
-                                    SPECIFICATION_FIELD -> specification, 
+                                  INSTITUTION_FIELD -> institution,
+                                  SPECIFICATION_FIELD -> specification, 
                                   PROJECT_FIELD -> project),
                               server,
                               filter,

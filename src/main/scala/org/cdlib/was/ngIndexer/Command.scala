@@ -12,6 +12,7 @@ case class IndexCommand (val uri : URI,
                          val solrUri : URI,
                          val job : String, 
                          val specification : String,
+                         val institution : String,
                          val project : String,
                          val tags : Seq[String]) extends Command {
   val ArcRE = new Regex(""".*?([A-Za-z0-9\.-]+arc.gz).*""");
@@ -30,6 +31,7 @@ object Command {
               solrUri       = new URI((cmd \ "solrUri").values.asInstanceOf[String]),
               job           = (cmd \ "job").values.asInstanceOf[String],
               specification = (cmd \ "specification").values.asInstanceOf[String],
+              institution   = (cmd \ "institution").values.asInstanceOf[String],
               project       = (cmd \ "project").values.asInstanceOf[String],
               tags          = (cmd \ "tags").values.asInstanceOf[List[String]]));
       }
