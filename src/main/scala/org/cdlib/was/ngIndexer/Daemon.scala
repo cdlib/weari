@@ -36,7 +36,6 @@ object Daemon {
   val zkPath =  config.zooKeeperPath();
   val threadCount = config.threadCount();
 
-
   val handlerFactory = new QueueItemHandlerFactory {
     val indexer = new SolrIndexer(config);
     val locker = new Locker(zkHosts);
@@ -45,6 +44,10 @@ object Daemon {
       def handle (item : Item) : Boolean = {
         Command.parseCommand(new String(item.getData(), "UTF-8")) match {
           case Some(cmd : IndexCommand) => 
+            val server = new StreamingUpdateSolrServer(cmd.solrUri.toString,
+                                                       config.queueSize(),
+                                                       config.threadCount());
+            val filter = new QuickIdFilter("specification:%s".format(cmd.specification), server);
             httpClient.getUri(cmd.uri) {
               (stream)=>
                 indexer.index(stream, 
@@ -54,10 +57,8 @@ object Daemon {
                                   TAG_FIELD->cmd.tags,
                                   SPECIFICATION_FIELD->cmd.specification, 
                                   PROJECT_FIELD->cmd.project),
-                              new StreamingUpdateSolrServer(cmd.solrUri.toString,
-                                                            config.queueSize(),
-                                                            config.threadCount()),
-                              None,
+                              server,
+                              filter,
                               config);
             }.getOrElse(false);
           case _ => false // Unknown command
