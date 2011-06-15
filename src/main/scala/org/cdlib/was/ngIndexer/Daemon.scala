@@ -48,7 +48,7 @@ object Daemon {
             val server = new StreamingUpdateSolrServer(cmd.solrUri.toString,
                                                        config.queueSize(),
                                                        config.threadCount());
-            val filter = new QuickIdFilter("specification:%s".format(cmd.specification), server);
+            val filter = new QuickIdFilter("specification:\"%s\"".format(cmd.specification), server);
             httpClient.getUri(cmd.uri) {
               (stream)=>
                 indexer.index(stream, 
