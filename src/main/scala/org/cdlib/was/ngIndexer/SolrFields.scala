@@ -13,6 +13,7 @@ object SolrFields {
   val HTTP_TYPE_FIELD      = "httpType";
   val HOST_FIELD           = "host";
   val ID_FIELD             = "id";
+  val INSTITUTION_FIELD    = "institution";
   val JOB_FIELD            = "job";
   val PROJECT_FIELD        = "project";
   val SERVER_FIELD         = "server";

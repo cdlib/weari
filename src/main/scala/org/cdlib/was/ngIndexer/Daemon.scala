@@ -17,6 +17,7 @@ import org.cdlib.mrt.queue.Item;
 import org.cdlib.ssconf.Configurator;
 
 import org.cdlib.was.ngIndexer.SolrFields.{JOB_FIELD,
+                                           INSTITUTION_FIELD,
                                            PROJECT_FIELD,
                                            SPECIFICATION_FIELD,
                                            TAG_FIELD};
@@ -47,13 +48,14 @@ object Daemon {
             val server = new StreamingUpdateSolrServer(cmd.solrUri.toString,
                                                        config.queueSize(),
                                                        config.threadCount());
-            val filter = new QuickIdFilter("specification:%s".format(cmd.specification), server);
+            val filter = new QuickIdFilter("specification:\"%s\"".format(cmd.specification), server);
             httpClient.getUri(cmd.uri) {
               (stream)=>
                 indexer.index(stream, 
                               cmd.arcName, 
                               cmd.specification,
                               Map(JOB_FIELD->cmd.job,
+                                  INSTITUTION_FIELD->cmd.institution,
                                   TAG_FIELD->cmd.tags,
                                   SPECIFICATION_FIELD->cmd.specification, 
                                   PROJECT_FIELD->cmd.project),
