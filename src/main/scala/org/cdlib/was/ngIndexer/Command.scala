@@ -15,12 +15,10 @@ case class IndexCommand (val uri : URI,
                          val institution : String,
                          val project : String,
                          val tags : Seq[String]) extends Command {
-  val ArcRE = new Regex(""".*?([A-Za-z0-9\.-]+arc.gz).*""");
-  val ArcRE(arcName) = uri.getPath;
+  val Utility.ARC_RE(arcName) = uri.getPath;
 }
 
 object Command {
-  
   def parseCommand(json : String) : Option[Command] = {
     // TODO - Make this typesafe
     val cmd = JsonParser.parse(json);

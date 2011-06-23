@@ -7,7 +7,8 @@ import org.archive.io.{ArchiveReaderFactory,ArchiveRecord};
 import scala.util.matching.Regex;
 
 object Utility {
-
+  val ARC_RE = new Regex(""".*?([A-Za-z0-9\.-]+arc.gz).*""");
+  
   def writeStreamToTempFile (prefix : String, in : InputStream) : File = { 
     val tempFile = File.createTempFile(prefix, null);
     readStreamIntoFile(tempFile, in);
