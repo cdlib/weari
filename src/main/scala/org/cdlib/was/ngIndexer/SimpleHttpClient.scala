@@ -38,7 +38,7 @@ class SimpleHttpClient {
         { EntityUtils.consume(response.getEntity); }
     }
   }
-      
+
   def mkRequestExcept[T](req : HttpGet) (f : (HttpResponse)=>T) : T = {
     mkRequest(req) {
       case (200, resp) => f (resp);
@@ -56,11 +56,43 @@ class SimpleHttpClient {
     }
   }
 
+  /**
+   * GET a URI, following redirects. Call the given function on the body
+   * if we get a 200 response.
+   */
   def getUri[T] (uri : URI) (f : (InputStream)=>T) : Option[T] = {
     return mkRequest(new HttpGet(uri)) {
       case (200, resp) => Some(f(resp.getEntity.getContent));
       case ((301 | 302 | 303), resp) => getRedir(resp).flatMap(newUri=>getUri(newUri)(f));
       case (_,   _)    => None;
+    }
+  }
+  
+  /**
+   * Get a URI, returning the response. Follows redirects. Return
+   * None if we get a non-200 response.
+   *
+   * Remember to call org.apache.http.util.EntityUtils.consume(response.getEntity) when
+   * finished.
+   */
+  def getUriResponse (uri : URI) : Option[HttpResponse] = {
+    var response : HttpResponse = null
+    var statusCode : Int = -1;
+    try {
+      response = httpClient.execute(new HttpGet(uri));
+      statusCode = response.getStatusLine.getStatusCode;
+      statusCode match {
+        case 200               => Some(response);
+        case (301 | 302 | 303) => getRedir(response).flatMap(newUri=>getUriResponse(newUri));
+        case _                 => None;
+      }
+    } finally {
+      if ((response != null) && (response.getEntity != null) &&
+          (statusCode != 200)) {
+            /* If we did not pass the content stream back to the user,
+             consume it. */
+            EntityUtils.consume(response.getEntity);
+          }
     }
   }
 }
