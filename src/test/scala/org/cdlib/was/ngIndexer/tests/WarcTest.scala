@@ -20,20 +20,22 @@ import scala.collection.mutable.HashMap;
 class WarcSpec extends FeatureSpec {
   val cl = classOf[WarcSpec].getClassLoader;
   val config = new Config {};
-  
+  val indexer = new SolrIndexer(config);
+
   feature ("We can read a WARC file.") {
     scenario ("(W)ARC files should return the same data.") {
       val warcName = "IAH-20080430204825-00000-blackbook.warc.gz";
       val arcName = "IAH-20080430204825-00000-blackbook.arc.gz";
       val arcData = new HashMap[String, SolrInputDocument];
       val warcData = new HashMap[String, SolrInputDocument];
+
       Utility.eachRecord (cl.getResourceAsStream(warcName), warcName) { (rec)=>
         if (rec.isHttpResponse) {
-          Warc2Solr.record2doc(rec, config).map(doc=>warcData += (rec.getUrl -> doc));
+          indexer.record2doc(rec, rec, config).map(doc=>warcData += (rec.getUrl -> doc));
         }
       }
       Utility.eachRecord (cl.getResourceAsStream(arcName), arcName) { (rec)=>
-        Warc2Solr.record2doc(rec, config).map(doc=>arcData += (rec.getUrl -> doc));
+        indexer.record2doc(rec, rec, config).map(doc=>arcData += (rec.getUrl -> doc));
       }
 /*      for ((k,v) <- arcData) {
         assert(v === warcData.getOrElse(k, ""));
