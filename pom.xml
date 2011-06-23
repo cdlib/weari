@@ -16,11 +16,16 @@
   </properties>
 
   <dependencies>
-    <dependency> 
-      <groupId>se.scalablesolutions.akka</groupId> 
-      <artifactId>akka-remote</artifactId> 
-      <version>1.1.2</version> 
-    </dependency> 
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-core</artifactId>
+      <version>0.20.203.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.pig</groupId>
+      <artifactId>pig</artifactId>
+      <version>0.8.0</version>
+    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -206,12 +211,6 @@
       <name>builds.archive.org</name>
       <url>http://builds.archive.org:8080/maven2/</url>
     </repository>
-
-    <repository> 
-      <id>akka.repository</id> 
-      <name>Akka Maven Repository</name> 
-      <url>http://akka.io/repository</url> 
-    </repository> 
   </repositories>
 
   <pluginRepositories>
