@@ -27,7 +27,8 @@ class SimpleHttpClient {
   cm.setMaxTotal(100);
   var httpClient = new DefaultHttpClient(cm, params);
 
-  def mkRequest[T] (request : HttpUriRequest) (f : (Pair[Int, HttpResponse]) => T) : T = {
+  def mkRequest[T] (request : HttpUriRequest) 
+                   (f : (Pair[Int, HttpResponse]) => T) : T = {
     var response : HttpResponse = null;
     try {
       response = httpClient.execute(request);
@@ -35,31 +36,30 @@ class SimpleHttpClient {
     } finally {
       if ((response != null) && (response.getEntity != null))
         { EntityUtils.consume(response.getEntity); }
-    }      
+    }
   }
-
+      
   def mkRequestExcept[T](req : HttpGet) (f : (HttpResponse)=>T) : T = {
     mkRequest(req) {
       case (200, resp) => f (resp);
       case (_,   resp) => throw new HttpException(resp.getStatusLine.toString);
     }
   }
+    
+  def getRedir (resp : HttpResponse) : Option[URI] = {
+    val header = resp.getFirstHeader("Location");
+    if (header == null) {
+      return None;
+    } else {
+      val newUri = new URI(header.getValue);
+      return Some(newUri);
+    }
+  }
 
   def getUri[T] (uri : URI) (f : (InputStream)=>T) : Option[T] = {
-    def followRedir (resp : HttpResponse) : Option[T] = {
-      val header = resp.getFirstHeader("Location");
-      if (header == null) {
-        return None;
-      } else {
-        val newUri = new URI(header.getValue);
-        return getUri[T](newUri)(f);
-      }
-    }
     return mkRequest(new HttpGet(uri)) {
       case (200, resp) => Some(f(resp.getEntity.getContent));
-      case (301, resp) => followRedir(resp);
-      case (302, resp) => followRedir(resp);
-      case (303, resp) => followRedir(resp);
+      case ((301 | 302 | 303), resp) => getRedir(resp).flatMap(newUri=>getUri(newUri)(f));
       case (_,   _)    => None;
     }
   }
