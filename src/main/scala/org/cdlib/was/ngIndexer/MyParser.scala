@@ -51,10 +51,12 @@ class MyParser {
     timeout(30000) {
         parser.parse(content, contentHandler, tikaMetadata, parseContext);
     }
-    val tikaMediaType = tikaMetadata.get(HttpHeaders.CONTENT_TYPE);
+    val tikaMediaType =
+      ArchiveRecordWrapper.parseContentType(tikaMetadata.get(HttpHeaders.CONTENT_TYPE));
+    val realMediaType = tikaMediaType.get.mediaTypeString;
     /* finish webgraph */
     var outlinks : Seq[Long] = List[Long]();
-    if (webGraphTypeRE.matcher(tikaMediaType).matches) {
+    if (webGraphTypeRE.matcher(realMediaType).matches) {
       val outlinksRaw = wgContentHandler.outlinks;
       if (outlinksRaw.size > 0) {
         outlinks = (for (l <- outlinksRaw) 
@@ -63,7 +65,7 @@ class MyParser {
       }
     }
     return new MyParseResult(content   = indexContentHandler.contentString.getOrElse(""),
-                             mediaType = tikaMediaType,
+                             mediaType = realMediaType,
                              title     = elseIfNull(tikaMetadata.get("title"), ""),
                              outlinks  = outlinks);
   }

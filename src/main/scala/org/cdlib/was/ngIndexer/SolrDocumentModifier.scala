@@ -130,17 +130,14 @@ object SolrDocumentModifier extends Logger {
   def updateMimeTypes (doc : SolrInputDocument,
                        httpTypeStr : String,
                        tikaTypeStr : String) {
-    val (httpType, httpCharset) = ArchiveRecordWrapper.parseContentType(httpTypeStr);
-    val (tikaType, tikaCharset) = ArchiveRecordWrapper.parseContentType(tikaTypeStr);
-    
-    httpType.map { p =>
-      doc.addField(HTTP_TOP_TYPE_FIELD, p._1, 1.0f);
-      doc.addField(HTTP_TYPE_FIELD, "%s/%s".format(p._1, p._2), 1.0f);
+    ArchiveRecordWrapper.parseContentType(httpTypeStr).map { t =>
+      doc.addField(HTTP_TOP_TYPE_FIELD, t.mediaTopType, 1.0f);
+      doc.addField(HTTP_TYPE_FIELD, t.mediaTypeString, 1.0f);
+      doc.addField(CHARSET_FIELD, t.charset, 1.0f);
     }
-    httpCharset.map(doc.addField(CHARSET_FIELD, _, 1.0f));
-    tikaType.map { p =>
-      doc.addField(TOP_TYPE_FIELD, p._1, 1.0f);
-      doc.addField(TYPE_FIELD, "%s/%s".format(p._1, p._2), 1.0f);
+    ArchiveRecordWrapper.parseContentType(tikaTypeStr).map { t =>
+      doc.addField(TOP_TYPE_FIELD, t.mediaTopType, 1.0f);
+      doc.addField(TYPE_FIELD, t.mediaTypeString);
     }
   }
 

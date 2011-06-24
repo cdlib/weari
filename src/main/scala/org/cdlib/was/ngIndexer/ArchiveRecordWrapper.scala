@@ -30,7 +30,7 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String)
 
   private var statusCode : Option[Int] = None;
   private var ready : Boolean = false;
-  private var contentType : Option[String] = None;
+  private var contentTypeStr : Option[String] = None;
   private var httpResponse : Boolean = false;
   private var mediaType : Option[Pair[String, String]] = None;
   private var charset : Option[String] = None;
@@ -49,7 +49,8 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String)
           val headers = ArchiveRecordWrapper.readHeaderLines(warcRec).map(lineParser.parseHeader(_));
           val headerMap = headers.map {(h)=> h.getName.toLowerCase->h }.toMap;
           statusCode = Some(statusLine.getStatusCode);
-          contentType = headerMap.get(HttpHeaders.CONTENT_TYPE.toLowerCase).map(_.getValue);
+          contentTypeStr = 
+            headerMap.get(HttpHeaders.CONTENT_TYPE.toLowerCase).map(_.getValue);
         } catch {
           case ex : ParseException => {
             ex.printStackTrace(System.err);
@@ -82,14 +83,15 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String)
         }
         val url = arcRec.getMetaData.getUrl;
         httpResponse = !url.startsWith("filedesc:") && !url.startsWith("dns:");
-        contentType = Some(arcRec.getHeader.getMimetype.toLowerCase);
+        contentTypeStr = Some(arcRec.getHeader.getMimetype.toLowerCase);
         statusCode = Some(arcRec.getStatusCode);
       }
     }
-    if (contentType.isDefined) {
-      val (mediaType1 : Option[Pair[String,String]], charset1) = 
-        ArchiveRecordWrapper.parseContentType(contentType.get);
-      mediaType = mediaType1; charset = charset1;
+    contentTypeStr.map { str =>
+      ArchiveRecordWrapper.parseContentType(str).map { contentType =>
+        mediaType = contentType.mediaType;
+        charset = contentType.charset;
+      }
     }
     ready = true;
   }
@@ -212,16 +214,28 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String)
 }
 
 object ArchiveRecordWrapper {
-  val MIME_RE = new Regex("""(application|audio|image|text|video)/([a-zA-Z0-9\.-]+)""");
+  class ContentType (val mediaType : Option[Pair[String,String]],
+                     val charset : Option[String]) {
+    lazy val mediaTopType = mediaType.map(p=>p._1);
+
+    lazy val mediaSubType = mediaType.map(p=>p._2);
+
+    lazy val mediaTypeString : String =
+      mediaType.map((p)=>"%s/%s".format(p._1, p._2)).
+        getOrElse("application/octet-stream")
+  }
+
+  val MIME_RE = 
+    new Regex("""(application|audio|image|text|video)/([a-zA-Z0-9\.-]+)""");
 
   val headerValueParser = new BasicHeaderValueParser;
-  
+
   /**
    * Parse a Content-Type header.
    *
    * @return The optional media type, as a pair (type, subtype), and an optional charset
    */
-  def parseContentType (line : String) : Pair[Option[Pair[String,String]], Option[String]] = {
+  def parseContentType (line : String) : Option[ContentType] = {
     try {
       val buff = new CharArrayBuffer(80);
       buff.append(line);
@@ -235,9 +249,9 @@ object ArchiveRecordWrapper {
         case null => None;
         case p : NameValuePair => Some(p.getValue);
       }
-      return (mediaType, charset);
+      return Some(new ContentType (mediaType, charset));
     } catch {
-      case ex : Exception => (None, None);
+      case ex : Exception => None;
     }
   }
 
