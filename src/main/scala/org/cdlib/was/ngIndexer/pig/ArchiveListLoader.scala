@@ -1,3 +1,5 @@
+package org.cdlib.was.ngIndexer.pig;
+
 import java.util.ArrayList;
 
 import java.net.URI;
@@ -90,6 +92,7 @@ class ArchiveListLoader extends LoadFunc {
           tuple.append(result.content);
           tuple.append(result.mediaType);
           tuple.append(result.title);
+          tuple.append(rec.getDigestStr.getOrElse("-"));
           tuple.append(outlinks);
           return tuple;
         }
