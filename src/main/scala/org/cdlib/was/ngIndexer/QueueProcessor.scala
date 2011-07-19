@@ -14,7 +14,7 @@ import sun.misc.{Signal, SignalHandler};
  */
 trait QueueItemHandler {
   /**
-   * @returns true if the item was handled sucessfully.
+   * @return true if the item was handled sucessfully.
    */
   def handle (item : Item) : Boolean;
 }
