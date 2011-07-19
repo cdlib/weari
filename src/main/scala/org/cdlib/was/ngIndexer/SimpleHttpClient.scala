@@ -27,6 +27,14 @@ class SimpleHttpClient {
   cm.setMaxTotal(100);
   var httpClient = new DefaultHttpClient(cm, params);
 
+  /**
+   * Send an HTTP request, and process the response.
+   *
+   * @param request The HTTP request.
+   * @param f A function which takes a pair (Int, HttpResponse)
+   *   and returns a T. Generally will be a set of case statements.
+   * @return The value returned by f.
+   */
   def mkRequest[T] (request : HttpUriRequest) 
                    (f : (Pair[Int, HttpResponse]) => T) : T = {
     var response : HttpResponse = null;
@@ -46,7 +54,12 @@ class SimpleHttpClient {
     }
   }
     
-  def getRedir (resp : HttpResponse) : Option[URI] = {
+  /**
+   * Get a redirect URI for an HttpResponse.
+   *
+   * @return The URI found, or None.
+   */
+  private def getRedir (resp : HttpResponse) : Option[URI] = {
     val header = resp.getFirstHeader("Location");
     if (header == null) {
       return None;
