@@ -15,17 +15,17 @@ import java.io.InputStream;
 import java.net.URI;
 
 class SimpleHttpClient {
-  val schemeRegistry = new SchemeRegistry();
+  private val schemeRegistry = new SchemeRegistry();
   schemeRegistry.register(
     new Scheme("http", 80, PlainSocketFactory.getSocketFactory()));
   /* setup params */
-  val params = new BasicHttpParams();
+  private val params = new BasicHttpParams();
   HttpConnectionParams.setConnectionTimeout(params, 20 * 1000);
   HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
-  val cm = new ThreadSafeClientConnManager(schemeRegistry);
+  private val cm = new ThreadSafeClientConnManager(schemeRegistry);
   cm.setDefaultMaxPerRoute(100);
   cm.setMaxTotal(100);
-  var httpClient = new DefaultHttpClient(cm, params);
+  private var httpClient = new DefaultHttpClient(cm, params);
 
   /**
    * Send an HTTP request, and process the response.
@@ -46,7 +46,16 @@ class SimpleHttpClient {
         { EntityUtils.consume(response.getEntity); }
     }
   }
-
+  
+  /**
+   * Send an HTTP request, and process the response. Throw an exception
+   * if the response is non-200.
+   *
+   * @param request The HTTP request.
+   * @param f A function which takes a HttpResponse
+   *   and returns a T. Generally will be a set of case statements.
+   * @return The value returned by f.
+   */
   def mkRequestExcept[T](req : HttpGet) (f : (HttpResponse)=>T) : T = {
     mkRequest(req) {
       case (200, resp) => f (resp);
