@@ -4,13 +4,15 @@ object SolrFields {
   val ARCNAME_FIELD        = "arcname";
   val BOOST_FIELD          = "boost";
   val CANONICALURL_FIELD   = "canonicalurl";
-  val CHARSET_FIELD        = "charset";
+  val CHARSET_DET_FIELD    = "charsetDet";
+  val CHARSET_SUP_FIELD    = "charsetSup";
   val CONTENT_FIELD        = "content";
   val CONTENT_LENGTH_FIELD = "contentLength";
   val DATE_FIELD           = "date";
+  val MEDIA_TYPE_DET_FIELD = "mediaTypeDet";
+  val MEDIA_TYPE_GROUP_DET_FIELD = "mediaTypeGroupDet";
+  val MEDIA_TYPE_SUP_FIELD = "mediaTypeSup";
   val DIGEST_FIELD         = "digest";
-  val HTTP_TOP_TYPE_FIELD  = "httpTopType";
-  val HTTP_TYPE_FIELD      = "httpType";
   val HOST_FIELD           = "host";
   val ID_FIELD             = "id";
   val INSTITUTION_FIELD    = "institution";
@@ -29,15 +31,19 @@ object SolrFields {
   /* fields which have a single value */
   val SINGLE_VALUED_FIELDS = 
       List(CANONICALURL_FIELD,
+           CHARSET_DET_FIELD,
+           CHARSET_SUP_FIELD,
            CONTENT_FIELD,
            CONTENT_LENGTH_FIELD,
            DIGEST_FIELD,
            HOST_FIELD,
            ID_FIELD, 
+           MEDIA_TYPE_DET_FIELD,
+           MEDIA_TYPE_GROUP_DET_FIELD,
+           MEDIA_TYPE_SUP_FIELD,
            SITE_FIELD,
            TAG_FIELD,
            TITLE_FIELD,
-           TYPE_FIELD,
            URLFP_FIELD,
            URL_FIELD);
 

@@ -66,18 +66,21 @@
         <field name="site" type="string" stored="true" indexed="true"/>
         <field name="url" type="url" stored="true" indexed="true"
             required="true"/>
+        <field name="canonicalurl" type="string" stored="true" indexed="true"/>
         <field name="content" type="text" stored="true" indexed="true" compressed="true"/>
         <field name="title" type="text" stored="true" indexed="true"/>
         <field name="cache" type="string" stored="true" indexed="false"/>
 
-        <field name="type" type="string" stored="true" indexed="true"/>
+        <!-- detected media type -->
+        <field name="mediaTypeDet" type="string" stored="true" indexed="true"/>
         <!-- application, audio, text, video, etc. -->
-        <field name="topType" type="string" stored="true" indexed="true"/>
-        <field name="charset" type="string" stored="true" indexed="true"/>
-        <!-- types as asserted in Content-Type header -->
-        <field name="httpTopType" type="string" stored="true" indexed="true"/>
-        <field name="httpType" type="string" stored="true" indexed="true"/>
-        <field name="typeGroup" type="string" stored="true" indexed="true"/>
+        <field name="mediaTypeGroupDet" type="string" stored="true" indexed="true"/>
+        <field name="charsetDet" type="string" stored="true" indexed="true"/>
+
+        <!-- supplied (in Content-Type header) media type, charset -->
+        <field name="mediaTypeSup" type="string" stored="true" indexed="true"/>
+        <field name="charsetSup" type="string" stored="true" indexed="true"/>
+
         <field name="contentLength" type="long" stored="true"
             indexed="false"/>
         <field name="lastModified" type="long" stored="true"
@@ -85,27 +88,24 @@
         <field name="date" type="date" stored="true" indexed="true"
                multiValued="true"/>
 
-        <!-- fields for languageidentifier plugin -->
-        <field name="lang" type="string" stored="true" indexed="true"/>
-        
-        <!-- my fields -egh -->
-        <field name="outlinks" type="long" stored="true" indexed="false"
-               multiValued="true"/>
-        <field name="urlfp" type="long" stored="true" indexed="true" omitNorms="true"/>
-        <field name="canonicalurl" type="string" stored="true" indexed="true"/>
-        <field name="server" type="string" stored="true" indexed="false"/>
+        <field name="institution" type="string" stored="true" indexed="true"
+               multiValued="false" />
         <field name="job" type="string" stored="true" indexed="true"
                multiValued="true" />
-        <field name="institution" type="string" stored="true" indexed="true"
-               multiValued="true"/>
         <field name="specification" type="string" stored="true" indexed="true"
                multiValued="true"/>
         <field name="project" type="string" stored="true" indexed="true"
-               multiValued="true"/>
+               multiValued="false"/>
         <field name="arcname" type="string" stored="true" indexed="true"
                multiValued="true" omitNorms="true"/>
         <field name="tag" type="string" stored="true" indexed="true"
                multiValued="true"/>
+
+        <!-- fields for outlinks -->
+        <field name="outlinks" type="long" stored="true" indexed="false"
+               multiValued="true"/>
+        <field name="urlfp" type="long" stored="true" indexed="true" omitNorms="true"/>
+
     </fields>
     <uniqueKey>id</uniqueKey>
     <defaultSearchField>content</defaultSearchField>

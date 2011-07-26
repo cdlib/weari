@@ -131,13 +131,12 @@ object SolrDocumentModifier extends Logger {
                        httpTypeStr : String,
                        tikaTypeStr : String) {
     ArchiveRecordWrapper.parseContentType(httpTypeStr).map { t =>
-      doc.addField(HTTP_TOP_TYPE_FIELD, t.mediaTopType, 1.0f);
-      doc.addField(HTTP_TYPE_FIELD, t.mediaTypeString, 1.0f);
-      doc.addField(CHARSET_FIELD, t.charset, 1.0f);
+      doc.addField(MEDIA_TYPE_SUP_FIELD, t.mediaTypeString, 1.0f);
+      t.charset.map(str=>doc.addField(CHARSET_SUP_FIELD, str, 1.0f));
     }
     ArchiveRecordWrapper.parseContentType(tikaTypeStr).map { t =>
-      doc.addField(TOP_TYPE_FIELD, t.mediaTopType, 1.0f);
-      doc.addField(TYPE_FIELD, t.mediaTypeString);
+      doc.addField(MEDIA_TYPE_DET_FIELD, t.mediaTypeString);
+      t.charset.map(str=>doc.addField(CHARSET_DET_FIELD, str, 1.0f));
     }
   }
 
