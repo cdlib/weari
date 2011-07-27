@@ -13,6 +13,7 @@ import org.apache.solr.common.{SolrDocument, SolrInputDocument};
 import org.cdlib.ssconf.Configurator;
 
 import org.cdlib.was.ngIndexer.SolrFields._;
+import org.cdlib.was.ngIndexer.Utility.null2option;
 
 import org.cdlib.was.ngIndexer.SolrDocumentModifier.{doc2InputDoc,makeDocument,mergeDocs};
 import scala.util.matching.Regex;
@@ -35,7 +36,7 @@ class SolrIndexer(config : Config) extends Retry with Logger {
       is.close; 
       return None;
     }
-    val result = parser.parse(is, rec.mediaTypeString, rec.getUrl, rec.getDate)
+    val result = parser.parse(is, null2option(rec.mediaTypeString), rec.getUrl, rec.getDate)
     is.close;
     return makeDocument(rec, result);
   }

@@ -20,6 +20,7 @@ import org.apache.pig.data._;
 
 import org.archive.io.{ArchiveReader,ArchiveReaderFactory,ArchiveRecord};
 import org.cdlib.was.ngIndexer._;
+import org.cdlib.was.ngIndexer.Utility.null2option;
 
 class ArchiveListLoader extends LoadFunc {
   val tupleFactory = TupleFactory.getInstance();
@@ -85,7 +86,7 @@ class ArchiveListLoader extends LoadFunc {
         case None => return null;
         case Some(rec) => {
           var tuple = tupleFactory.newTupleNoCopy(new java.util.ArrayList[java.lang.Object]());
-          val result = parser.parse(rec, rec.mediaTypeString, rec.getUrl, rec.getDate)
+          val result = parser.parse(rec, null2option(rec.mediaTypeString), rec.getUrl, rec.getDate)
           val outlinks = bagFactory.newDistinctBag;
           for (link <- result.outlinks) { outlinks.add(tupleFactory.newTuple(link)); }
           tuple.append(rec.getUrl)

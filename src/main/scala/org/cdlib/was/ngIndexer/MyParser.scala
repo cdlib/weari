@@ -8,16 +8,19 @@ import org.apache.tika.config.TikaConfig;
 import org.apache.tika.metadata.{Metadata, HttpHeaders};
 import org.apache.tika.parser.{AutoDetectParser, ParseContext, Parser};
 
-import org.cdlib.was.ngIndexer.Utility.{elseIfNull,timeout};
+import org.cdlib.was.ngIndexer.Utility.{elseIfNull,null2option,timeout};
 import org.cdlib.was.ngIndexer.webgraph.WebGraphContentHandler;
 
 import org.xml.sax.ContentHandler;
 
-class MyParseResult(val content  : String,
+/**
+ * Represents the result of a Tika parse.
+ */
+class MyParseResult(val content  : Option[String],
                     topMediaType : Option[String],
                     subMediaType : Option[String],
                     charset      : Option[String],
-                    val title    : String,
+                    val title    : Option[String],
                     val outlinks : Seq[Long])
   extends ContentTypeImpl(topMediaType, subMediaType, charset);
 
@@ -31,14 +34,12 @@ class MyParser {
      outlinks indexed */
   val webGraphTypeRE = Pattern.compile("^(.*html.*|application/pdf)$");
 
-  def parse (content : Array[Byte],
-             mediaType : String,
-             url : String,
-             date : Date) : MyParseResult =
-    parse(new ByteArrayInputStream(content), mediaType, url, date);
+  def parse (input : Array[Byte], contentType : Option[String], 
+             url : String, date : Date) : MyParseResult = 
+    parse(new ByteArrayInputStream(input), contentType, url, date);
 
-  def parse (content : InputStream,
-             mediaType : String,
+  def parse (input : InputStream,
+             contentType : Option[String],
              url : String,
              date : Date) : MyParseResult = {
     val tikaMetadata = new Metadata;
@@ -47,12 +48,13 @@ class MyParser {
     val contentHandler = new 
       MultiContentHander(List[ContentHandler](wgContentHandler, indexContentHandler));
     tikaMetadata.set(HttpHeaders.CONTENT_LOCATION, url);
-    tikaMetadata.set(HttpHeaders.CONTENT_TYPE, mediaType);
+    contentType.map(str=>tikaMetadata.set(HttpHeaders.CONTENT_TYPE, str));
     timeout(30000) {
-        parser.parse(content, contentHandler, tikaMetadata, parseContext);
+      parser.parse(input, contentHandler, tikaMetadata, parseContext);
     }
     val tikaMediaType =
       ContentType.parse(tikaMetadata.get(HttpHeaders.CONTENT_TYPE));
+
     /* finish webgraph */
     var outlinks : Seq[Long] = List[Long]();
     if (webGraphTypeRE.matcher(tikaMediaType.get.mediaTypeString).matches) {
@@ -63,15 +65,11 @@ class MyParser {
                       toList.distinct.sortWith((a,b)=>(a < b));
       }
     }
-    val charset = tikaMetadata.get(HttpHeaders.CONTENT_ENCODING) match {
-      case null => None;
-      case s : String => Some(s);
-    }
-    return new MyParseResult(charset      = charset,
-                             content      = indexContentHandler.contentString.getOrElse(""),
+    return new MyParseResult(charset      = null2option(tikaMetadata.get(HttpHeaders.CONTENT_ENCODING)),
+                             content      = indexContentHandler.contentString,
                              subMediaType = tikaMediaType.get.subMediaType,
                              topMediaType = tikaMediaType.get.topMediaType,
-                             title        = elseIfNull(tikaMetadata.get("title"), ""),
+                             title        = null2option(tikaMetadata.get("title")),
                              outlinks     = outlinks);
   }
 }

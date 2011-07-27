@@ -15,9 +15,11 @@ import org.cdlib.was.ngIndexer.SolrFields._;
 import scala.collection.JavaConversions.collectionAsScalaIterable;
 
 object SolrDocumentModifier extends Logger {
-  /** Turn an existing SolrDocument into a SolrInputDocument suitable
-    * for sending back to solr.
-    */
+
+  /**
+   * Turn an existing SolrDocument into a SolrInputDocument suitable
+   * for sending back to solr.
+   */
   def doc2InputDoc (doc : SolrDocument) : SolrInputDocument = {
     val idoc = new SolrInputDocument();
     for (fieldName <- doc.getFieldNames) {
@@ -127,15 +129,14 @@ object SolrDocumentModifier extends Logger {
     doc.addField(CANONICALURL_FIELD, uuri.toString, 1.0f);
   }
 
-  def updateMimeTypes (doc : SolrInputDocument,
-                       det : ContentType,
-                       sup : ContentType) {
-    
-    doc.addField(MEDIA_TYPE_SUP_FIELD, sup.mediaTypeString, 1.0f);
-    sup.charset.map(str=>doc.addField(CHARSET_SUP_FIELD, str, 1.0f));
+  def updateMimeTypes (doc      : SolrInputDocument,
+                       detected : ContentType,
+                       supplied : ContentType) {
+    doc.addField(MEDIA_TYPE_SUP_FIELD, supplied.mediaTypeString, 1.0f);
+    supplied.charset.map(str=>doc.addField(CHARSET_SUP_FIELD, str, 1.0f));
 
-    doc.addField(MEDIA_TYPE_DET_FIELD, det.mediaTypeString);
-    det.charset.map(str=>doc.addField(CHARSET_DET_FIELD, str, 1.0f))
+    doc.addField(MEDIA_TYPE_DET_FIELD, detected.mediaTypeString);
+    detected.charset.map(str=>doc.addField(CHARSET_DET_FIELD, str, 1.0f))
   }
 
   def makeDocument (rec : IndexArchiveRecord,
@@ -147,10 +148,11 @@ object SolrDocumentModifier extends Logger {
     } else {
       updateDocMain(doc, rec.getUrl, rec.getDigestStr.get);
       doc.addField(DATE_FIELD, rec.getDate, 1.0f);
+      parseResult.content.map(str=>doc.addField(CONTENT_FIELD, str, 1.0f));
       updateMimeTypes(doc, 
                       parseResult,
                       rec);
-      doc.addField(TITLE_FIELD, parseResult.title, 1.0f);
+      parseResult.title.map(str=>doc.addField(TITLE_FIELD, str, 1.0f));
       doc.addField(CONTENT_LENGTH_FIELD, rec.getLength, 1.0f);
       return Some(doc);
     }
