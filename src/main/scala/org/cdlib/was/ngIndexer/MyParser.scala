@@ -13,11 +13,13 @@ import org.cdlib.was.ngIndexer.webgraph.WebGraphContentHandler;
 
 import org.xml.sax.ContentHandler;
 
-
-class MyParseResult(val content : String,
-                    val mediaType : String,
-                    val title : String,
-                    val outlinks : Seq[Long]);
+class MyParseResult(val content  : String,
+                    topMediaType : Option[String],
+                    subMediaType : Option[String],
+                    charset      : Option[String],
+                    val title    : String,
+                    val outlinks : Seq[Long])
+  extends ContentTypeImpl(topMediaType, subMediaType, charset);
 
 class MyParser {
   val parseContext = new ParseContext;
@@ -32,10 +34,8 @@ class MyParser {
   def parse (content : Array[Byte],
              mediaType : String,
              url : String,
-             date : Date) : MyParseResult = {
-    val bais = new ByteArrayInputStream(content);
-    return parse(bais, mediaType, url, date);
-  }
+             date : Date) : MyParseResult =
+    parse(new ByteArrayInputStream(content), mediaType, url, date);
 
   def parse (content : InputStream,
              mediaType : String,
@@ -52,11 +52,10 @@ class MyParser {
         parser.parse(content, contentHandler, tikaMetadata, parseContext);
     }
     val tikaMediaType =
-      ArchiveRecordWrapper.parseContentType(tikaMetadata.get(HttpHeaders.CONTENT_TYPE));
-    val realMediaType = tikaMediaType.get.mediaTypeString;
+      ContentType.parse(tikaMetadata.get(HttpHeaders.CONTENT_TYPE));
     /* finish webgraph */
     var outlinks : Seq[Long] = List[Long]();
-    if (webGraphTypeRE.matcher(realMediaType).matches) {
+    if (webGraphTypeRE.matcher(tikaMediaType.get.mediaTypeString).matches) {
       val outlinksRaw = wgContentHandler.outlinks;
       if (outlinksRaw.size > 0) {
         outlinks = (for (l <- outlinksRaw) 
@@ -64,9 +63,15 @@ class MyParser {
                       toList.distinct.sortWith((a,b)=>(a < b));
       }
     }
-    return new MyParseResult(content   = indexContentHandler.contentString.getOrElse(""),
-                             mediaType = realMediaType,
-                             title     = elseIfNull(tikaMetadata.get("title"), ""),
-                             outlinks  = outlinks);
+    val charset = tikaMetadata.get(HttpHeaders.CONTENT_ENCODING) match {
+      case null => None;
+      case s : String => Some(s);
+    }
+    return new MyParseResult(charset      = charset,
+                             content      = indexContentHandler.contentString.getOrElse(""),
+                             subMediaType = tikaMediaType.get.subMediaType,
+                             topMediaType = tikaMediaType.get.topMediaType,
+                             title        = elseIfNull(tikaMetadata.get("title"), ""),
+                             outlinks     = outlinks);
   }
 }

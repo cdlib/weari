@@ -128,16 +128,14 @@ object SolrDocumentModifier extends Logger {
   }
 
   def updateMimeTypes (doc : SolrInputDocument,
-                       httpTypeStr : String,
-                       tikaTypeStr : String) {
-    ArchiveRecordWrapper.parseContentType(httpTypeStr).map { t =>
-      doc.addField(MEDIA_TYPE_SUP_FIELD, t.mediaTypeString, 1.0f);
-      t.charset.map(str=>doc.addField(CHARSET_SUP_FIELD, str, 1.0f));
-    }
-    ArchiveRecordWrapper.parseContentType(tikaTypeStr).map { t =>
-      doc.addField(MEDIA_TYPE_DET_FIELD, t.mediaTypeString);
-      t.charset.map(str=>doc.addField(CHARSET_DET_FIELD, str, 1.0f));
-    }
+                       det : ContentType,
+                       sup : ContentType) {
+    
+    doc.addField(MEDIA_TYPE_SUP_FIELD, sup.mediaTypeString, 1.0f);
+    sup.charset.map(str=>doc.addField(CHARSET_SUP_FIELD, str, 1.0f));
+
+    doc.addField(MEDIA_TYPE_DET_FIELD, det.mediaTypeString);
+    det.charset.map(str=>doc.addField(CHARSET_DET_FIELD, str, 1.0f))
   }
 
   def makeDocument (rec : IndexArchiveRecord,
@@ -150,8 +148,8 @@ object SolrDocumentModifier extends Logger {
       updateDocMain(doc, rec.getUrl, rec.getDigestStr.get);
       doc.addField(DATE_FIELD, rec.getDate, 1.0f);
       updateMimeTypes(doc, 
-                      parseResult.mediaType,
-                      rec.getMediaTypeStr);
+                      parseResult,
+                      rec);
       doc.addField(TITLE_FIELD, parseResult.title, 1.0f);
       doc.addField(CONTENT_LENGTH_FIELD, rec.getLength, 1.0f);
       return Some(doc);

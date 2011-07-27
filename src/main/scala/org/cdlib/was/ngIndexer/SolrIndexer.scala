@@ -35,7 +35,7 @@ class SolrIndexer(config : Config) extends Retry with Logger {
       is.close; 
       return None;
     }
-    val result = parser.parse(is, rec.getMediaTypeStr, rec.getUrl, rec.getDate)
+    val result = parser.parse(is, rec.mediaTypeString, rec.getUrl, rec.getDate)
     is.close;
     return makeDocument(rec, result);
   }
@@ -115,14 +115,15 @@ class SolrIndexer(config : Config) extends Retry with Logger {
             logger.error("Exception while indexing document from arc ({}).", arcName, ex);
         }
       }
-      /* ensure a commit at the end of the stream */
-      server.commit;
     } catch {
       case ex : Exception => {
         logger.error("Exception while generating doc from arc ({}) {}.", arcName, ex);
         ex.printStackTrace();
         return false;
       }
+    } finally {
+      /* ensure a commit at the end of the stream */
+      server.commit;
     }
     return true;
   }
@@ -208,7 +209,7 @@ object SolrIndexer {
           val filter = new QuickIdFilter("specification:\"%s\"".format(specification), server);
           command match {
             case "index" => {
-              for (path <- args.drop(5)) {
+              for (path <- args.drop(6)) {
                 indexer.index(new File(path), specification,
                               Map(JOB_FIELD -> job, 
                                   INSTITUTION_FIELD -> institution,

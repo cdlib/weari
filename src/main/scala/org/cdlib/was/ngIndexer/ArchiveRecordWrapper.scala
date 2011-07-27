@@ -26,14 +26,13 @@ import scala.util.matching.Regex;
  * interface.
  */
 class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String) 
-  extends InputStream with IndexArchiveRecord {
+  extends InputStream with IndexArchiveRecord with ContentType {
 
   private var statusCode : Option[Int] = None;
   private var ready : Boolean = false;
   private var contentTypeStr : Option[String] = None;
   private var httpResponse : Boolean = false;
-  private var mediaType : Option[Pair[String, String]] = None;
-  private var charset : Option[String] = None;
+  private var contentType : Option[ContentType] = None;
   private var closed : Boolean = false;
 
   /**
@@ -88,10 +87,7 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String)
       }
     }
     contentTypeStr.map { str =>
-      ArchiveRecordWrapper.parseContentType(str).map { contentType =>
-        mediaType = contentType.mediaType;
-        charset = contentType.charset;
-      }
+      contentType = ContentType.parse(str);
     }
     ready = true;
   }
@@ -109,14 +105,19 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String)
     }
   }
 
-  lazy val getMediaType = {
+  override lazy val subMediaType : Option[String] = {
     if (!ready) cueUp;
-    mediaType;
+    contentType.flatMap(_.subMediaType);
   }
 
-  lazy val getCharset : Option[String] = {
+  override lazy val topMediaType : Option[String] = {
     if (!ready) cueUp;
-    charset;
+    contentType.flatMap(_.topMediaType);
+  }
+
+  override lazy val charset : Option[String] = {
+    if (!ready) cueUp;
+    contentType.flatMap(_.charset);
   }
 
   /**
@@ -214,47 +215,6 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String)
 }
 
 object ArchiveRecordWrapper {
-  class ContentType (val mediaType : Option[Pair[String,String]],
-                     val charset : Option[String]) {
-    lazy val mediaTopType = mediaType.map(p=>p._1);
-
-    lazy val mediaSubType = mediaType.map(p=>p._2);
-
-    lazy val mediaTypeString : String =
-      mediaType.map((p)=>"%s/%s".format(p._1, p._2)).
-        getOrElse("application/octet-stream")
-  }
-
-  val MIME_RE = 
-    new Regex("""(application|audio|image|text|video)/([a-zA-Z0-9\.-]+)""");
-
-  val headerValueParser = new BasicHeaderValueParser;
-
-  /**
-   * Parse a Content-Type header.
-   *
-   * @return The optional media type, as a pair (type, subtype), and an optional charset
-   */
-  def parseContentType (line : String) : Option[ContentType] = {
-    try {
-      val buff = new CharArrayBuffer(80);
-      buff.append(line);
-      val parsed = headerValueParser.parseElements(buff, new ParserCursor(0, buff.length));
-      val mediaType = parsed(0).getName match {
-        case null => None;
-        case MIME_RE(topType, subType) => Some(Pair(topType, subType));
-        case _ => None;
-      }
-      val charset = parsed(0).getParameterByName("charset") match {
-        case null => None;
-        case p : NameValuePair => Some(p.getValue);
-      }
-      return Some(new ContentType (mediaType, charset));
-    } catch {
-      case ex : Exception => None;
-    }
-  }
-
   /**
    * Method to read one line of input from an InputStream. A line
    * ends in \n or \r\n.
