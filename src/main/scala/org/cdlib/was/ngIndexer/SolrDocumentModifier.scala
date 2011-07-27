@@ -47,12 +47,13 @@ object SolrDocumentModifier extends Logger {
   
   def modifyDocuments (query : String, 
                        server : CommonsHttpSolrServer)
-                      (f : (SolrDocument) => Option[SolrInputDocument]) {
+                      (f : (SolrInputDocument) => Option[SolrInputDocument]) {
     val q = new SolrQuery;
     q.setQuery(query);
     val coll = new SolrDocumentCollection(server, q);
     for (doc <- coll) {
-      f(doc) match {
+      val idoc = doc2InputDoc(doc);
+      f(idoc) match {
         case None => ();
         case Some(idoc) => {
           server.add(idoc);
@@ -66,8 +67,7 @@ object SolrDocumentModifier extends Logger {
                     field : String, 
                     value : String, 
                     server : CommonsHttpSolrServer) {
-    modifyDocuments (query, server) { (doc)=>
-      val idoc = doc2InputDoc(doc);
+    modifyDocuments (query, server) { (idoc)=>
       val oldfield = idoc.getFieldValues(field);
       if ((oldfield != null) && !oldfield.contains(value)) {
         idoc.addField(field, value);
@@ -82,8 +82,7 @@ object SolrDocumentModifier extends Logger {
                        field : String, 
                        removeValue : String, 
                        server : CommonsHttpSolrServer) {
-    modifyDocuments (query, server) { (doc)=>
-      val idoc = doc2InputDoc(doc);
+    modifyDocuments (query, server) { (idoc)=>
       val oldfield = idoc.getFieldValues(field);
       if ((oldfield != null) && oldfield.contains(removeValue)) {
         idoc.removeField(field);
@@ -98,8 +97,8 @@ object SolrDocumentModifier extends Logger {
   }
 
   def noop(query : String, server : CommonsHttpSolrServer) {
-    modifyDocuments (query, server) { (doc)=>
-      Some(doc2InputDoc(doc)) 
+    modifyDocuments (query, server) { (idoc)=>
+      Some(idoc);
     }
   }
 
