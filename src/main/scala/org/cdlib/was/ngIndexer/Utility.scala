@@ -8,7 +8,15 @@ import scala.util.matching.Regex;
 
 object Utility {
   val ARC_RE = new Regex(""".*?([A-Za-z0-9\.-]+arc.gz).*""");
-  
+
+  /**
+   * Convert a possibly null thing into an Option version.
+   */
+  def null2option[A] (what : A) : Option[A] = {
+    if (what == null) None;
+    else Some(what);
+  }
+
   def writeStreamToTempFile (prefix : String, in : InputStream) : File = { 
     val tempFile = File.createTempFile(prefix, null);
     readStreamIntoFile(tempFile, in);
