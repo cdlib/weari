@@ -7,11 +7,17 @@ import org.apache.http.util.CharArrayBuffer;
 
 import scala.util.matching.Regex;
 
+/**
+ * Trait to represent a content-type, including a media type and
+ * encoding, as supplied by, e.g., the Content-Type header.
+ */
 trait ContentType {
   def topMediaType : Option[String];
+
   lazy val topMediaTypeString = topMediaType.getOrElse("application");
 
   def subMediaType : Option[String];
+
   lazy val subMediaTypeString = topMediaType.getOrElse("octet-string");
 
   def charset : Option[String];
