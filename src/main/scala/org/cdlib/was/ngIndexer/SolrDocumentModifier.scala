@@ -8,7 +8,7 @@ import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.common.{SolrDocument, SolrInputDocument};
 
-import org.archive.net.UURIFactory;
+import org.archive.net.{UURI,UURIFactory};
 
 import org.cdlib.was.ngIndexer.SolrFields._;
 
@@ -35,8 +35,9 @@ object SolrDocumentModifier extends Logger {
     return idoc;
   }
 
-  /** Remove a single value from a document's field.
-    */
+  /**
+   * Remove a single value from a document's field.
+   */
   def removeFieldValue (doc : SolrInputDocument, key : String, value : Any) {
     val oldValues = doc.getFieldValues(key);
     doc.removeField(key);
@@ -111,48 +112,67 @@ object SolrDocumentModifier extends Logger {
     doc.addField(BOOST_FIELD, boost);
   }
     
+  def updateFields(doc : SolrInputDocument,
+                   fields : Pair[String, Any]*) {
+    for (field <- fields) {
+      field._2 match {
+        case null | None   => ();
+        case Some(s)       => doc.addField(field._1, s);
+        case s             => doc.addField(field._1, s);
+      }
+    }
+  }
+          
   /**
-   * Update the url & digest fields in a document.
+   * Update the url-based fields in a document.
    */
-  def updateDocMain (doc : SolrInputDocument, 
-                     url : String,
-                     digest : String) {
+  def updateDocUrls (doc : SolrInputDocument, 
+                     url : String) {
     val uuri = UURIFactory.getInstance(url);
     val host = uuri.getHost;
-    doc.addField(ID_FIELD, "%s.%s".format(uuri.toString, digest));
-    doc.addField(DIGEST_FIELD, digest);
-    doc.addField(HOST_FIELD, host);
-    doc.addField(SITE_FIELD, host);
-    doc.addField(URL_FIELD, url, 1.0f);
-    doc.addField(URLFP_FIELD, UriUtils.fingerprint(uuri));
-    doc.addField(CANONICALURL_FIELD, uuri.toString, 1.0f);
+    updateFields(doc,
+                 HOST_FIELD         -> host,
+                 SITE_FIELD         -> host,
+                 URL_FIELD          -> url,
+                 URLFP_FIELD        -> UriUtils.fingerprint(uuri),
+                 CANONICALURL_FIELD -> uuri.toString);
   }
 
-  def updateMimeTypes (doc      : SolrInputDocument,
-                       detected : ContentType,
-                       supplied : ContentType) {
-    doc.addField(MEDIA_TYPE_SUP_FIELD, supplied.mediaTypeString, 1.0f);
-    supplied.charset.map(str=>doc.addField(CHARSET_SUP_FIELD, str, 1.0f));
-
-    doc.addField(MEDIA_TYPE_DET_FIELD, detected.mediaTypeString);
-    detected.charset.map(str=>doc.addField(CHARSET_DET_FIELD, str, 1.0f))
+  /**
+   * Update the content type fields in a document.
+   *
+   * @parameter detected The content type as parsed.
+   * @parameter supplied The content type as supplied by the server.
+   */
+  def updateContentType (doc      : SolrInputDocument,
+                         detected : ContentType,
+                         supplied : ContentType) {
+    updateFields(doc,
+                 MEDIA_TYPE_SUP_FIELD -> supplied.mediaTypeString,
+                 CHARSET_SUP_FIELD    -> supplied.charset,
+                 MEDIA_TYPE_DET_FIELD -> detected.mediaTypeString,
+                 CHARSET_DET_FIELD    -> detected.charset);
   }
 
   def makeDocument (rec : IndexArchiveRecord,
                     parseResult : MyParseResult) : Option[SolrInputDocument] = {
     val doc = new SolrInputDocument;
-    updateDocBoost(doc, 1.0f);
     if (rec.getDigestStr.isEmpty) {
       return None;
     } else {
-      updateDocMain(doc, rec.getUrl, rec.getDigestStr.get);
-      doc.addField(DATE_FIELD, rec.getDate, 1.0f);
-      parseResult.content.map(str=>doc.addField(CONTENT_FIELD, str, 1.0f));
-      updateMimeTypes(doc, 
-                      parseResult,
-                      rec);
-      parseResult.title.map(str=>doc.addField(TITLE_FIELD, str, 1.0f));
-      doc.addField(CONTENT_LENGTH_FIELD, rec.getLength, 1.0f);
+      /* set the fields */
+      val uuri = UURIFactory.getInstance(rec.getUrl);
+      val digest = rec.getDigestStr;
+      updateFields(doc,
+                   ID_FIELD             -> "%s.%s".format(uuri.toString, digest),
+                   DIGEST_FIELD         -> digest,
+                   DATE_FIELD           -> rec.getDate,
+                   CONTENT_FIELD        -> parseResult.content,
+                   TITLE_FIELD          -> parseResult.title,
+                   CONTENT_LENGTH_FIELD -> rec.getLength);
+      updateDocBoost(doc, 1.0f);
+      updateDocUrls(doc, rec.getUrl);
+      updateContentType(doc, parseResult, rec);
       return Some(doc);
     }
   }
