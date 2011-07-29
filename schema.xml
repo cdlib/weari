@@ -78,17 +78,17 @@
         <field name="title" type="text" stored="true" indexed="true"/>
 
         <!-- detected media type -->
-        <field name="mediaTypeDet" type="string" stored="true" indexed="true"/>
-        <field name="charsetDet" type="string" stored="true" indexed="true"/>
+        <field name="mediatypedet" type="string" stored="true" indexed="true"/>
+        <field name="charsetdet" type="string" stored="true" indexed="true"/>
         <!-- html, pdf, word, audio, video, image, etc. -->        
-        <field name="mediaTypeGroupDet" type="string" stored="true" indexed="true"/>
+        <field name="mediatypegroupdet" type="string" stored="true" indexed="true"/>
 
         <!-- supplied (in Content-Type header) media type, charset -->
-        <field name="mediaTypeSup" type="string" stored="true" indexed="true"/>
-        <field name="charsetSup" type="string" stored="true" indexed="true"/>
+        <field name="mediatypesup" type="string" stored="true" indexed="true"/>
+        <field name="charsetsup" type="string" stored="true" indexed="true"/>
 
-        <field name="contentLength" type="long" stored="true" indexed="false"/>
-        <field name="lastModified" type="long" stored="true"  indexed="false"/>
+        <field name="contentlength" type="long" stored="true" indexed="false"/>
+        <field name="lastmodified" type="long" stored="true"  indexed="false"/>
         <field name="date" type="date" stored="true" indexed="true"
                multiValued="true"/>
 
