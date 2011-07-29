@@ -25,9 +25,9 @@ object SolrDocumentModifier extends Logger {
     for (fieldName <- doc.getFieldNames) {
       if (MULTI_VALUED_FIELDS.contains(fieldName)) {
         val values = doc.getFieldValues(fieldName);
-        if (values != null) {
-          for (value <- values) { idoc.addField(fieldName, value); }
-        }
+        if (values != null)
+          for (value <- values) 
+            idoc.addField(fieldName, value);
       } else {
         idoc.addField(fieldName, doc.getFirstValue(fieldName));
       }
@@ -41,9 +41,8 @@ object SolrDocumentModifier extends Logger {
   def removeFieldValue (doc : SolrInputDocument, key : String, value : Any) {
     val oldValues = doc.getFieldValues(key);
     doc.removeField(key);
-    for (value <- oldValues.filter(_==value)) {
+    for (value <- oldValues.filter(_==value))
       doc.addField(key, value);
-    }
   }
   
   def modifyDocuments (query : String, 
@@ -87,9 +86,8 @@ object SolrDocumentModifier extends Logger {
       val oldfield = idoc.getFieldValues(field);
       if ((oldfield != null) && oldfield.contains(removeValue)) {
         idoc.removeField(field);
-        for (value <- oldfield.filter(_ != removeValue)) {
+        for (value <- oldfield.filter(_ != removeValue))
           idoc.addField(field, value);
-        }
         Some(idoc);
       } else {
         None;
@@ -187,9 +185,8 @@ object SolrDocumentModifier extends Logger {
       throw new Exception;
     } else {
       /* identical fields */
-      for (fieldName <- SINGLE_VALUED_FIELDS) {
+      for (fieldName <- SINGLE_VALUED_FIELDS)
         retval.setField(fieldName, a.getFieldValue(fieldName));
-      }
       /* fields to merge */
       for (fieldName <- MULTI_VALUED_FIELDS) {
         def emptyIfNull(xs : JCollection[JObject]) : List[JObject] = xs match {
@@ -198,9 +195,8 @@ object SolrDocumentModifier extends Logger {
         }
         val values = (emptyIfNull(a.getFieldValues(fieldName)) ++
                       emptyIfNull(b.getFieldValues(fieldName))).distinct;
-        for (value <- values) {
+        for (value <- values)
           retval.addField(fieldName, value);
-        }
       }
     }
     return retval;
