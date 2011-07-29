@@ -26,9 +26,7 @@ import org.menagerie.{DefaultZkSessionManager,ZkSessionManager};
 
 import sun.misc.{Signal, SignalHandler};
 
-object Daemon {
-  val httpClient = new SimpleHttpClient;
-    
+object Daemon {    
   /* load configuration */
   val config = SolrIndexer.loadConfigOrExit;
   
@@ -38,33 +36,14 @@ object Daemon {
   val threadCount = config.threadCount();
 
   val handlerFactory = new QueueItemHandlerFactory {
-    val indexer = new SolrIndexer(config);
     val locker = new Locker(zkHosts);
+    val executor = new CommandExecutor(config);
 
     def mkHandler = new QueueItemHandler {
       def handle (item : Item) : Boolean = {
-        Command.parseCommand(new String(item.getData(), "UTF-8")) match {
-          case Some(cmd : IndexCommand) => 
-            val server = new StreamingUpdateSolrServer(cmd.solrUri.toString,
-                                                       config.queueSize(),
-                                                       config.threadCount());
-            val filter = new QuickIdFilter("specification:\"%s\"".format(cmd.specification), server);
-            httpClient.getUri(cmd.uri) {
-              (stream)=>
-                indexer.index(stream, 
-                              cmd.arcName, 
-                              cmd.specification,
-                              Map(JOB_FIELD->cmd.job,
-                                  INSTITUTION_FIELD->cmd.institution,
-                                  TAG_FIELD->cmd.tags,
-                                  SPECIFICATION_FIELD->cmd.specification, 
-                                  PROJECT_FIELD->cmd.project),
-                              server,
-                              filter,
-                              config);
-            }.getOrElse(false);
-          case _ => false // Unknown command
-        }
+        val cmds = Command.parse(new String(item.getData(), "UTF-8"));
+        cmds.map(executor.exec(_))
+        return true;
       }
     }
     def finish = { locker.finish; }

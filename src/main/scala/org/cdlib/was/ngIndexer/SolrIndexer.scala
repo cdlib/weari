@@ -223,6 +223,11 @@ object SolrIndexer {
             }
           }
         }
+        case "json" => {
+          val cmds = Command.parse(new File(args(1)));
+          val executor = new CommandExecutor(config);
+          cmds.map(executor.exec(_));
+        }
         case _ => {
           System.err.println("No command specified!");
           System.exit(1);
