@@ -185,8 +185,15 @@ object SolrDocumentModifier extends Logger {
       throw new Exception;
     } else {
       /* identical fields */
-      for (fieldName <- SINGLE_VALUED_FIELDS)
-        retval.setField(fieldName, a.getFieldValue(fieldName));
+      for (fieldName <- SINGLE_VALUED_FIELDS) {
+        val content = {
+          val aval = a.getFieldValue(fieldName);
+          if (aval != null && aval != "")
+            aval;
+          else b.getFieldValue(fieldName);
+        }
+        retval.setField(fieldName, content);
+      }
       /* fields to merge */
       for (fieldName <- MULTI_VALUED_FIELDS) {
         def emptyIfNull(xs : JCollection[JObject]) : List[JObject] = xs match {
