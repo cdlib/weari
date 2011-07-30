@@ -31,6 +31,24 @@ trait ContentType {
   
   lazy val mediaTypeString : String = 
     mediaType.getOrElse("application/octet-string");
+
+  lazy val mediaTypeGroupString : Option[String] = topMediaTypeString match {
+    case "audio" => Some("audio");
+    case "video" => Some("video");
+    case "image" => Some("image");
+    case "application" => subMediaTypeString match {
+      case "pdf"    => Some("pdf");
+      case "zip"    => Some("compressed");
+      case "x-gzip" => Some("compressed");
+      case s if s.startsWith("ms") || s.startsWith("vnd.ms") =>
+        Some("office");
+      case _ => None;
+    } 
+    case "text" => subMediaTypeString match {
+      case "html" => Some("html");
+    }
+    case _ => None;
+  }
 }
 
 object ContentType {
