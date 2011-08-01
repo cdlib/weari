@@ -162,6 +162,7 @@ object SolrDocumentModifier extends Logger {
       val uuri = UURIFactory.getInstance(rec.getUrl);
       val digest = rec.getDigestStr;
       updateFields(doc,
+                   ARCNAME_FIELD        -> rec.getFilename,
                    ID_FIELD             -> "%s.%s".format(uuri.toString, digest.getOrElse("-")),
                    DIGEST_FIELD         -> digest,
                    DATE_FIELD           -> rec.getDate,
