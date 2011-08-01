@@ -1,6 +1,6 @@
 package org.cdlib.was.ngIndexer;
 
-trait Retry {
+trait Retry extends Logger {
   /**
    * Retry an operation a number of times.
    * @param times Time to try to retry.
@@ -21,6 +21,12 @@ trait Retry {
           if (i >= times) throw ex;
         }
       }
+    }
+  }
+  
+  def retryLog (times : Int) (what : =>Unit) {
+    retry (times) (what) { (ex)=>
+      logger.error("Caught exception {}; retrying.", ex);
     }
   }
 }
