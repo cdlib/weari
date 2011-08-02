@@ -10,7 +10,7 @@ import org.apache.http.params.{BasicHttpParams,HttpConnectionParams,HttpProtocol
 import org.apache.http.{HttpException,HttpResponse,HttpVersion};
 import org.apache.http.util.EntityUtils;
 
-import java.io.InputStream;
+import java.io.{InputStream,IOException};
 
 import java.net.URI;
 
@@ -42,8 +42,14 @@ class SimpleHttpClient {
       response = httpClient.execute(request);
       return f ((response.getStatusLine.getStatusCode, response));
     } finally {
-      if ((response != null) && (response.getEntity != null))
-        { EntityUtils.consume(response.getEntity); }
+      if ((response != null) && (response.getEntity != null)) {
+        try {
+          EntityUtils.consume(response.getEntity); 
+        } catch {
+          /* doesn't matter now */
+          case ex : IOException => ();
+        }
+      }
     }
   }
   
