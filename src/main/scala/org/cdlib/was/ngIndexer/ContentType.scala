@@ -46,6 +46,7 @@ trait ContentType {
     } 
     case "text" => subMediaTypeString match {
       case "html" => Some("html");
+      case _ => None;
     }
     case _ => None;
   }
