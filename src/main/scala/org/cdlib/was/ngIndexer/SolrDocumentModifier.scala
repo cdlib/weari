@@ -146,10 +146,11 @@ object SolrDocumentModifier extends Logger {
                          detected : ContentType,
                          supplied : ContentType) {
     updateFields(doc,
-                 MEDIA_TYPE_SUP_FIELD -> supplied.mediaTypeString,
-                 CHARSET_SUP_FIELD    -> supplied.charset,
-                 MEDIA_TYPE_DET_FIELD -> detected.mediaTypeString,
-                 CHARSET_DET_FIELD    -> detected.charset);
+                 MEDIA_TYPE_GROUP_DET_FIELD -> detected.mediaTypeGroupString,
+                 MEDIA_TYPE_SUP_FIELD       -> supplied.mediaTypeString,
+                 CHARSET_SUP_FIELD          -> supplied.charset,
+                 MEDIA_TYPE_DET_FIELD       -> detected.mediaTypeString,
+                 CHARSET_DET_FIELD          -> detected.charset);
   }
 
   def makeDocument (rec : IndexArchiveRecord,
