@@ -211,7 +211,8 @@ object SolrIndexer {
           command match {
             case "index" => {
               for (path <- args.drop(6)) {
-                indexer.index(new File(path), specification,
+                indexer.index(new File(path), 
+                              specification,
                               Map(JOB_FIELD -> job, 
                                   INSTITUTION_FIELD -> institution,
                                   SPECIFICATION_FIELD -> specification, 
