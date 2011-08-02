@@ -18,7 +18,7 @@ trait ContentType {
 
   def subMediaType : Option[String];
 
-  lazy val subMediaTypeString = topMediaType.getOrElse("octet-string");
+  lazy val subMediaTypeString = subMediaType.getOrElse("octet-string");
 
   def charset : Option[String];
 
