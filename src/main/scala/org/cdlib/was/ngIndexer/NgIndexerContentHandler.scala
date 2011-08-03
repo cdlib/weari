@@ -24,12 +24,16 @@ class NgIndexerContentHandler (useTempFile : Boolean)
     return sb.toString;
   }
 
-  def contentString : Option[String] = 
-    contentWriter match {
+  lazy val contentString : Option[String] = {
+    val what = contentWriter match {
       /* replace all repeated whitespace with a single space */
       case s : StringWriter => Some(s.toString.replaceAll("""\s+""", " "));
       case w : Writer       => contentReader.map(reader2string(_).replaceAll("""\s+""", " "));
     }
+    /* we are done with the temp file, delete */
+    tempFile.map(_.delete());
+    what;
+  }
 
   val tempFile = if (useTempFile) {
     val f = File.createTempFile("ng-indexer", "data");
@@ -39,10 +43,8 @@ class NgIndexerContentHandler (useTempFile : Boolean)
     None
   }
   
-  val contentWriter : Writer = tempFile match {
-    case Some(f) => new FileWriter(f);
-    case None    => new StringWriter(262144);
-  }
+  val contentWriter : Writer = 
+    tempFile.map(new FileWriter(_)).getOrElse(new StringWriter(262144));
 
   val WHITESPACE = Array(' ');
   def addWhitespace {
