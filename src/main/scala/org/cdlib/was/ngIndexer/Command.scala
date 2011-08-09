@@ -38,7 +38,7 @@ object Command {
     parse(JsonParser.parse(new FileReader(file), true));
 }
 
-class CommandExecutor (config : Config) {
+class CommandExecutor (config : Config) extends Retry {
   val httpClient = new SimpleHttpClient;
   val indexer = new SolrIndexer(config);
 
@@ -51,18 +51,20 @@ class CommandExecutor (config : Config) {
                                         config.threadCount());
         val filter = 
           new QuickIdFilter("specification:\"%s\"".format(cmd.specification), server);
-        httpClient.getUri(new URI(cmd.uri)) { (stream)=>
-          indexer.index(stream      = stream,
-                        arcName     = cmd.arcName,
-                        extraId     = cmd.specification,
+        retryLog (10) {
+          httpClient.getUri(new URI(cmd.uri)) { (stream)=>
+            indexer.index(stream      = stream,
+                          arcName     = cmd.arcName,
+                          extraId     = cmd.specification,
                           extraFields = Map(JOB_FIELD           -> cmd.job,
                                             INSTITUTION_FIELD   -> cmd.institution,
                                             TAG_FIELD           -> cmd.tags,
                                             SPECIFICATION_FIELD -> cmd.specification, 
                                             PROJECT_FIELD       -> cmd.project),
-                        server      = server,
-                        filter      = filter,
-                        config      = config);
+                          server      = server,
+                          filter      = filter,
+                          config      = config);
+                                             }
         }
       }
       case _ => ();
