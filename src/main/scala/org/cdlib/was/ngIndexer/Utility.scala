@@ -23,14 +23,6 @@ object Utility {
     tempFile.deleteOnExit();
     return tempFile;
   }
-  
-  def elseIfNull[T](what : T, default : T) : T = {
-    if (what == null) {
-      return what;
-    } else {
-      return default;
-    }
-  }
 
   /**
    * Read a set of bytes from an input stream and pass them on to a function.

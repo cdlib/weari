@@ -8,7 +8,7 @@ import org.apache.tika.config.TikaConfig;
 import org.apache.tika.metadata.{Metadata, HttpHeaders};
 import org.apache.tika.parser.{AutoDetectParser, ParseContext, Parser};
 
-import org.cdlib.was.ngIndexer.Utility.{elseIfNull,null2option,timeout};
+import org.cdlib.was.ngIndexer.Utility.{null2option,timeout};
 import org.cdlib.was.ngIndexer.webgraph.WebGraphContentHandler;
 
 import org.xml.sax.ContentHandler;
