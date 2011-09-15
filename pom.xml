@@ -101,11 +101,6 @@
       <artifactId>law</artifactId>
       <version>1.4</version>
     </dependency>
-<!--    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-library</artifactId>
-      <version>2.9.0</version>
-    </dependency> -->
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
@@ -164,7 +159,7 @@
     </dependency>
     <dependency>
       <groupId>org.scalatest</groupId>
-      <artifactId>scalatest_2.9.0</artifactId>
+      <artifactId>scalatest_2.9.1</artifactId>
       <version>1.6.1</version>
     </dependency>
     <dependency>
@@ -180,12 +175,12 @@
     <dependency>
       <groupId>org.cdlib</groupId>
       <artifactId>ssconf</artifactId>
-      <version>0.1-SNAPSHOT_2.9.0</version>
+      <version>0.1-SNAPSHOT_2.9.1</version>
     </dependency>
     <dependency>
       <groupId>net.liftweb</groupId>
-      <artifactId>lift-json_2.9.0</artifactId>
-      <version>2.4-M2</version>
+      <artifactId>lift-json_2.9.1</artifactId>
+      <version>2.4-M4</version>
     </dependency>
   </dependencies>
 
@@ -254,6 +249,9 @@
           </execution>
         </executions>
         <configuration>
+          <configuration>
+            <scalaVersion>2.9.1</scalaVersion>
+          </configuration>
           <launchers>
             <launcher>
               <id>solr</id>
