@@ -249,9 +249,7 @@
           </execution>
         </executions>
         <configuration>
-          <configuration>
-            <scalaVersion>2.9.1</scalaVersion>
-          </configuration>
+          <scalaVersion>2.9.1</scalaVersion>
           <launchers>
             <launcher>
               <id>solr</id>
