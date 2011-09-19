@@ -118,6 +118,7 @@ class SolrIndexer(config : Config) extends Retry with Logger {
       }
     } catch {
       case ex : Exception => {
+        server.rollback;
         logger.error("Exception while generating doc from arc ({}) {}.", arcName, ex);
         ex.printStackTrace();
         return false;
@@ -226,8 +227,12 @@ object SolrIndexer {
         }
         case "json" => {
           val cmds = Command.parse(new File(args(1)));
+          val sortedCmds = cmds.sortWith(_.arcName < _.arcName);
           val executor = new CommandExecutor(config);
-          cmds.map(executor.exec(_));
+          sortedCmds.map { cmd =>
+            executor.exec(cmd);
+            System.out.println("Indexed %s".format(cmd.arcName));
+          }
         }
         case _ => {
           System.err.println("No command specified!");
