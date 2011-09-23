@@ -31,10 +31,10 @@ class IndexResource (var rec : IndexArchiveRecord,
   parseResult = null;
 
   def makeDocument : Option[SolrInputDocument] = {
-    val doc = new SolrInputDocument;
     if (digest.isEmpty) {
       return None;
     } else {
+      val doc = new SolrInputDocument;
       /* set the fields */
       val uuri = UURIFactory.getInstance(url);
       updateFields(doc,
