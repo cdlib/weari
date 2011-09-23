@@ -87,4 +87,6 @@ object ContentType {
 class ContentTypeImpl (val topMediaType : Option[String],
                        val subMediaType : Option[String],
                        val charset      : Option[String])
-  extends ContentType;
+  extends ContentType {
+    def this (t : ContentType) = this (t.topMediaType, t.subMediaType, t.charset);
+  }
