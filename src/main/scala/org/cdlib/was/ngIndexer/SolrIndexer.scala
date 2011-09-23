@@ -15,7 +15,7 @@ import org.cdlib.ssconf.Configurator;
 import org.cdlib.was.ngIndexer.SolrFields._;
 import org.cdlib.was.ngIndexer.Utility.null2option;
 
-import org.cdlib.was.ngIndexer.SolrDocumentModifier.{doc2InputDoc,makeDocument,mergeDocs};
+import org.cdlib.was.ngIndexer.SolrDocumentModifier.{doc2InputDoc,mergeDocs};
 import scala.util.matching.Regex;
 
 /**
@@ -33,12 +33,12 @@ class SolrIndexer(config : Config) extends Retry with Logger {
   def record2doc(is : InputStream, rec : IndexArchiveRecord, config : Config) : 
       Option[SolrInputDocument] = {
     if (!rec.isHttpResponse || (rec.getStatusCode != 200)) {
-      is.close; 
+      is.close;
       return None;
     }
     val result = parser.parse(is, null2option(rec.mediaTypeString), rec.getUrl, rec.getDate)
     is.close;
-    return makeDocument(rec, result);
+    return new IndexResource(rec, result).makeDocument;
   }
   
   def getById(id : String, server : SolrServer) : Option[SolrDocument] = {

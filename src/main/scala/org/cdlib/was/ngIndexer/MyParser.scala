@@ -24,7 +24,9 @@ class MyParseResult(val content  : Option[String],
                     val outlinks : Seq[Long])
   extends ContentTypeImpl(topMediaType, subMediaType, charset);
 
-class MyParser {
+class MyParser extends Logger {
+  /* return max size of content 1Mb */
+  val maxSize = 100000;
   val parseContext = new ParseContext;
   val detector = (new TikaConfig).getMimeRepository;
   val parser = new AutoDetectParser(detector);
@@ -49,9 +51,13 @@ class MyParser {
       MultiContentHander(List[ContentHandler](wgContentHandler, indexContentHandler));
     tikaMetadata.set(HttpHeaders.CONTENT_LOCATION, url);
     contentType.map(str=>tikaMetadata.set(HttpHeaders.CONTENT_TYPE, str));
-    timeout(30000) {
-      parser.parse(input, contentHandler, tikaMetadata, parseContext);
+
+    catchAndLogExceptions {
+      timeout(30000) {
+        parser.parse(input, contentHandler, tikaMetadata, parseContext);
+      }
     }
+
     val tikaMediaType =
       ContentType.parse(tikaMetadata.get(HttpHeaders.CONTENT_TYPE));
 
@@ -66,7 +72,7 @@ class MyParser {
       }
     }
     return new MyParseResult(charset      = null2option(tikaMetadata.get(HttpHeaders.CONTENT_ENCODING)),
-                             content      = indexContentHandler.contentString,
+                             content      = indexContentHandler.contentString(maxSize),
                              subMediaType = tikaMediaType.get.subMediaType,
                              topMediaType = tikaMediaType.get.topMediaType,
                              title        = null2option(tikaMetadata.get("title")),

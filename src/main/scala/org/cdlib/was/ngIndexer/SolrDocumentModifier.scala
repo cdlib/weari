@@ -155,39 +155,12 @@ object SolrDocumentModifier extends Logger {
 
   def shouldIndexContentType (contentType : ContentType) : Boolean = {
     /* Right now we index everything except js, css */
-    contentType.topMediaType match {
-      case Some("text") => contentType.subMediaType match {
-        case Some("javascript") => false;
-        case Some("css")        => false;
-        case _                  => true;
-      }
+    contentType.mediaType match {
+      case Some("text/javascript") | 
+        Some("text/css") | 
+        Some("application/zip") => 
+          false;
       case _ => true;
-    }
-  }
-
-  def makeDocument (rec : IndexArchiveRecord,
-                    parseResult : MyParseResult) : Option[SolrInputDocument] = {
-    val doc = new SolrInputDocument;
-    if (rec.getDigestStr.isEmpty) {
-      return None;
-    } else {
-      /* set the fields */
-      val uuri = UURIFactory.getInstance(rec.getUrl);
-      val digest = rec.getDigestStr;
-      updateFields(doc,
-                   ARCNAME_FIELD        -> rec.getFilename,
-                   ID_FIELD             -> "%s.%s".format(uuri.toString, digest.getOrElse("-")),
-                   DIGEST_FIELD         -> digest,
-                   DATE_FIELD           -> rec.getDate,
-                   TITLE_FIELD          -> parseResult.title,
-                   CONTENT_LENGTH_FIELD -> rec.getLength);
-      if (shouldIndexContentType(rec)) {
-        updateFields(doc, CONTENT_FIELD -> parseResult.content);
-      }
-      updateDocBoost(doc, 1.0f);
-      updateDocUrls(doc, rec.getUrl);
-      updateContentType(doc, parseResult, rec);
-      return Some(doc);
     }
   }
 
