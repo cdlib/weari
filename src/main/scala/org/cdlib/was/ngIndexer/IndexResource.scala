@@ -29,6 +29,7 @@ class IndexResource (var rec : IndexArchiveRecord,
   /* throw away the refs */
   rec = null;
   parseResult = null;
+
   def makeDocument : Option[SolrInputDocument] = {
     val doc = new SolrInputDocument;
     if (digest.isEmpty) {
@@ -42,10 +43,8 @@ class IndexResource (var rec : IndexArchiveRecord,
                    DIGEST_FIELD         -> digest,
                    DATE_FIELD           -> date,
                    TITLE_FIELD          -> title,
-                   CONTENT_LENGTH_FIELD -> length);
-     content.map { c =>
-        updateFields(doc, CONTENT_FIELD -> c);
-      }
+                   CONTENT_LENGTH_FIELD -> length,
+                   CONTENT_FIELD        -> content);
       updateDocBoost(doc, 1.0f);
       updateDocUrls(doc, url);
       updateContentType(doc, detectedContentType, suppliedContentType);
