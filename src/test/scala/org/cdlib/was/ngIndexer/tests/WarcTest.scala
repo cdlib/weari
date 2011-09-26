@@ -31,11 +31,11 @@ class WarcSpec extends FeatureSpec {
 
       Utility.eachRecord (cl.getResourceAsStream(warcName), warcName) { (rec)=>
         if (rec.isHttpResponse) {
-          indexer.record2doc(rec, rec, config).map(doc=>warcData += (rec.getUrl -> doc));
+          indexer.mkIndexResource(rec, rec, config).map(res=>res.toDocument.map(doc=>warcData += (rec.getUrl -> doc)));
         }
       }
       Utility.eachRecord (cl.getResourceAsStream(arcName), arcName) { (rec)=>
-        indexer.record2doc(rec, rec, config).map(doc=>arcData += (rec.getUrl -> doc));
+        indexer.mkIndexResource(rec, rec, config).map(res=>res.toDocument.map(doc=>arcData += (rec.getUrl -> doc)));
       }
 /*      for ((k,v) <- arcData) {
         assert(v === warcData.getOrElse(k, ""));

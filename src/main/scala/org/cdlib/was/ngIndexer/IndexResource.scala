@@ -32,7 +32,7 @@ class IndexResource (var rec : IndexArchiveRecord,
   rec = null;
   parseResult = null;
 
-  def makeDocument : Option[SolrInputDocument] = {
+  def toDocument : Option[SolrInputDocument] = {
     if (digest.isEmpty) {
       return None;
     } else {

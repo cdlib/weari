@@ -33,15 +33,15 @@ class SolrIndexer(config : Config) extends Retry with Logger {
    * Take an archive record & return a solr document, or none if we
    * cannot parse.
    */
-  def record2doc(is : InputStream, rec : IndexArchiveRecord, config : Config) : 
-      Option[SolrInputDocument] = {
+  def mkIndexResource(is : InputStream, rec : IndexArchiveRecord, config : Config) : 
+      Option[IndexResource] = {
     if (!rec.isHttpResponse || (rec.getStatusCode != 200)) {
       is.close;
       return None;
     }
     val result = parser.parse(is, null2option(rec.mediaTypeString), rec.getUrl, rec.getDate)
     is.close;
-    return new IndexResource(rec, result).makeDocument;
+    return Some(new IndexResource(rec, result));
   }
   
   def getById(id : String, server : SolrServer) : Option[SolrDocument] = {
@@ -105,18 +105,20 @@ class SolrIndexer(config : Config) extends Retry with Logger {
              filter : QuickIdFilter,
              config : Config) : Boolean = {
     try {
-      processStream(arcName, stream, config) { (doc) =>
-        for ((k,v) <- extraFields) v match {
-          case l : List[Any] => l.map(v2=>doc.addField(k, v2));
-          case o : Any => doc.setField(k, o);
-        }
-        val oldId = doc.getFieldValue(ID_FIELD).asInstanceOf[String];
-        doc.setField(ID_FIELD, "%s.%s".format(oldId, extraId));
-        retry(3) {
-          indexDoc(doc, server, filter);
-        } { 
-          case ex : Exception =>
-            logger.error("Exception while indexing document from arc ({}).", arcName, ex);
+      processStream(arcName, stream, config) { (rec) =>
+        rec.toDocument.map { (doc) =>
+          for ((k,v) <- extraFields) v match {
+            case l : List[Any] => l.map(v2=>doc.addField(k, v2));
+            case o : Any => doc.setField(k, o);
+          }
+          val oldId = doc.getFieldValue(ID_FIELD).asInstanceOf[String];
+          doc.setField(ID_FIELD, "%s.%s".format(oldId, extraId));
+          retry(3) {
+            indexDoc(doc, server, filter);
+          } { 
+            case ex : Exception =>
+              logger.error("Exception while indexing document from arc ({}).", arcName, ex);
+          }
         }
       }
     } catch {
@@ -149,8 +151,8 @@ class SolrIndexer(config : Config) extends Retry with Logger {
               arcName : String,
               config : Config) {
     try {
-      processStream(arcName, stream, config) { (doc) =>
-        System.err.println("%s = %s".format(doc.getFieldValue(URL_FIELD), doc.getFieldValue(DIGEST_FIELD)));
+      processStream(arcName, stream, config) { (res) =>
+        System.err.println("%s = %s".format(res.url, res.digest));
         /* noop */
       }
     } catch {
@@ -162,13 +164,13 @@ class SolrIndexer(config : Config) extends Retry with Logger {
    /**
     * For each record in a file, call the function.
     */
-  def processFile (file : File, config : Config) (func : (SolrInputDocument) => Unit) {
-    Utility.eachRecord(file) (r=>record2doc(r, r, config).map(func));
+  def processFile (file : File, config : Config) (func : (IndexResource) => Unit) {
+    Utility.eachRecord(file) (r=>mkIndexResource(r, r, config).map(func));
   }
 
   def processStream (arcName : String, stream : InputStream, config : Config) 
-  (func : (SolrInputDocument) => Unit) {
-    Utility.eachRecord(stream, arcName) (r=>record2doc(r, r, config).map(func));
+  (func : (IndexResource) => Unit) {
+    Utility.eachRecord(stream, arcName) (r=>mkIndexResource(r, r, config).map(func));
   }
 }
 
