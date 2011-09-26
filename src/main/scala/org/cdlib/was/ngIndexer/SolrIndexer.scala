@@ -33,15 +33,20 @@ class SolrIndexer(config : Config) extends Retry with Logger {
    * Take an archive record & return a solr document, or none if we
    * cannot parse.
    */
-  def mkIndexResource(is : InputStream, rec : IndexArchiveRecord, config : Config) : 
+  def mkIndexResource(rec : IndexArchiveRecord with InputStream) : 
       Option[IndexResource] = {
     if (!rec.isHttpResponse || (rec.getStatusCode != 200)) {
-      is.close;
+      rec.close;
       return None;
     }
-    val result = parser.parse(is, null2option(rec.mediaTypeString), rec.getUrl, rec.getDate)
-    is.close;
-    return Some(new IndexResource(rec, result));
+    val result = parser.parse(rec, null2option(rec.mediaTypeString), rec.getUrl, rec.getDate)
+    rec.close;
+    if (rec.getDigestStr.isEmpty) {
+      /* need to check now because the ARC needs to be closed before we can get it */
+      return None;
+    } else {
+      return Some(IndexResource(rec, result));
+    }
   }
   
   def getById(id : String, server : SolrServer) : Option[SolrDocument] = {
@@ -106,19 +111,18 @@ class SolrIndexer(config : Config) extends Retry with Logger {
              config : Config) : Boolean = {
     try {
       processStream(arcName, stream, config) { (rec) =>
-        rec.toDocument.map { (doc) =>
-          for ((k,v) <- extraFields) v match {
-            case l : List[Any] => l.map(v2=>doc.addField(k, v2));
-            case o : Any => doc.setField(k, o);
-          }
-          val oldId = doc.getFieldValue(ID_FIELD).asInstanceOf[String];
-          doc.setField(ID_FIELD, "%s.%s".format(oldId, extraId));
-          retry(3) {
-            indexDoc(doc, server, filter);
-          } { 
-            case ex : Exception =>
-              logger.error("Exception while indexing document from arc ({}).", arcName, ex);
-          }
+        val doc = rec.toDocument;
+        for ((k,v) <- extraFields) v match {
+          case l : List[Any] => l.map(v2=>doc.addField(k, v2));
+          case o : Any => doc.setField(k, o);
+        }
+        val oldId = doc.getFieldValue(ID_FIELD).asInstanceOf[String];
+        doc.setField(ID_FIELD, "%s.%s".format(oldId, extraId));
+        retry(3) {
+          indexDoc(doc, server, filter);
+        } { 
+          case ex : Exception =>
+            logger.error("Exception while indexing document from arc ({}).", arcName, ex);
         }
       }
     } catch {
@@ -165,12 +169,12 @@ class SolrIndexer(config : Config) extends Retry with Logger {
     * For each record in a file, call the function.
     */
   def processFile (file : File, config : Config) (func : (IndexResource) => Unit) {
-    Utility.eachRecord(file) (r=>mkIndexResource(r, r, config).map(func));
+    Utility.eachRecord(file) (r=>mkIndexResource(r).map(func));
   }
 
   def processStream (arcName : String, stream : InputStream, config : Config) 
   (func : (IndexResource) => Unit) {
-    Utility.eachRecord(stream, arcName) (r=>mkIndexResource(r, r, config).map(func));
+    Utility.eachRecord(stream, arcName) (r=>mkIndexResource(r).map(func));
   }
 }
 
