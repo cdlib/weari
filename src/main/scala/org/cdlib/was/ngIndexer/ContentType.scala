@@ -1,3 +1,5 @@
+/* Copyright (c) 2011 The Regents of the University of California */
+
 package org.cdlib.was.ngIndexer;
 
 import org.apache.http.NameValuePair;
@@ -84,6 +86,10 @@ object ContentType {
   }
 }
 
+/**
+ * Dead simple implementation of ContentType trait.
+ *
+ */
 class ContentTypeImpl (val topMediaType : Option[String],
                        val subMediaType : Option[String],
                        val charset      : Option[String])
