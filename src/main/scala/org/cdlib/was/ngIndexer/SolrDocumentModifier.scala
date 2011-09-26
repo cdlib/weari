@@ -10,6 +10,8 @@ import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.common.{SolrDocument, SolrInputDocument};
 
+import org.apache.solr.client.solrj.util.ClientUtils.toSolrInputDocument;
+
 import org.archive.net.{UURI,UURIFactory};
 
 import org.cdlib.was.ngIndexer.SolrFields._;
@@ -17,25 +19,6 @@ import org.cdlib.was.ngIndexer.SolrFields._;
 import scala.collection.JavaConversions.collectionAsScalaIterable;
 
 object SolrDocumentModifier extends Logger {
-
-  /**
-   * Turn an existing SolrDocument into a SolrInputDocument suitable
-   * for sending back to solr.
-   */
-  def doc2InputDoc (doc : SolrDocument) : SolrInputDocument = {
-    val idoc = new SolrInputDocument();
-    for (fieldName <- doc.getFieldNames) {
-      if (MULTI_VALUED_FIELDS.contains(fieldName)) {
-        val values = doc.getFieldValues(fieldName);
-        if (values != null)
-          for (value <- values) 
-            idoc.addField(fieldName, value);
-      } else {
-        idoc.addField(fieldName, doc.getFirstValue(fieldName));
-      }
-    }
-    return idoc;
-  }
 
   /**
    * Remove a single value from a document's field.
@@ -54,7 +37,7 @@ object SolrDocumentModifier extends Logger {
     q.setQuery(query);
     val coll = new SolrDocumentCollection(server, q);
     for (doc <- coll) {
-      val idoc = doc2InputDoc(doc);
+      val idoc = toSolrInputDocument(doc);
       f(idoc) match {
         case None => ();
         case Some(idoc) => {

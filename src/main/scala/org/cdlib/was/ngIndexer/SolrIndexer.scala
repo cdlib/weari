@@ -10,6 +10,7 @@ import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
 import org.apache.solr.client.solrj.impl.StreamingUpdateSolrServer;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.util.ClientUtils.toSolrInputDocument;
 import org.apache.solr.common.{SolrDocument, SolrInputDocument};
 
 import org.cdlib.ssconf.Configurator;
@@ -17,7 +18,7 @@ import org.cdlib.ssconf.Configurator;
 import org.cdlib.was.ngIndexer.SolrFields._;
 import org.cdlib.was.ngIndexer.Utility.null2option;
 
-import org.cdlib.was.ngIndexer.SolrDocumentModifier.{doc2InputDoc,mergeDocs};
+import org.cdlib.was.ngIndexer.SolrDocumentModifier.{mergeDocs};
 import scala.util.matching.Regex;
 
 /**
@@ -83,7 +84,7 @@ class SolrIndexer(config : Config) extends Retry with Logger {
         /* it could still be a false positive */
         case None => server.add(doc);
         case Some(olddoc) => {
-        val mergedDoc = mergeDocs(doc2InputDoc(olddoc), doc);
+        val mergedDoc = mergeDocs(toSolrInputDocument(olddoc), doc);
           server.add(mergedDoc);
         }
       }
