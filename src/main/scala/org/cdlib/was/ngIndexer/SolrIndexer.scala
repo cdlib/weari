@@ -33,7 +33,7 @@ class SolrIndexer(config : Config) extends Retry with Logger {
    * Take an archive record & return a solr document, or none if we
    * cannot parse.
    */
-  def mkIndexResource(rec : IndexArchiveRecord with InputStream) : 
+  def mkIndexResource(rec : WASArchiveRecord with InputStream) : 
       Option[IndexResource] = {
     if (!rec.isHttpResponse || (rec.getStatusCode != 200)) {
       rec.close;

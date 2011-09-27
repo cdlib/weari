@@ -4,7 +4,7 @@ package org.cdlib.was.ngIndexer;
 
 import java.util.Date;
 
-trait IndexArchiveRecord extends ContentType {
+trait WASArchiveRecord extends ContentType {
   def getStatusCode : Int;
 
   def getFilename : String;

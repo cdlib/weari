@@ -28,7 +28,7 @@ import scala.util.matching.Regex;
  * interface.
  */
 class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String) 
-  extends InputStream with IndexArchiveRecord with ContentType {
+  extends InputStream with WASArchiveRecord with ContentType {
 
   private var statusCode : Option[Int] = None;
   private var ready : Boolean = false;
