@@ -33,8 +33,8 @@ class SolrIndexer(config : Config) extends Retry with Logger {
    * Take an archive record & return a solr document, or none if we
    * cannot parse.
    */
-  def mkIndexResource(rec : WASArchiveRecord with InputStream) : 
-      Option[IndexResource] = {
+  def parseArchiveRecord(rec : WASArchiveRecord with InputStream) : 
+      Option[ParsedArchiveRecord] = {
     if (!rec.isHttpResponse || (rec.getStatusCode != 200)) {
       rec.close;
       return None;
@@ -45,7 +45,7 @@ class SolrIndexer(config : Config) extends Retry with Logger {
       /* need to check now because the ARC needs to be closed before we can get it */
       return None;
     } else {
-      return Some(IndexResource(rec, result));
+      return Some(ParsedArchiveRecord(rec, result));
     }
   }
   
@@ -168,13 +168,13 @@ class SolrIndexer(config : Config) extends Retry with Logger {
    /**
     * For each record in a file, call the function.
     */
-  def processFile (file : File, config : Config) (func : (IndexResource) => Unit) {
-    Utility.eachRecord(file) (r=>mkIndexResource(r).map(func));
+  def processFile (file : File, config : Config) (func : (ParsedArchiveRecord) => Unit) {
+    Utility.eachRecord(file) (parseArchiveRecord(_).map(func));
   }
 
   def processStream (arcName : String, stream : InputStream, config : Config) 
-  (func : (IndexResource) => Unit) {
-    Utility.eachRecord(stream, arcName) (r=>mkIndexResource(r).map(func));
+  (func : (ParsedArchiveRecord) => Unit) {
+    Utility.eachRecord(stream, arcName) (parseArchiveRecord(_).map(func));
   }
 }
 

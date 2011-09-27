@@ -2,10 +2,11 @@
 
 package org.cdlib.was.ngIndexer;
 
+import java.io.{File,FileReader};
 import java.util.Date;
 
-import net.liftweb.json._;
-import net.liftweb.json.Serialization.write;
+import net.liftweb.json.{DefaultFormats,JsonParser,NoTypeHints,Serialization}
+import net.liftweb.json.JsonAST.JValue;
 
 import org.archive.net.UURIFactory;
 import java.io.{BufferedWriter,File,FileOutputStream,OutputStreamWriter,Writer};
@@ -16,7 +17,10 @@ import org.apache.solr.client.solrj.util.ClientUtils;
 import org.cdlib.was.ngIndexer.SolrFields._;
 import org.cdlib.was.ngIndexer.SolrDocumentModifier.{shouldIndexContentType,updateDocBoost,updateDocUrls,updateContentType,updateFields};
 
-class IndexResource (
+/**
+ * A class representing a WASArchiveRecord that has been parsed.
+ */
+class ParsedArchiveRecord (
   val filename : String,
   val digest : String,
   val url : String,
@@ -25,10 +29,18 @@ class IndexResource (
   val length : Long,
   val content : Option[String],
   val suppliedContentType : ContentType,
-  val detectedContentType : ContentType) {
-  
-  /* for json */
-  implicit val formats = Serialization.formats(NoTypeHints);
+  val detectedContentType : ContentType) extends WASArchiveRecord {
+
+  def getFilename = filename;
+  def getDigestStr = Some(digest);
+  def getUrl = url;
+  def getDate = date;
+  def topMediaType = suppliedContentType.topMediaType;
+  def subMediaType = suppliedContentType.subMediaType;
+  def charset = suppliedContentType.charset;
+  def getLength = length;
+  def getStatusCode = 200;
+  def isHttpResponse = true;
 
   private def toMap = 
     Map("filename" -> filename,
@@ -39,12 +51,15 @@ class IndexResource (
         "length"   -> length,
         "content"  -> content.getOrElse(""));
 
+  /* for json */
+  implicit val formats = Serialization.formats(NoTypeHints);
+
   def toJson : String = {
-    return write(toMap);
+    return Serialization.write(toMap);
   }
 
   def writeJson (w : Writer) {
-    write(toMap, w);
+    Serialization.write(toMap, w);
   }
 
   def toDocument : SolrInputDocument = {
@@ -61,15 +76,26 @@ class IndexResource (
                  CONTENT_FIELD        -> content);
     updateDocBoost(doc, 1.0f);
     updateDocUrls(doc, url);
-    updateContentType(doc, detectedContentType, suppliedContentType);
+    updateContentType(doc, detectedContentType, this);
     return doc;
   }
 }
 
-object IndexResource {
-  def apply(rec : IndexArchiveRecord,
-            parseResult : MyParseResult) : IndexResource = {
-    new IndexResource(filename = rec.getFilename,
+object ParsedArchiveRecord {
+  /* for json */
+  implicit val formats = DefaultFormats;
+
+  def fromJson (j : JValue) = j.extract[List[ParsedArchiveRecord]];
+
+  def fromJson (in : String) : List[ParsedArchiveRecord] = 
+    fromJson(JsonParser.parse(in));
+  
+  def parse (file : File) : List[ParsedArchiveRecord] =
+    fromJson(JsonParser.parse(new FileReader(file), true));
+
+  def apply(rec : WASArchiveRecord,
+            parseResult : MyParseResult) : ParsedArchiveRecord = {
+    new ParsedArchiveRecord(filename = rec.getFilename,
                       digest = rec.getDigestStr.getOrElse("-"),
                       url = rec.getUrl,
                       date = rec.getDate,
