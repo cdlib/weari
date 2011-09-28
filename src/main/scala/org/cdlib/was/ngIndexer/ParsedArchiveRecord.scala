@@ -35,24 +35,26 @@ class ParsedArchiveRecord (
   def getDigestStr = Some(digest);
   def getUrl = url;
   def getDate = date;
-  def topMediaType = suppliedContentType.topMediaType;
-  def subMediaType = suppliedContentType.subMediaType;
-  def charset = suppliedContentType.charset;
   def getLength = length;
   def getStatusCode = 200;
   def isHttpResponse = true;
+  def getContentType = suppliedContentType;
 
-  private def toMap = 
-    Map("filename" -> filename,
-        "digest"   -> digest,
-        "url"      -> url,
-        "date"     -> date,
-        "title"    -> title,
-        "length"   -> length,
-        "content"  -> content.getOrElse(""));
+  private def toMap = {
+    var m = Map("filename" -> filename,
+                "digest"   -> digest,
+                "url"      -> url,
+                "date"     -> date,
+                "suppliedContentType" -> suppliedContentType.toString,
+                "detectedContentType" -> detectedContentType.toString,
+                "title"    -> title,
+                "length"   -> length);
+    if (content.isDefined) { m += ("content") -> content.get }
+    m;
+  }
 
   /* for json */
-  implicit val formats = Serialization.formats(NoTypeHints);
+  implicit val formats = DefaultFormats;
 
   def toJson : String = {
     return Serialization.write(toMap);
@@ -76,7 +78,7 @@ class ParsedArchiveRecord (
                  CONTENT_FIELD        -> content);
     updateDocBoost(doc, 1.0f);
     updateDocUrls(doc, url);
-    updateContentType(doc, detectedContentType, this);
+    updateContentType(doc, detectedContentType, suppliedContentType);
     return doc;
   }
 }
@@ -85,12 +87,12 @@ object ParsedArchiveRecord {
   /* for json */
   implicit val formats = DefaultFormats;
 
-  def fromJson (j : JValue) = j.extract[List[ParsedArchiveRecord]];
+  def fromJson (j : JValue) = j.extract[ParsedArchiveRecord];
 
-  def fromJson (in : String) : List[ParsedArchiveRecord] = 
+  def fromJson (in : String) : ParsedArchiveRecord = 
     fromJson(JsonParser.parse(in));
   
-  def parse (file : File) : List[ParsedArchiveRecord] =
+  def parse (file : File) : ParsedArchiveRecord =
     fromJson(JsonParser.parse(new FileReader(file), true));
 
   def apply(rec : WASArchiveRecord,
@@ -101,13 +103,13 @@ object ParsedArchiveRecord {
                       date = rec.getDate,
                       title = parseResult.title.getOrElse(""),
                       length = rec.getLength,
-                      content = if (shouldIndexContentType(rec)) {
+                      content = if (shouldIndexContentType(rec.getContentType)) {
                         parseResult.content;
                       } else { 
                         None;
                       },
-                      suppliedContentType = new ContentTypeImpl(rec),
-                      detectedContentType = new ContentTypeImpl(parseResult));
+                      suppliedContentType = rec.getContentType,
+                      detectedContentType = parseResult.contentType);
 
   }
 }

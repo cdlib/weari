@@ -131,19 +131,19 @@ object SolrDocumentModifier extends Logger {
                          detected : ContentType,
                          supplied : ContentType) {
     updateFields(doc,
-                 MEDIA_TYPE_GROUP_DET_FIELD -> detected.mediaTypeGroupString,
-                 MEDIA_TYPE_SUP_FIELD       -> supplied.mediaTypeString,
+                 MEDIA_TYPE_GROUP_DET_FIELD -> detected.mediaTypeGroup,
+                 MEDIA_TYPE_SUP_FIELD       -> supplied.mediaType,
                  CHARSET_SUP_FIELD          -> supplied.charset,
-                 MEDIA_TYPE_DET_FIELD       -> detected.mediaTypeString,
+                 MEDIA_TYPE_DET_FIELD       -> detected.mediaType,
                  CHARSET_DET_FIELD          -> detected.charset);
   }
 
   def shouldIndexContentType (contentType : ContentType) : Boolean = {
     /* Right now we index everything except js, css */
     contentType.mediaType match {
-      case Some("text/javascript") | 
-        Some("text/css") | 
-        Some("application/zip") => 
+      case "text/javascript" | 
+        "text/css" | 
+        "application/zip" => 
           false;
       case _ => true;
     }

@@ -39,7 +39,7 @@ class SolrIndexer(config : Config) extends Retry with Logger {
       rec.close;
       return None;
     }
-    val result = parser.parse(rec, null2option(rec.mediaTypeString), rec.getUrl, rec.getDate)
+    val result = parser.parse(rec, Some(rec.getContentType.mediaType), rec.getUrl, rec.getDate)
     rec.close;
     if (rec.getDigestStr.isEmpty) {
       /* need to check now because the ARC needs to be closed before we can get it */
