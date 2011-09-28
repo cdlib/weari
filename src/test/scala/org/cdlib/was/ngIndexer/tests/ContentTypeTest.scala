@@ -13,19 +13,21 @@ import org.cdlib.was.ngIndexer._;
 class ContentTypeSpec extends FeatureSpec {
   feature ("We can parse Content-Type headers.") {
     scenario ("text/plain") {
-      val str = "text/plain";
-      ContentType.parse(str) match {
+      ContentType.parse("text/plain") match {
         case Some(ContentType("text", "plain", None)) => assert(true);
         case _ => assert(false);
       }
     }
 
     scenario ("text/plain; charset=utf-8") {
-      val str = "text/plain; charset=utf-8";
-      ContentType.parse(str) match {
+      ContentType.parse("text/plain; charset=utf-8") match {
         case Some(ContentType("text", "plain", Some("utf-8"))) => assert(true);
         case _ => assert(false);
       }
+    }
+
+    scenario ("bad line") {
+      assert (ContentType.parse("xxx").isEmpty);
     }
   }
 }
