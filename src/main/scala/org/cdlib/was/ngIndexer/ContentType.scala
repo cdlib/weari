@@ -1,6 +1,7 @@
 /* Copyright (c) 2011 The Regents of the University of California */
-
 package org.cdlib.was.ngIndexer;
+
+import net.liftweb.json.{Formats,JField,JObject,JString,JValue,MappingException,Serializer,TypeInfo};
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.{BasicHeaderValueParser,ParserCursor};
@@ -13,21 +14,18 @@ import scala.util.matching.Regex;
  * Trait to represent a content-type, including a media type and
  * encoding, as supplied by, e.g., the Content-Type header.
  */
-case class ContentType (val topMediaType : String,
-                        val subMediaType : String,
-                        val charset      : Option[String]) {
-
-  def this (topMediaType : String, subMediaType : String) = 
-    this(topMediaType, subMediaType, None);
+case class ContentType (val top     : String,
+                        val sub     : String,
+                        val charset : Option[String]) {
 
   lazy val mediaType : String = 
-      "%s/%s".format(topMediaType, subMediaType);
+      "%s/%s".format(top, sub);
 
-  lazy val mediaTypeGroup : Option[String] = topMediaType match {
+  lazy val mediaTypeGroup : Option[String] = top match {
     case "audio" => Some("audio");
     case "video" => Some("video");
     case "image" => Some("image");
-    case "application" => subMediaType match {
+    case "application" => sub match {
       case "pdf"    => Some("pdf");
       case "zip"    => Some("compressed");
       case "x-gzip" => Some("compressed");
@@ -35,7 +33,7 @@ case class ContentType (val topMediaType : String,
         Some("office");
       case _ => None;
     } 
-    case "text" => subMediaType match {
+    case "text" => sub match {
       case "html" => Some("html");
       case _ => None;
     }

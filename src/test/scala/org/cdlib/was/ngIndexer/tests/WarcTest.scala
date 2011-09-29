@@ -2,7 +2,8 @@
 
 package org.cdlib.was.ngIndexer.tests;
 
-import net.liftweb.json.parse;
+import net.liftweb.json._;
+import net.liftweb.json.Serialization.{read, write};
 
 import org.apache.solr.common.SolrInputDocument;
 
@@ -11,7 +12,6 @@ import org.archive.io.{ArchiveReaderFactory,ArchiveRecord};
 import org.cdlib.was.ngIndexer._;
 
 import org.junit.runner.RunWith;
-
 
 import org.scalatest.{FeatureSpec,GivenWhenThen,Ignore};
 import org.scalatest.junit.JUnitRunner;
@@ -33,13 +33,13 @@ class WarcSpec extends FeatureSpec {
 
       Utility.eachRecord (cl.getResourceAsStream(warcName), warcName) { (rec)=>
         if (rec.isHttpResponse) {
-          indexer.mkIndexResource(rec).map { res =>
+          indexer.parseArchiveRecord(rec).map { res =>
             warcData += (rec.getUrl -> res.toJson);
           }
         }
       }
       Utility.eachRecord (cl.getResourceAsStream(arcName), arcName) { (rec)=>
-        indexer.mkIndexResource(rec).map { res =>
+        indexer.parseArchiveRecord(rec).map { res =>
           arcData += (rec.getUrl -> res.toJson)
         }
       }
@@ -51,5 +51,13 @@ class WarcSpec extends FeatureSpec {
         }
       }
     }
+    
+    scenario ("We can round trip JSON.") {
+      Utility.eachRecord (cl.getResourceAsStream(arcName), arcName) { (rec)=>
+        indexer.parseArchiveRecord(rec).map { res =>
+          assert (ParsedArchiveRecord.fromJson(res.toJson) == res);
+        }
+      }
+    }      
   }
 }

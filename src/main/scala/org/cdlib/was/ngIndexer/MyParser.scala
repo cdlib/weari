@@ -58,7 +58,7 @@ class MyParser extends Logger {
     }
     val tmp = ContentType.parse(tikaMetadata.get(HttpHeaders.CONTENT_TYPE)).getOrElse(ContentType.DEFAULT);
     val tikaMediaType =
-      ContentType(tmp.topMediaType, tmp.subMediaType,
+      ContentType(tmp.top, tmp.sub,
                   null2option(tikaMetadata.get(HttpHeaders.CONTENT_ENCODING)));
 
     /* finish webgraph */

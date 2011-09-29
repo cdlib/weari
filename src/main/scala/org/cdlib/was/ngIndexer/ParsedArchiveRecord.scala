@@ -20,7 +20,7 @@ import org.cdlib.was.ngIndexer.SolrDocumentModifier.{shouldIndexContentType,upda
 /**
  * A class representing a WASArchiveRecord that has been parsed.
  */
-class ParsedArchiveRecord (
+case class ParsedArchiveRecord (
   val filename : String,
   val digest : String,
   val url : String,
@@ -45,8 +45,8 @@ class ParsedArchiveRecord (
                 "digest"   -> digest,
                 "url"      -> url,
                 "date"     -> date,
-                "suppliedContentType" -> suppliedContentType.toString,
-                "detectedContentType" -> detectedContentType.toString,
+                "suppliedContentType" -> suppliedContentType,
+                "detectedContentType" -> detectedContentType,
                 "title"    -> title,
                 "length"   -> length);
     if (content.isDefined) { m += ("content") -> content.get }

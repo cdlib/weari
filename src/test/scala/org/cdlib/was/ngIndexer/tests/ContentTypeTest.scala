@@ -50,6 +50,5 @@ class ContentTypeSpec extends FeatureSpec {
       val ct = ContentType("application", "pdf", None);
       assert (parse(write(ct)).extract[ContentType] == ct);
     }
-
   }
 }
