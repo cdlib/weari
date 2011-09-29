@@ -1,3 +1,5 @@
+/* Copyright (c) 2011 The Regents of the University of California */
+
 package org.cdlib.was.ngIndexer;
 
 import java.io.{ByteArrayInputStream,InputStream};
@@ -17,14 +19,13 @@ import org.xml.sax.ContentHandler;
  * Represents the result of a Tika parse.
  */
 class MyParseResult(val content  : Option[String],
-                    topMediaType : Option[String],
-                    subMediaType : Option[String],
-                    charset      : Option[String],
+                    val contentType : ContentType,
                     val title    : Option[String],
-                    val outlinks : Seq[Long])
-  extends ContentTypeImpl(topMediaType, subMediaType, charset);
+                    val outlinks : Seq[Long]);
 
-class MyParser {
+class MyParser extends Logger {
+  /* return max size of content 1Mb */
+  val maxSize = 100000;
   val parseContext = new ParseContext;
   val detector = (new TikaConfig).getMimeRepository;
   val parser = new AutoDetectParser(detector);
@@ -49,15 +50,20 @@ class MyParser {
       MultiContentHander(List[ContentHandler](wgContentHandler, indexContentHandler));
     tikaMetadata.set(HttpHeaders.CONTENT_LOCATION, url);
     contentType.map(str=>tikaMetadata.set(HttpHeaders.CONTENT_TYPE, str));
-    timeout(30000) {
-      parser.parse(input, contentHandler, tikaMetadata, parseContext);
+
+    catchAndLogExceptions {
+      timeout(30000) {
+        parser.parse(input, contentHandler, tikaMetadata, parseContext);
+      }
     }
+    val tmp = ContentType.parse(tikaMetadata.get(HttpHeaders.CONTENT_TYPE)).getOrElse(ContentType.DEFAULT);
     val tikaMediaType =
-      ContentType.parse(tikaMetadata.get(HttpHeaders.CONTENT_TYPE));
+      ContentType(tmp.top, tmp.sub,
+                  null2option(tikaMetadata.get(HttpHeaders.CONTENT_ENCODING)));
 
     /* finish webgraph */
     var outlinks : Seq[Long] = List[Long]();
-    if (webGraphTypeRE.matcher(tikaMediaType.get.mediaTypeString).matches) {
+    if (webGraphTypeRE.matcher(tikaMediaType.mediaType).matches) {
       val outlinksRaw = wgContentHandler.outlinks;
       if (outlinksRaw.size > 0) {
         outlinks = (for (l <- outlinksRaw) 
@@ -65,10 +71,8 @@ class MyParser {
                       toList.distinct.sortWith((a,b)=>(a < b));
       }
     }
-    return new MyParseResult(charset      = null2option(tikaMetadata.get(HttpHeaders.CONTENT_ENCODING)),
-                             content      = indexContentHandler.contentString,
-                             subMediaType = tikaMediaType.get.subMediaType,
-                             topMediaType = tikaMediaType.get.topMediaType,
+    return new MyParseResult(content      = indexContentHandler.contentString(maxSize),
+                             contentType  = tikaMediaType,
                              title        = null2option(tikaMetadata.get("title")),
                              outlinks     = outlinks);
   }

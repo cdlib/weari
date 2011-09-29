@@ -1,3 +1,5 @@
+/* Copyright (c) 2011 The Regents of the University of California */
+
 package org.cdlib.was.ngIndexer;
 
 import java.io.{File,FileInputStream,FileNotFoundException,InputStream,IOException};
@@ -8,6 +10,7 @@ import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
 import org.apache.solr.client.solrj.impl.StreamingUpdateSolrServer;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.util.ClientUtils.toSolrInputDocument;
 import org.apache.solr.common.{SolrDocument, SolrInputDocument};
 
 import org.cdlib.ssconf.Configurator;
@@ -15,7 +18,7 @@ import org.cdlib.ssconf.Configurator;
 import org.cdlib.was.ngIndexer.SolrFields._;
 import org.cdlib.was.ngIndexer.Utility.null2option;
 
-import org.cdlib.was.ngIndexer.SolrDocumentModifier.{doc2InputDoc,makeDocument,mergeDocs};
+import org.cdlib.was.ngIndexer.SolrDocumentModifier.{mergeDocs};
 import scala.util.matching.Regex;
 
 /**
@@ -30,15 +33,20 @@ class SolrIndexer(config : Config) extends Retry with Logger {
    * Take an archive record & return a solr document, or none if we
    * cannot parse.
    */
-  def record2doc(is : InputStream, rec : IndexArchiveRecord, config : Config) : 
-      Option[SolrInputDocument] = {
+  def parseArchiveRecord(rec : WASArchiveRecord with InputStream) : 
+      Option[ParsedArchiveRecord] = {
     if (!rec.isHttpResponse || (rec.getStatusCode != 200)) {
-      is.close; 
+      rec.close;
       return None;
     }
-    val result = parser.parse(is, null2option(rec.mediaTypeString), rec.getUrl, rec.getDate)
-    is.close;
-    return makeDocument(rec, result);
+    val result = parser.parse(rec, Some(rec.getContentType.mediaType), rec.getUrl, rec.getDate)
+    rec.close;
+    if (rec.getDigestStr.isEmpty) {
+      /* need to check now because the ARC needs to be closed before we can get it */
+      return None;
+    } else {
+      return Some(ParsedArchiveRecord(rec, result));
+    }
   }
   
   def getById(id : String, server : SolrServer) : Option[SolrDocument] = {
@@ -81,7 +89,7 @@ class SolrIndexer(config : Config) extends Retry with Logger {
         /* it could still be a false positive */
         case None => server.add(doc);
         case Some(olddoc) => {
-        val mergedDoc = mergeDocs(doc2InputDoc(olddoc), doc);
+        val mergedDoc = mergeDocs(toSolrInputDocument(olddoc), doc);
           server.add(mergedDoc);
         }
       }
@@ -102,7 +110,8 @@ class SolrIndexer(config : Config) extends Retry with Logger {
              filter : QuickIdFilter,
              config : Config) : Boolean = {
     try {
-      processStream(arcName, stream, config) { (doc) =>
+      processStream(arcName, stream, config) { (rec) =>
+        val doc = rec.toDocument;
         for ((k,v) <- extraFields) v match {
           case l : List[Any] => l.map(v2=>doc.addField(k, v2));
           case o : Any => doc.setField(k, o);
@@ -118,6 +127,7 @@ class SolrIndexer(config : Config) extends Retry with Logger {
       }
     } catch {
       case ex : Exception => {
+        server.rollback;
         logger.error("Exception while generating doc from arc ({}) {}.", arcName, ex);
         ex.printStackTrace();
         return false;
@@ -145,8 +155,8 @@ class SolrIndexer(config : Config) extends Retry with Logger {
               arcName : String,
               config : Config) {
     try {
-      processStream(arcName, stream, config) { (doc) =>
-        System.err.println("%s = %s".format(doc.getFieldValue(URL_FIELD), doc.getFieldValue(DIGEST_FIELD)));
+      processStream(arcName, stream, config) { (res) =>
+        System.err.println("%s = %s".format(res.url, res.digest));
         /* noop */
       }
     } catch {
@@ -158,13 +168,13 @@ class SolrIndexer(config : Config) extends Retry with Logger {
    /**
     * For each record in a file, call the function.
     */
-  def processFile (file : File, config : Config) (func : (SolrInputDocument) => Unit) {
-    Utility.eachRecord(file) (r=>record2doc(r, r, config).map(func));
+  def processFile (file : File, config : Config) (func : (ParsedArchiveRecord) => Unit) {
+    Utility.eachRecord(file) (parseArchiveRecord(_).map(func));
   }
 
   def processStream (arcName : String, stream : InputStream, config : Config) 
-  (func : (SolrInputDocument) => Unit) {
-    Utility.eachRecord(stream, arcName) (r=>record2doc(r, r, config).map(func));
+  (func : (ParsedArchiveRecord) => Unit) {
+    Utility.eachRecord(stream, arcName) (parseArchiveRecord(_).map(func));
   }
 }
 
@@ -226,8 +236,12 @@ object SolrIndexer {
         }
         case "json" => {
           val cmds = Command.parse(new File(args(1)));
+          val sortedCmds = cmds.sortWith(_.arcName < _.arcName);
           val executor = new CommandExecutor(config);
-          cmds.map(executor.exec(_));
+          sortedCmds.map { cmd =>
+            executor.exec(cmd);
+            System.out.println("Indexed %s".format(cmd.arcName));
+          }
         }
         case _ => {
           System.err.println("No command specified!");

@@ -1,3 +1,5 @@
+/* Copyright (c) 2011 The Regents of the University of California */
+
 package org.cdlib.was.ngIndexer;
 
 import java.lang.{Object=>JObject}
@@ -8,6 +10,8 @@ import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.common.{SolrDocument, SolrInputDocument};
 
+import org.apache.solr.client.solrj.util.ClientUtils.toSolrInputDocument;
+
 import org.archive.net.{UURI,UURIFactory};
 
 import org.cdlib.was.ngIndexer.SolrFields._;
@@ -15,25 +19,6 @@ import org.cdlib.was.ngIndexer.SolrFields._;
 import scala.collection.JavaConversions.collectionAsScalaIterable;
 
 object SolrDocumentModifier extends Logger {
-
-  /**
-   * Turn an existing SolrDocument into a SolrInputDocument suitable
-   * for sending back to solr.
-   */
-  def doc2InputDoc (doc : SolrDocument) : SolrInputDocument = {
-    val idoc = new SolrInputDocument();
-    for (fieldName <- doc.getFieldNames) {
-      if (MULTI_VALUED_FIELDS.contains(fieldName)) {
-        val values = doc.getFieldValues(fieldName);
-        if (values != null)
-          for (value <- values) 
-            idoc.addField(fieldName, value);
-      } else {
-        idoc.addField(fieldName, doc.getFirstValue(fieldName));
-      }
-    }
-    return idoc;
-  }
 
   /**
    * Remove a single value from a document's field.
@@ -52,7 +37,7 @@ object SolrDocumentModifier extends Logger {
     q.setQuery(query);
     val coll = new SolrDocumentCollection(server, q);
     for (doc <- coll) {
-      val idoc = doc2InputDoc(doc);
+      val idoc = toSolrInputDocument(doc);
       f(idoc) match {
         case None => ();
         case Some(idoc) => {
@@ -146,48 +131,21 @@ object SolrDocumentModifier extends Logger {
                          detected : ContentType,
                          supplied : ContentType) {
     updateFields(doc,
-                 MEDIA_TYPE_GROUP_DET_FIELD -> detected.mediaTypeGroupString,
-                 MEDIA_TYPE_SUP_FIELD       -> supplied.mediaTypeString,
+                 MEDIA_TYPE_GROUP_DET_FIELD -> detected.mediaTypeGroup,
+                 MEDIA_TYPE_SUP_FIELD       -> supplied.mediaType,
                  CHARSET_SUP_FIELD          -> supplied.charset,
-                 MEDIA_TYPE_DET_FIELD       -> detected.mediaTypeString,
+                 MEDIA_TYPE_DET_FIELD       -> detected.mediaType,
                  CHARSET_DET_FIELD          -> detected.charset);
   }
 
   def shouldIndexContentType (contentType : ContentType) : Boolean = {
     /* Right now we index everything except js, css */
-    contentType.topMediaType match {
-      case Some("text") => contentType.subMediaType match {
-        case Some("javascript") => false;
-        case Some("css")        => false;
-        case _                  => true;
-      }
+    contentType.mediaType match {
+      case "text/javascript" | 
+        "text/css" | 
+        "application/zip" => 
+          false;
       case _ => true;
-    }
-  }
-
-  def makeDocument (rec : IndexArchiveRecord,
-                    parseResult : MyParseResult) : Option[SolrInputDocument] = {
-    val doc = new SolrInputDocument;
-    if (rec.getDigestStr.isEmpty) {
-      return None;
-    } else {
-      /* set the fields */
-      val uuri = UURIFactory.getInstance(rec.getUrl);
-      val digest = rec.getDigestStr;
-      updateFields(doc,
-                   ARCNAME_FIELD        -> rec.getFilename,
-                   ID_FIELD             -> "%s.%s".format(uuri.toString, digest.getOrElse("-")),
-                   DIGEST_FIELD         -> digest,
-                   DATE_FIELD           -> rec.getDate,
-                   TITLE_FIELD          -> parseResult.title,
-                   CONTENT_LENGTH_FIELD -> rec.getLength);
-      if (shouldIndexContentType(rec)) {
-        updateFields(doc, CONTENT_FIELD -> parseResult.content);
-      }
-      updateDocBoost(doc, 1.0f);
-      updateDocUrls(doc, rec.getUrl);
-      updateContentType(doc, parseResult, rec);
-      return Some(doc);
     }
   }
 

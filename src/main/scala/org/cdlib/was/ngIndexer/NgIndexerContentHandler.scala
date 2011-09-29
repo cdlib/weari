@@ -1,3 +1,5 @@
+/* Copyright (c) 2011 The Regents of the University of California */
+
 package org.cdlib.was.ngIndexer;
 
 import java.io.{CharArrayReader,CharArrayWriter,File,FileReader,FileWriter,Reader,StringReader,StringWriter,Writer};
@@ -13,22 +15,26 @@ class NgIndexerContentHandler (useTempFile : Boolean)
       case w : StringWriter    => Some(new StringReader(w.toString));
     }
 
-  def reader2string (r : Reader) : String = {
-    var buf = new Array[Char](65536);
+  /* maxSize param is not *strictly* followed */
+  def reader2string (r : Reader, maxSize : Int) : String = {
+    val BUF_SIZE = 65536;
+    var buf = new Array[Char](BUF_SIZE);
     var sb  = new StringBuffer();
     var i = 0;
+    var totalRead = 0;
     do {
       sb.append(buf, 0, i);
       i = r.read(buf, 0, buf.length);
-    } while (i != -1);
+      totalRead += i;
+    } while (i != -1 && totalRead + BUF_SIZE <= maxSize);
     return sb.toString;
   }
 
-  lazy val contentString : Option[String] = {
+  def contentString (maxSize : Int) : Option[String] = {
     val what = contentWriter match {
       /* replace all repeated whitespace with a single space */
       case s : StringWriter => Some(s.toString.replaceAll("""\s+""", " "));
-      case w : Writer       => contentReader.map(reader2string(_).replaceAll("""\s+""", " "));
+      case w : Writer       => contentReader.map(reader2string(_, maxSize).replaceAll("""\s+""", " "));
     }
     /* we are done with the temp file, delete */
     tempFile.map(_.delete());

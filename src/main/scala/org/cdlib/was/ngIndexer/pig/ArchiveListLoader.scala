@@ -1,3 +1,5 @@
+/* Copyright (c) 2011 The Regents of the University of California */
+
 package org.cdlib.was.ngIndexer.pig;
 
 import java.util.ArrayList;
@@ -86,12 +88,12 @@ class ArchiveListLoader extends LoadFunc {
         case None => return null;
         case Some(rec) => {
           var tuple = tupleFactory.newTupleNoCopy(new java.util.ArrayList[java.lang.Object]());
-          val result = parser.parse(rec, null2option(rec.mediaTypeString), rec.getUrl, rec.getDate)
+          val result = parser.parse(rec, null2option(rec.getContentType.mediaType), rec.getUrl, rec.getDate)
           val outlinks = bagFactory.newDistinctBag;
           for (link <- result.outlinks) { outlinks.add(tupleFactory.newTuple(link)); }
           tuple.append(rec.getUrl)
           tuple.append(result.content);
-          tuple.append(result.mediaType);
+          tuple.append(result.contentType.mediaType);
           tuple.append(result.title);
           tuple.append(rec.getDigestStr.getOrElse("-"));
           tuple.append(outlinks);

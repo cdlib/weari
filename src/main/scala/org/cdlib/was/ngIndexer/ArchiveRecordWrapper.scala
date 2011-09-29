@@ -1,3 +1,5 @@
+/* Copyright (c) 2011 The Regents of the University of California */
+
 package org.cdlib.was.ngIndexer;
 
 import java.io.InputStream;
@@ -26,7 +28,7 @@ import scala.util.matching.Regex;
  * interface.
  */
 class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String) 
-  extends InputStream with IndexArchiveRecord with ContentType {
+  extends InputStream with WASArchiveRecord {
 
   private var statusCode : Option[Int] = None;
   private var ready : Boolean = false;
@@ -105,19 +107,9 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String)
     }
   }
 
-  override lazy val subMediaType : Option[String] = {
+  lazy val getContentType : ContentType = {
     if (!ready) cueUp;
-    contentType.flatMap(_.subMediaType);
-  }
-
-  override lazy val topMediaType : Option[String] = {
-    if (!ready) cueUp;
-    contentType.flatMap(_.topMediaType);
-  }
-
-  override lazy val charset : Option[String] = {
-    if (!ready) cueUp;
-    contentType.flatMap(_.charset);
+    contentType.getOrElse(ContentType.DEFAULT);
   }
 
   /**
