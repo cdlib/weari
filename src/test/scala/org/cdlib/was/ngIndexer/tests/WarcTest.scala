@@ -2,8 +2,11 @@
 
 package org.cdlib.was.ngIndexer.tests;
 
+import java.io.{File,FileOutputStream};
+
 import net.liftweb.json._;
 import net.liftweb.json.Serialization.{read, write};
+import net.liftweb.json.{DefaultFormats,Serialization};
 
 import org.apache.solr.common.SolrInputDocument;
 
@@ -25,7 +28,8 @@ class WarcSpec extends FeatureSpec {
   val indexer = new SolrIndexer(config);
   val warcName = "IAH-20080430204825-00000-blackbook.warc.gz";
   val arcName = "IAH-20080430204825-00000-blackbook.arc.gz";
-  
+  implicit val formats = DefaultFormats;
+
   feature ("We can read a WARC file.") {
     scenario ("(W)ARC files should return the same data.") {
       val arcData = new HashMap[String, String];
@@ -34,13 +38,13 @@ class WarcSpec extends FeatureSpec {
       Utility.eachRecord (cl.getResourceAsStream(warcName), warcName) { (rec)=>
         if (rec.isHttpResponse) {
           indexer.parseArchiveRecord(rec).map { res =>
-            warcData += (rec.getUrl -> res.toJson);
+            warcData += (rec.getUrl -> Serialization.write(res));
           }
         }
       }
       Utility.eachRecord (cl.getResourceAsStream(arcName), arcName) { (rec)=>
         indexer.parseArchiveRecord(rec).map { res =>
-          arcData += (rec.getUrl -> res.toJson)
+          arcData += (rec.getUrl -> Serialization.write(res))
         }
       }
       for ((k,v) <- arcData) {
@@ -55,9 +59,15 @@ class WarcSpec extends FeatureSpec {
     scenario ("We can round trip JSON.") {
       Utility.eachRecord (cl.getResourceAsStream(arcName), arcName) { (rec)=>
         indexer.parseArchiveRecord(rec).map { res =>
-          assert (ParsedArchiveRecord.fromJson(res.toJson) == res);
+          assert (parse(Serialization.write(res)).extract[ParsedArchiveRecord] == res);
         }
       }
-    }      
+    }
+    
+    scenario ("can serialize an arc to JSON") {
+      val tmpfile = File.createTempFile("ng-indexer", "json");
+      val os = new FileOutputStream(tmpfile);
+      indexer.parseToJson(cl.getResourceAsStream(arcName), arcName, os);
+    }
   }
 }

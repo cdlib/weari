@@ -2,9 +2,11 @@
 
 package org.cdlib.was.ngIndexer;
 
-import java.io.{File,FileInputStream,FileNotFoundException,InputStream,IOException};
+import java.io.{BufferedWriter,File,FileInputStream,FileNotFoundException,InputStream,IOException,OutputStream,OutputStreamWriter};
 
 import java.net.URI;
+
+import net.liftweb.json.{DefaultFormats,Serialization};
 
 import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
 import org.apache.solr.client.solrj.impl.StreamingUpdateSolrServer;
@@ -61,6 +63,19 @@ class SolrIndexer(config : Config) extends Retry with Logger {
     }
   }
 
+  def parseToJson (stream : InputStream,
+                   arcName : String,
+                   os : OutputStream) {
+    implicit val formats = DefaultFormats;
+    val writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
+    writer.write("[", 0, 1);
+    processStream(arcName, stream) { (rec) =>
+      Serialization.write(rec, writer);
+      writer.write(",", 0, 1);
+    }
+    writer.write("]", 0, 1);
+  }
+
   /** Index an ARC file. */
   def index (file : File, 
              extraId : String, 
@@ -110,7 +125,7 @@ class SolrIndexer(config : Config) extends Retry with Logger {
              filter : QuickIdFilter,
              config : Config) : Boolean = {
     try {
-      processStream(arcName, stream, config) { (rec) =>
+      processStream(arcName, stream) { (rec) =>
         val doc = rec.toDocument;
         for ((k,v) <- extraFields) v match {
           case l : List[Any] => l.map(v2=>doc.addField(k, v2));
@@ -155,7 +170,7 @@ class SolrIndexer(config : Config) extends Retry with Logger {
               arcName : String,
               config : Config) {
     try {
-      processStream(arcName, stream, config) { (res) =>
+      processStream(arcName, stream) { (res) =>
         System.err.println("%s = %s".format(res.url, res.digest));
         /* noop */
       }
@@ -168,11 +183,11 @@ class SolrIndexer(config : Config) extends Retry with Logger {
    /**
     * For each record in a file, call the function.
     */
-  def processFile (file : File, config : Config) (func : (ParsedArchiveRecord) => Unit) {
+  def processFile (file : File) (func : (ParsedArchiveRecord) => Unit) {
     Utility.eachRecord(file) (parseArchiveRecord(_).map(func));
   }
 
-  def processStream (arcName : String, stream : InputStream, config : Config) 
+  def processStream (arcName : String, stream : InputStream)
   (func : (ParsedArchiveRecord) => Unit) {
     Utility.eachRecord(stream, arcName) (parseArchiveRecord(_).map(func));
   }
