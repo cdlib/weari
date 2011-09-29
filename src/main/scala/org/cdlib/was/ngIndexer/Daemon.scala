@@ -38,7 +38,6 @@ object Daemon {
   val threadCount = config.threadCount();
 
   val handlerFactory = new QueueItemHandlerFactory {
-    val locker = new Locker(zkHosts);
     val executor = new CommandExecutor(config);
 
     def mkHandler = new QueueItemHandler {
@@ -48,7 +47,7 @@ object Daemon {
         return true;
       }
     }
-    def finish = { locker.finish; }
+    def finish = { /*locker.finish;*/ }
   };
 
   val queueProcessor = 
