@@ -2,7 +2,7 @@
 
 package org.cdlib.was.ngIndexer.tests;
 
-import java.io.{File,FileOutputStream};
+import java.io.{File,FileInputStream,FileOutputStream,InputStreamReader};
 
 import net.liftweb.json._;
 import net.liftweb.json.Serialization.{read, write};
@@ -68,6 +68,10 @@ class WarcSpec extends FeatureSpec {
       val tmpfile = File.createTempFile("ng-indexer", "json");
       val os = new FileOutputStream(tmpfile);
       indexer.parseToJson(cl.getResourceAsStream(arcName), arcName, os);
+
+      /* and read it */
+      val is = new FileInputStream(tmpfile);
+      JsonParser.parse(new InputStreamReader(is, "UTF-8"), true).extract[List[ParsedArchiveRecord]];
     }
   }
 }
