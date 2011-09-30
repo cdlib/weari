@@ -25,7 +25,7 @@ import scala.collection.mutable.HashMap;
 class WarcSpec extends FeatureSpec {
   val cl = classOf[WarcSpec].getClassLoader;
   val config = new Config {};
-  val indexer = new SolrIndexer(config);
+  val indexer = new SolrIndexer;
   val warcName = "IAH-20080430204825-00000-blackbook.warc.gz";
   val arcName = "IAH-20080430204825-00000-blackbook.arc.gz";
   implicit val formats = DefaultFormats;

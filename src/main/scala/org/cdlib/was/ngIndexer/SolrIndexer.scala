@@ -26,7 +26,7 @@ import scala.util.matching.Regex;
 /**
  * Class used to index ARC files.
  */
-class SolrIndexer(config : Config) extends Retry with Logger {
+class SolrIndexer extends Retry with Logger {
   val httpClient = new SimpleHttpClient;
 
   val parser = new MyParser;
@@ -81,9 +81,8 @@ class SolrIndexer(config : Config) extends Retry with Logger {
              extraId : String, 
              extraFields : Map[String, Any],
              server : SolrServer,
-             filter : QuickIdFilter,
-             config : Config) : Boolean = 
-    index(new FileInputStream(file), file.getName, extraId, extraFields, server, filter, config);
+             filter : QuickIdFilter) : Boolean = 
+    index(new FileInputStream(file), file.getName, extraId, extraFields, server, filter);
 
   /**
    * Index a single Solr document. If a document with the same ID
@@ -122,8 +121,7 @@ class SolrIndexer(config : Config) extends Retry with Logger {
              extraId : String,
              extraFields : Map[String, Any],
              server : SolrServer,
-             filter : QuickIdFilter,
-             config : Config) : Boolean = {
+             filter : QuickIdFilter) : Boolean = {
     try {
       processStream(arcName, stream) { (rec) =>
         val doc = rec.toDocument;
@@ -210,7 +208,7 @@ object SolrIndexer {
 
   def main (args : Array[String]) {
     val config = loadConfigOrExit;
-    val indexer = new SolrIndexer(config);
+    val indexer = new SolrIndexer;
 
     try {
       val command = args(0);
@@ -242,8 +240,7 @@ object SolrIndexer {
                                   SPECIFICATION_FIELD -> specification, 
                                   PROJECT_FIELD -> project),
                               server,
-                              filter,
-                              config)
+                              filter)
               }
             }
           }

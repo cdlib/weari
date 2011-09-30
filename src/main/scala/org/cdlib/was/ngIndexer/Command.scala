@@ -42,7 +42,7 @@ object Command {
 
 class CommandExecutor (config : Config) extends Retry {
   val httpClient = new SimpleHttpClient;
-  val indexer = new SolrIndexer(config);
+  val indexer = new SolrIndexer;
 
   def exec (command : Command) {
     command match {
@@ -64,9 +64,8 @@ class CommandExecutor (config : Config) extends Retry {
                                             SPECIFICATION_FIELD -> cmd.specification, 
                                             PROJECT_FIELD       -> cmd.project),
                           server      = server,
-                          filter      = filter,
-                          config      = config);
-                                             }
+                          filter      = filter);
+          }
         }
       }
       case _ => ();

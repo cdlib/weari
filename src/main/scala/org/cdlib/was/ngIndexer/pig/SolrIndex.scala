@@ -34,7 +34,7 @@ class SolrIndex extends EvalFunc[String] with Algebraic {
 
 object SolrIndex {
   val config = new Config {};
-  val indexer = new SolrIndexer(config);
+  val indexer = new SolrIndexer;
   
   def indexTuple (input : Tuple) : String = {
     val solrUrl = input.get(0).asInstanceOf[String];
