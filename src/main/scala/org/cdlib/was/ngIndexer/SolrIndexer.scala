@@ -74,6 +74,7 @@ class SolrIndexer extends Retry with Logger {
       writer.write(",", 0, 1);
     }
     writer.write("]", 0, 1);
+    writer.close;
   }
 
   /** Index an ARC file. */
