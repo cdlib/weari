@@ -41,24 +41,19 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String)
    * Parse the headers from a WARCRecord.
    */
   def parseWarcHttpHeaders {
-    rec match {
-      case warcRec : WARCRecord => {
-        val lineParser = new BasicLineParser;
-        val firstLine = ArchiveRecordWrapper.readLine(warcRec);
-        try {
-          val statusLine = lineParser.parseStatusLine(firstLine, new ParserCursor(0, firstLine.length - 1));
-          val headers = ArchiveRecordWrapper.readHeaderLines(warcRec).map(lineParser.parseHeader(_));
-          val headerMap = headers.map {(h)=> h.getName.toLowerCase->h }.toMap;
-          statusCode = Some(statusLine.getStatusCode);
-          contentTypeStr = 
-            headerMap.get(HttpHeaders.CONTENT_TYPE.toLowerCase).map(_.getValue);
-        } catch {
-          case ex : ParseException => {
-            ex.printStackTrace(System.err);
-          }
-        }
+    val lineParser = new BasicLineParser;
+    val firstLine = ArchiveRecordWrapper.readLine(rec);
+    try {
+      val statusLine = lineParser.parseStatusLine(firstLine, new ParserCursor(0, firstLine.length - 1));
+      val headers = ArchiveRecordWrapper.readHeaderLines(rec).map(lineParser.parseHeader(_));
+        val headerMap = headers.map {(h)=> h.getName.toLowerCase->h }.toMap;
+      statusCode = Some(statusLine.getStatusCode);
+      contentTypeStr = 
+        headerMap.get(HttpHeaders.CONTENT_TYPE.toLowerCase).map(_.getValue);
+    } catch {
+      case ex : ParseException => {
+        ex.printStackTrace(System.err);
       }
-      case _ => ()
     }
   }
   
@@ -74,18 +69,11 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String)
         }
       }
       case arcRec : ARCRecord => {
-        val contentBegin = arcRec.getMetaData.getContentBegin;
-        var totalbytesread = 0;
-        var bytesread = 0;
-        var buffer = new Array[Byte](1024);
-        while (bytesread != -1 && totalbytesread + bytesread < contentBegin) {
-          totalbytesread += bytesread;
-          bytesread = arcRec.read(buffer, 0, scala.math.min(1024, contentBegin - totalbytesread));
-        }
         val url = arcRec.getMetaData.getUrl;
-        httpResponse = !url.startsWith("filedesc:") && !url.startsWith("dns:");
-        contentTypeStr = Some(arcRec.getHeader.getMimetype.toLowerCase);
-        statusCode = Some(arcRec.getStatusCode);
+        if (url.startsWith("http:")) {
+          httpResponse = true;
+          parseWarcHttpHeaders;
+        }
       }
     }
     contentTypeStr.map { str =>
