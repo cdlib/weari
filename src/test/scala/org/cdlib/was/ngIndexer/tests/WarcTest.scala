@@ -65,13 +65,11 @@ class WarcSpec extends FeatureSpec {
     }
     
     scenario ("can serialize an arc to JSON") {
-      val tmpfile = File.createTempFile("ng-indexer", "json");
-      val os = new FileOutputStream(tmpfile);
-      indexer.parseToJson(cl.getResourceAsStream(arcName), arcName, os);
+      val tmpfile = File.createTempFile("ng-indexer", ".json.gz");
+      indexer.arc2json(cl.getResourceAsStream(arcName), arcName, tmpfile);
 
       /* and read it */
-      val is = new FileInputStream(tmpfile);
-      JsonParser.parse(new InputStreamReader(is, "UTF-8"), true).extract[List[ParsedArchiveRecord]];
+      indexer.json2records(tmpfile);
     }
   }
 }

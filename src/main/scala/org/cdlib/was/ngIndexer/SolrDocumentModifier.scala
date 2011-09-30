@@ -19,7 +19,6 @@ import org.cdlib.was.ngIndexer.SolrFields._;
 import scala.collection.JavaConversions.collectionAsScalaIterable;
 
 object SolrDocumentModifier extends Logger {
-
   /**
    * Remove a single value from a document's field.
    */
@@ -139,13 +138,17 @@ object SolrDocumentModifier extends Logger {
   }
 
   def shouldIndexContentType (contentType : ContentType) : Boolean = {
-    /* Right now we index everything except js, css */
-    contentType.mediaType match {
-      case "text/javascript" | 
-        "text/css" | 
-        "application/zip" => 
-          false;
-      case _ => true;
+    /* Right now we index everything except audio, video, image, js, & css */
+    contentType.top match {
+      case "audio" | "video" | "image" => false;
+      case "text" => contentType.sub match {
+        case "javascript" | "css" => false;
+        case _ => true;
+      }
+      case "application" => contentType.sub match {
+        case "zip" => false;
+        case _     => true;
+      }
     }
   }
 

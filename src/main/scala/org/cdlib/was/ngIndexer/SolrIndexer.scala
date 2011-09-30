@@ -2,11 +2,13 @@
 
 package org.cdlib.was.ngIndexer;
 
-import java.io.{BufferedWriter,File,FileInputStream,FileNotFoundException,InputStream,IOException,OutputStream,OutputStreamWriter};
+import java.io.{BufferedWriter,File,FileInputStream,FileNotFoundException,FileOutputStream,InputStream,InputStreamReader,IOException,OutputStream,OutputStreamWriter};
 
 import java.net.URI;
 
-import net.liftweb.json.{DefaultFormats,Serialization};
+import java.util.zip.{GZIPInputStream,GZIPOutputStream};
+
+import net.liftweb.json.{DefaultFormats,JsonParser,Serialization};
 
 import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
 import org.apache.solr.client.solrj.impl.StreamingUpdateSolrServer;
@@ -63,11 +65,12 @@ class SolrIndexer extends Retry with Logger {
     }
   }
 
-  def parseToJson (stream : InputStream,
-                   arcName : String,
-                   os : OutputStream) {
+  def arc2json (stream : InputStream,
+                arcName : String,
+                file : File) {
+    val gzos = new GZIPOutputStream(new FileOutputStream(file));
     implicit val formats = DefaultFormats;
-    val writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
+    val writer = new BufferedWriter(new OutputStreamWriter(gzos, "UTF-8"));
     writer.write("[", 0, 1);
     processStream(arcName, stream) { (rec) =>
       Serialization.write(rec, writer);
@@ -75,6 +78,12 @@ class SolrIndexer extends Retry with Logger {
     }
     writer.write("]", 0, 1);
     writer.close;
+  }
+
+  def json2records (file : File) : Seq[ParsedArchiveRecord] = {
+    implicit val formats = DefaultFormats;
+    val gzis = new GZIPInputStream(new FileInputStream(file));
+    return JsonParser.parse(new InputStreamReader(gzis, "UTF-8"), true).extract[List[ParsedArchiveRecord]];
   }
 
   /** Index an ARC file. */
