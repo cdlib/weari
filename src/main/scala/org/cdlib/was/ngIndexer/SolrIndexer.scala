@@ -154,21 +154,20 @@ class SolrIndexer(config : Config) extends Retry with Logger {
     return true;
   }
 
-  def dryrun (uri : URI, config : Config) {
+  def dryrun (uri : URI) {
     val ArcRE = new Regex(""".*?([A-Za-z0-9\.-]+arc.gz).*""");
     val ArcRE(arcName) = uri.getPath;
     httpClient.getUri(uri) { (stream)=>
-      dryrun(stream, arcName, config);
+      dryrun(stream, arcName);
     }
   }
 
-  def dryrun (file : File, config : Config) {
-    dryrun(new FileInputStream(file), file.getName, config);
+  def dryrun (file : File) {
+    dryrun(new FileInputStream(file), file.getName);
   }
 
   def dryrun (stream : InputStream,
-              arcName : String,
-              config : Config) {
+              arcName : String) {
     try {
       processStream(arcName, stream) { (res) =>
         System.err.println("%s = %s".format(res.url, res.digest));
@@ -219,9 +218,9 @@ object SolrIndexer {
         case "dryrun" => 
           for (path <- args.drop(1)) {
             if (path.startsWith("http")) {
-              indexer.dryrun(new URI(path), config);
+              indexer.dryrun(new URI(path));
             } else {
-              indexer.dryrun(new File(path), config);
+              indexer.dryrun(new File(path));
             }
           }
         case "index" => {
