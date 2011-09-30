@@ -71,7 +71,7 @@ class SolrIndexer extends Retry with Logger {
     writer.write("[", 0, 1);
     processStream(arcName, stream) { (rec) =>
       Serialization.write(rec, writer);
-      writer.write(",", 0, 1);
+      writer.write(",\n", 0, 2);
     }
     writer.write("]", 0, 1);
     writer.close;
