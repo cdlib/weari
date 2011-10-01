@@ -23,8 +23,9 @@ import org.cdlib.was.ngIndexer.SolrFields._;
 import org.cdlib.was.ngIndexer.Utility.null2option;
 
 import org.cdlib.was.ngIndexer.SolrDocumentModifier.{mergeDocs};
-import scala.util.matching.Regex;
 
+import scala.collection.mutable.SynchronizedQueue;
+import scala.util.matching.Regex;
 /**
  * Class used to index ARC files.
  */
@@ -231,6 +232,25 @@ object SolrIndexer {
               indexer.dryrun(new File(path));
             }
           }
+        case "parse" => {
+          var q = new SynchronizedQueue[String];
+          q ++= args.drop(1);
+          var threads = List[Thread]();
+          for (n <- 1.to(config.threadCount())) {
+            val thread = new Thread() {
+              val executor = new CommandExecutor(config);
+              override def run {
+                if (!q.isEmpty) {
+                  val uri = q.dequeue;
+                  executor.exec(ParseCommand(uri=uri));
+                }
+              }
+            }
+            thread.start;
+            threads = thread :: threads;
+          }
+          threads.map(_.join);
+        }
         case "index" => {
           val job = args(1);
           val specification = args(2);
