@@ -244,13 +244,14 @@ object SolrIndexer {
           }
         case "parse" => {
           var q = new SynchronizedQueue[String];
-          q ++= args.drop(1);
+          val infile = new File(args(1));
+          q ++= io.Source.fromFile(infile).getLines;
           var threads = List[Thread]();
           for (n <- 1.to(config.threadCount())) {
             val thread = new Thread() {
               val executor = new CommandExecutor(config);
               override def run {
-                if (!q.isEmpty) {
+                while (!q.isEmpty) {
                   val uri = q.dequeue;
                   executor.exec(ParseCommand(uri=uri));
                 }
