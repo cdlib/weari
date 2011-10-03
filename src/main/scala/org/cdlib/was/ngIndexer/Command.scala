@@ -34,7 +34,7 @@ case class ParseCommand (val uri : String) extends Command {
   val Utility.ARC_RE(arcName) = new URI(uri).getPath;
 }
 
-object Command {
+object Command extends Logger {
   implicit val formats = DefaultFormats;
 
   def parse (j : JValue) : List[Command] = {
@@ -64,9 +64,13 @@ class CommandExecutor (config : Config) extends Retry {
     command match {
       case cmd : ParseCommand => {
         val arcname = cmd.arcName;
-        httpClient.getUri(new URI(cmd.uri)) { stream =>
-          val file = new File("%s.json.gz".format(arcname));
-          indexer.arc2json(stream, arcname, file);
+        val file = new File("%s.json.gz".format(arcname));
+        if (!file.exists) {
+          catchAndLogExceptions("Top-level parser caught exception: {}") {
+            httpClient.getUri(new URI(cmd.uri)) { stream =>
+              indexer.arc2json(stream, arcname, file);
+            }
+          }
         }
       }
       case cmd : IndexCommand => {
