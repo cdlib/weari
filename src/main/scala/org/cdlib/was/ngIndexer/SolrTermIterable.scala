@@ -6,13 +6,18 @@ import org.apache.solr.client.solrj.{SolrQuery,SolrServer};
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.SolrParams;
 
+/**
+ * Iterable which is used to fetch terms from solr index. Lazy loads
+ * the terms.
+ *
+ */
 class SolrTermIterable(server : SolrServer, field : String, queryString : String)
   extends Iterable[String] {
 
   def this(server : SolrServer, field : String) = this(server, field, "*:*");
 
   override def toString = 
-    iterator.peek.map(el=>"(%s, ...)".format(el)).getOrElse("(empty");
+    iterator.peek.map(el=>"(%s, ...)".format(el)).getOrElse("(empty)");
 
   override def iterator = new CachingIterator[String]() {
     var lowerLimit : String = "";
