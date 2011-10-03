@@ -68,6 +68,10 @@ class SolrIndexer extends Retry with Logger {
     }
   }
 
+  /**
+   * Convert an ARC file into a gzipped JSON file representing the parsed
+   * content ready for indexing.
+   */
   def arc2json (stream : InputStream,
                 arcName : String,
                 file : File) {
@@ -83,13 +87,18 @@ class SolrIndexer extends Retry with Logger {
     writer.close;
   }
 
+  /**
+   * Convert a gzipped JSON file (see #arc2json) into a sequence of ParsedArchiveRecord
+   */
   def json2records (file : File) : Seq[ParsedArchiveRecord] = {
     implicit val formats = DefaultFormats;
     val gzis = new GZIPInputStream(new FileInputStream(file));
     return JsonParser.parse(new InputStreamReader(gzis, "UTF-8"), true).extract[List[ParsedArchiveRecord]];
   }
 
-  /** Index an ARC file. */
+  /**
+   * Index an ARC file.
+   */
   def index (file : File, 
              extraId : String, 
              extraFields : Map[String, Any],
@@ -125,6 +134,7 @@ class SolrIndexer extends Retry with Logger {
         
   /**
    * Index an arc file.
+   *
    * @param extraId extra bit to be appended to the document id
    * @param extraFields Map of extra fields to be added to the document
    * @return true if indexing succeeded
