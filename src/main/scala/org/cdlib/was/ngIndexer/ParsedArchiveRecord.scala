@@ -28,7 +28,7 @@ case class ParsedArchiveRecord (
   val length : Long,
   val content : Option[String],
   val suppliedContentType : ContentType,
-  val detectedContentType : ContentType) extends WASArchiveRecord {
+  val detectedContentType : Option[ContentType]) extends WASArchiveRecord {
 
   def getFilename = filename;
   def getDigestStr = Some(digest);
@@ -60,19 +60,22 @@ case class ParsedArchiveRecord (
 
 object ParsedArchiveRecord {
   def apply(rec : WASArchiveRecord,
-            parseResult : MyParseResult) : ParsedArchiveRecord = {
+            parseResult : Option[MyParseResult]) : ParsedArchiveRecord = {
+    val suppliedContentType = rec.getContentType;
+    val detectedContentType = parseResult.map(_.contentType)
     new ParsedArchiveRecord(filename = rec.getFilename,
                             digest = rec.getDigestStr.getOrElse("-"),
                             url = rec.getUrl,
                             date = rec.getDate,
-                              title = parseResult.title.getOrElse(""),
+                            title = parseResult.flatMap(_.title).getOrElse(""),
                             length = rec.getLength,
-                            content = if (shouldIndexContentType(rec.getContentType)) {
-                              parseResult.content;
+                            content = if (shouldIndexContentType(suppliedContentType) ||
+                                          shouldIndexContentType(detectedContentType.getOrElse(ContentType.DEFAULT))) {
+                              parseResult.flatMap(_.content);
                             } else { 
                               None;
                             },
-                              suppliedContentType = rec.getContentType,
-                            detectedContentType = parseResult.contentType);
+                            suppliedContentType = suppliedContentType,
+                            detectedContentType = detectedContentType);
   }
 }

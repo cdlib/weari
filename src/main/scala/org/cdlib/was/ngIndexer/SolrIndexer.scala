@@ -52,7 +52,7 @@ class SolrIndexer extends Retry with Logger {
       /* need to check now because the ARC needs to be closed before we can get it */
       return None;
     } else {
-      return parsed.map(ParsedArchiveRecord(rec, _));
+      return Some(ParsedArchiveRecord(rec, parsed));
     }
   }
   

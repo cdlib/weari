@@ -127,14 +127,14 @@ object SolrDocumentModifier extends Logger {
    * @parameter supplied The content type as supplied by the server.
    */
   def updateContentType (doc      : SolrInputDocument,
-                         detected : ContentType,
+                         detected : Option[ContentType],
                          supplied : ContentType) {
     updateFields(doc,
-                 MEDIA_TYPE_GROUP_DET_FIELD -> detected.mediaTypeGroup,
+                 MEDIA_TYPE_GROUP_DET_FIELD -> detected.flatMap(_.mediaTypeGroup),
                  MEDIA_TYPE_SUP_FIELD       -> supplied.mediaType,
                  CHARSET_SUP_FIELD          -> supplied.charset,
-                 MEDIA_TYPE_DET_FIELD       -> detected.mediaType,
-                 CHARSET_DET_FIELD          -> detected.charset);
+                 MEDIA_TYPE_DET_FIELD       -> detected.map(_.mediaType),
+                 CHARSET_DET_FIELD          -> detected.flatMap(_.charset));
   }
 
   def shouldIndexContentType (contentType : ContentType) : Boolean = {
