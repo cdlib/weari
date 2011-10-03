@@ -17,6 +17,8 @@ import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.util.ClientUtils.toSolrInputDocument;
 import org.apache.solr.common.{SolrDocument, SolrInputDocument};
 
+import org.archive.io.{ArchiveReaderFactory,ArchiveRecord};
+
 import org.cdlib.ssconf.Configurator;
 
 import org.cdlib.was.ngIndexer.SolrFields._;
@@ -203,8 +205,9 @@ class SolrIndexer extends Retry with Logger {
    /**
     * For each record in a file, call the function.
     */
-  def processFile (file : File) (func : (ParsedArchiveRecord) => Unit) {
-    Utility.eachRecord(file) { rec =>
+  def processFile (file : File)
+                  (func : (ParsedArchiveRecord) => Unit) {
+    eachRecord(file) { rec =>
       catchAndLogExceptions("Caught exception processing %s: {}".format(file.getName)) {
         parseArchiveRecord(rec).map(func);
       }
@@ -212,13 +215,44 @@ class SolrIndexer extends Retry with Logger {
   }
 
   def processStream (arcName : String, stream : InputStream)
-  (func : (ParsedArchiveRecord) => Unit) {
-    Utility.eachRecord(stream, arcName) { rec =>
+                    (func : (ParsedArchiveRecord) => Unit) {
+    eachRecord(stream, arcName) { rec =>
       catchAndLogExceptions("Caught exception processing %s: {}".format(arcName)) {
         parseArchiveRecord(rec).map(func);
       }
     }
   }
+
+  def eachRecord (arcFile : java.io.File)
+                 (f: (ArchiveRecordWrapper)=>Unit) {
+    val reader = ArchiveReaderFactory.get(arcFile)
+    val it = reader.iterator;
+    while (it.hasNext) {
+      val next = it.next;
+      val rec = new ArchiveRecordWrapper(next, arcFile.getName);
+      if (rec.isHttpResponse) {
+        f (rec);
+      }
+      next.close;
+    }
+    reader.close;
+  }
+
+  def eachRecord (stream : java.io.InputStream, arcName : String)
+                 (f: (ArchiveRecordWrapper)=>Unit) {
+    val reader = ArchiveReaderFactory.get(arcName, stream, true);
+    val it = reader.iterator;
+    while (it.hasNext) {
+      val next = it.next;
+      val rec = new ArchiveRecordWrapper(next, arcName);
+      if (rec.isHttpResponse) {
+        f (rec);
+      }
+      next.close;
+    }
+    reader.close;
+  }
+
 }
 
 object SolrIndexer {

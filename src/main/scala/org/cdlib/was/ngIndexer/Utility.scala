@@ -4,8 +4,6 @@ package org.cdlib.was.ngIndexer;
 
 import java.io.{BufferedInputStream,File,InputStream,FileOutputStream,OutputStream};
 
-import org.archive.io.{ArchiveReaderFactory,ArchiveRecord};
-
 import scala.util.matching.Regex;
 
 object Utility {
@@ -67,34 +65,6 @@ object Utility {
   def flushStream (in : InputStream, out : OutputStream) : Unit = {
     readBytes(in, (bytesRead, buffer) =>
       out.write(buffer, 0, bytesRead));
-  }
-
-  def eachRecord (arcFile : java.io.File) (f: (ArchiveRecordWrapper)=>Unit) {
-    val reader = ArchiveReaderFactory.get(arcFile)
-    val it = reader.iterator;
-    while (it.hasNext) {
-      val next = it.next;
-      val rec = new ArchiveRecordWrapper(next, arcFile.getName);
-      if (rec.isHttpResponse) {
-        f (rec);
-      }
-      next.close;
-    }
-    reader.close;
-  }
-
-  def eachRecord (stream : java.io.InputStream, arcName : String) (f: (ArchiveRecordWrapper)=>Unit) {
-    val reader = ArchiveReaderFactory.get(arcName, stream, true);
-    val it = reader.iterator;
-    while (it.hasNext) {
-      val next = it.next;
-      val rec = new ArchiveRecordWrapper(next, arcName);
-      if (rec.isHttpResponse) {
-        f (rec);
-      }
-      next.close;
-    }
-    reader.close;
   }
 
   def timeout[T] (msec : Int) (f: => T) : Option[T] = {
