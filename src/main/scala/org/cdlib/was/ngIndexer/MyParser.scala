@@ -51,10 +51,8 @@ class MyParser extends Logger {
     tikaMetadata.set(HttpHeaders.CONTENT_LOCATION, url);
     contentType.map(str=>tikaMetadata.set(HttpHeaders.CONTENT_TYPE, str));
 
-    catchAndLogExceptions {
-      timeout(30000) {
-        parser.parse(input, contentHandler, tikaMetadata, parseContext);
-      }
+    timeout(30000) {
+      parser.parse(input, contentHandler, tikaMetadata, parseContext);
     }
     val tmp = ContentType.parse(tikaMetadata.get(HttpHeaders.CONTENT_TYPE)).getOrElse(ContentType.DEFAULT);
     val tikaMediaType =

@@ -44,13 +44,15 @@ class SolrIndexer extends Retry with Logger {
       rec.close;
       return None;
     }
-    val result = parser.parse(rec, Some(rec.getContentType.mediaType), rec.getUrl, rec.getDate)
+    val parsed = catchAndLogExceptions("Caught exception parsing %s in arc %s: {}".format(rec.getUrl, rec.getFilename)) {
+      parser.parse(rec, Some(rec.getContentType.mediaType), rec.getUrl, rec.getDate)
+    }
     rec.close;
     if (rec.getDigestStr.isEmpty) {
       /* need to check now because the ARC needs to be closed before we can get it */
       return None;
     } else {
-      return Some(ParsedArchiveRecord(rec, result));
+      return parsed.map(ParsedArchiveRecord(rec, _));
     }
   }
   
@@ -192,12 +194,20 @@ class SolrIndexer extends Retry with Logger {
     * For each record in a file, call the function.
     */
   def processFile (file : File) (func : (ParsedArchiveRecord) => Unit) {
-    Utility.eachRecord(file) (parseArchiveRecord(_).map(func));
+    Utility.eachRecord(file) { rec =>
+      catchAndLogExceptions("Caught exception processing %s: {}".format(file.getName)) {
+        parseArchiveRecord(rec).map(func);
+      }
+    }
   }
 
   def processStream (arcName : String, stream : InputStream)
   (func : (ParsedArchiveRecord) => Unit) {
-    Utility.eachRecord(stream, arcName) (parseArchiveRecord(_).map(func));
+    Utility.eachRecord(stream, arcName) { rec =>
+      catchAndLogExceptions("Caught exception processing %s: {}".format(arcName)) {
+        parseArchiveRecord(rec).map(func);
+      }
+    }
   }
 }
 

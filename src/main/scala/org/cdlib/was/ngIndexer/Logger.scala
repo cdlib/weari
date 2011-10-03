@@ -17,14 +17,18 @@ trait Logger { self =>
     return result.toString;
   }
 
-  def catchAndLogExceptions (f: => Unit) {
+  def catchAndLogExceptions[T] (f: => T) : Option[T] = 
+    catchAndLogExceptions("Caught exception {}.") (f);
+
+  def catchAndLogExceptions[T] (formatStr : String) (f: => T) : Option[T] = {
     try {
-      f;
+      Some(f);
     } catch {
       case ex : Exception => {
-        logger.error("Caught exception {}.", ex.toString);
+        logger.error(formatStr, ex.toString);
         logger.debug(getStackTrace(ex));
       }
+      None;
     }
   }
 }
