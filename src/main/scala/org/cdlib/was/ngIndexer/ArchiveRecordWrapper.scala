@@ -61,24 +61,14 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String)
    * Cue up a record to its start, fill in httpResponse & contentType.
    */
   private def cueUp {
-    rec match {
-      case warcRec : WARCRecord => {
-        if (warcRec.getHeader.getMimetype == "application/http; msgtype=response") {
-          httpResponse = true;
-          parseWarcHttpHeaders;
-        }
-      }
-      case arcRec : ARCRecord => {
-        val url = arcRec.getMetaData.getUrl;
-        if (url.startsWith("http:")) {
-          httpResponse = true;
-          parseWarcHttpHeaders;
-        }
-      }
-    }
-    contentTypeStr.map { str =>
-      contentType = ContentType.parse(str);
-    }
+    if (((rec.getClass == classOf[WARCRecord]) &&
+         (rec.getHeader.getMimetype == "application/http; msgtype=response")) ||
+        ((rec.getClass == classOf[ARCRecord]) &&
+         rec.asInstanceOf[ARCRecord].getMetaData.getUrl.startsWith("http:"))) {
+           httpResponse = true;
+           parseWarcHttpHeaders;
+         }
+    contentType = contentTypeStr.flatMap(ContentType.parse(_));
     ready = true;
   }
 
