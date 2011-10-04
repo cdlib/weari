@@ -14,69 +14,35 @@ class MultiContentHander (handlers : Seq[ContentHandler])
     for (h <- handlers) f(h);
   }
   
-  def characters (ch : Array[Char], start : Int, length : Int) {
-    eachHandler { h =>
-      h.characters(ch, start, length);
-    }
-  }
+  def characters (ch : Array[Char], start : Int, length : Int) =
+    eachHandler(_.characters(ch, start, length));
 
-  def endDocument {
-    eachHandler { h =>
-      h.endDocument;
-    }
-  }
+  def endDocument = eachHandler(_.endDocument);
+
+  def endElement (namespaceURI : String, localName : String, qName : String) =
+    eachHandler(_.endElement(namespaceURI, localName, qName));
   
-  def endElement (namespaceURI : String, localName : String, qName : String) {
-    eachHandler { h =>
-      h.endElement(namespaceURI, localName, qName);
-    }
-  }
+  def endPrefixMapping (prefix : String) =
+    eachHandler(_.endPrefixMapping(prefix));
+
+  def ignorableWhitespace(ch : Array[Char], start : Int, length : Int) =
+    eachHandler(_.ignorableWhitespace(ch, start, length));
   
-  def endPrefixMapping (prefix : String) {
-    eachHandler { h =>
-      h.endPrefixMapping(prefix);
-    }
-  }
+  def processingInstruction(target : String, data : String) =
+    eachHandler(_.processingInstruction(target, data));
 
-  def ignorableWhitespace(ch : Array[Char], start : Int, length : Int) {
-    eachHandler { h =>
-      h.ignorableWhitespace(ch, start, length);
-    }
-  }
-  
-  def processingInstruction(target : String, data : String) {
-    eachHandler { h =>
-      h.processingInstruction(target, data);
-    }
-  }
+  def setDocumentLocator(locator : Locator) =
+    eachHandler(_.setDocumentLocator(locator));
 
-  def setDocumentLocator(locator : Locator) {
-    eachHandler { h =>
-      h.setDocumentLocator(locator);
-    }
-  }
+  def skippedEntity(name : String) =
+    eachHandler(_.skippedEntity(name));
 
-  def skippedEntity(name : String) {
-    eachHandler { h =>
-      h.skippedEntity(name);
-    }
-  }
+  def startDocument =
+    eachHandler(_.startDocument);
 
-  def startDocument {
-    eachHandler { h =>
-      h.startDocument;
-    }
-  }
+  def startElement(namespaceURI : String, localName : String, qName : String, atts : Attributes) =
+    eachHandler(_.startElement(namespaceURI, localName, qName, atts))
 
-  def startElement(namespaceURI : String, localName : String, qName : String, atts : Attributes) {
-    eachHandler { h =>
-      h.startElement(namespaceURI, localName, qName, atts);
-    }
-  }
-    
-  def startPrefixMapping(prefix : String, uri : String) {
-    eachHandler { h =>
-      h.startPrefixMapping(prefix, uri);
-    }
-  }
+  def startPrefixMapping(prefix : String, uri : String) =
+    eachHandler(_.startPrefixMapping(prefix, uri))
 }
