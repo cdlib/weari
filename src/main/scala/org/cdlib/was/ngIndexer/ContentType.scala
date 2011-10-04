@@ -11,7 +11,7 @@ import org.apache.http.util.CharArrayBuffer;
 import scala.util.matching.Regex;
 
 /**
- * Trait to represent a content-type, including a media type and
+ * Represents a content-type, including a media type and
  * encoding, as supplied by, e.g., the Content-Type header.
  */
 case class ContentType (val top     : String,
