@@ -180,9 +180,9 @@ class SolrIndexer extends Retry with Logger {
     return true;
   }
 
-   /**
-    * For each record in a file, call the function.
-    */
+  /**
+   * For each record in a file, call the function.
+   */
   def processFile (file : File)
                   (func : (ParsedArchiveRecord) => Unit) {
     eachRecord(file) { rec =>
