@@ -4,9 +4,10 @@ package org.cdlib.was.ngIndexer;
 
 import org.xml.sax.{Attributes,ContentHandler,Locator};
 
-/** A proxy ContentHandler that passes everything off to multiple
-  * child ContentHandlers.
-  */
+/**
+ * A proxy ContentHandler that passes everything off to multiple
+ * child ContentHandlers.
+ */
 class MultiContentHander (handlers : Seq[ContentHandler]) 
   extends ContentHandler {
   
