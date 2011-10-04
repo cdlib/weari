@@ -35,14 +35,14 @@ class WarcSpec extends FeatureSpec {
       val arcData = new HashMap[String, String];
       val warcData = new HashMap[String, String];
 
-      Utility.eachRecord (cl.getResourceAsStream(warcName), warcName) { (rec)=>
+      indexer.eachRecord (cl.getResourceAsStream(warcName), warcName) { (rec)=>
         if (rec.isHttpResponse) {
           indexer.parseArchiveRecord(rec).map { res =>
             warcData += (rec.getUrl -> Serialization.write(res));
           }
         }
       }
-      Utility.eachRecord (cl.getResourceAsStream(arcName), arcName) { (rec)=>
+      indexer.eachRecord (cl.getResourceAsStream(arcName), arcName) { (rec)=>
         indexer.parseArchiveRecord(rec).map { res =>
           arcData += (rec.getUrl -> Serialization.write(res))
         }
@@ -57,7 +57,7 @@ class WarcSpec extends FeatureSpec {
     }
     
     scenario ("We can round trip JSON.") {
-      Utility.eachRecord (cl.getResourceAsStream(arcName), arcName) { (rec)=>
+      indexer.eachRecord (cl.getResourceAsStream(arcName), arcName) { (rec)=>
         indexer.parseArchiveRecord(rec).map { res =>
           assert (parse(Serialization.write(res)).extract[ParsedArchiveRecord] == res);
         }
