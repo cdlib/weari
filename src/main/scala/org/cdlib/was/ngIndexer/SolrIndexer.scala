@@ -28,6 +28,9 @@ import org.cdlib.was.ngIndexer.SolrDocumentModifier.{mergeDocs};
 
 import scala.collection.mutable.SynchronizedQueue;
 import scala.util.matching.Regex;
+
+import sun.misc.{Signal, SignalHandler};
+
 /**
  * Class used to index ARC files.
  */
@@ -256,6 +259,8 @@ class SolrIndexer extends Retry with Logger {
 }
 
 object SolrIndexer {
+  val indexer = new SolrIndexer;
+
   def loadConfigOrExit : Config = {
     val configPath = System.getProperty("org.cdlib.was.ngIndexer.ConfigFile") match {
       case null =>
@@ -271,9 +276,40 @@ object SolrIndexer {
     return (new Configurator).loadSimple(configPath.get, classOf[Config]);
   }
 
+  def parse(args : Array[String])(implicit config : Config) {
+    var finished = false;
+
+    val handler = new SignalHandler {
+      def handle (signal : Signal) { 
+        finished = true;
+      }
+    };
+
+    Signal.handle(new Signal("TERM"), handler);
+    Signal.handle(new Signal("INT"), handler);
+    
+    var q = new SynchronizedQueue[String];
+    val infile = new File(args(1));
+    q ++= io.Source.fromFile(infile).getLines;
+    var threads = List[Thread]();
+    for (n <- 1.to(config.threadCount())) {
+      val thread = new Thread() {
+        val executor = new CommandExecutor(config);
+        override def run {
+          while (!finished && !q.isEmpty) {
+            val uri = q.dequeue;
+            executor.exec(ParseCommand(uri=uri));
+          }
+        }
+      }
+      thread.start;
+      threads = thread :: threads;
+    }
+    threads.map(_.join);
+  }
+
   def main (args : Array[String]) {
-    val config = loadConfigOrExit;
-    val indexer = new SolrIndexer;
+    implicit val config = loadConfigOrExit;
 
     try {
       val command = args(0);
@@ -287,24 +323,7 @@ object SolrIndexer {
             }
           }
         case "parse" => {
-          var q = new SynchronizedQueue[String];
-          val infile = new File(args(1));
-          q ++= io.Source.fromFile(infile).getLines;
-          var threads = List[Thread]();
-          for (n <- 1.to(config.threadCount())) {
-            val thread = new Thread() {
-              val executor = new CommandExecutor(config);
-              override def run {
-                while (!q.isEmpty) {
-                  val uri = q.dequeue;
-                  executor.exec(ParseCommand(uri=uri));
-                }
-              }
-            }
-            thread.start;
-            threads = thread :: threads;
-          }
-          threads.map(_.join);
+          parse(args);
         }
         case "index" => {
           val job = args(1);
