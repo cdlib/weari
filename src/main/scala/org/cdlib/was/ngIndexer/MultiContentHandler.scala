@@ -10,19 +10,19 @@ import org.xml.sax.{Attributes,ContentHandler,Locator};
 class MultiContentHander (handlers : Seq[ContentHandler]) 
   extends ContentHandler {
   
-  def eachHandler (f : ContentHandler=>Unit) {
+  def eachHandler(f : ContentHandler=>Unit) {
     for (h <- handlers) f(h);
   }
   
-  def characters (ch : Array[Char], start : Int, length : Int) =
+  def characters(ch : Array[Char], start : Int, length : Int) =
     eachHandler(_.characters(ch, start, length));
 
   def endDocument = eachHandler(_.endDocument);
 
-  def endElement (namespaceURI : String, localName : String, qName : String) =
+  def endElement(namespaceURI : String, localName : String, qName : String) =
     eachHandler(_.endElement(namespaceURI, localName, qName));
   
-  def endPrefixMapping (prefix : String) =
+  def endPrefixMapping(prefix : String) =
     eachHandler(_.endPrefixMapping(prefix));
 
   def ignorableWhitespace(ch : Array[Char], start : Int, length : Int) =
