@@ -15,17 +15,15 @@ class ParserFilter (parser : ThreadedParser)
 
   get("/:arcname.json") {
     val arcname = params("arcname");
-    val jsonfile = new File(config.jsonCacheDir(), "%s.json".format(arcname));
-    if (jsonfile.exists) {
-      contentType = "application/json";
-      halt(headers = Map("Content-Encoding"->"gzip"),
-           body    = jsonfile);
-    } else {
-      if (!parser.q.contains(arcname) &&
-          !(new File(config.jsonCacheDir(), "%s.json.tmp".format(arcname)).exists)) {
-            parser.q += arcname;
+    parser.getJsonFile(arcname) match {
+      case None => {
+        parser.parse(arcname);
+        halt(202);
       }
-      halt(202);
+      case Some(jsonfile) =>
+        halt(body    = jsonfile,
+             headers = Map("Content-Encoding" -> "gzip",
+                           "Content-Type"     -> "application/json"));
     }
   }
 }
