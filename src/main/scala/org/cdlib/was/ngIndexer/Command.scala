@@ -30,7 +30,8 @@ case class IndexCommand (val uri : String,
   val solrUriReal = new URI(solrUri);
 }
 
-case class ParseCommand (val uri : String) extends Command {
+case class ParseCommand (val uri : String,
+                         val jsonfile : File) extends Command {
   val Utility.ARC_RE(arcName) = new URI(uri).getPath;
 }
 
@@ -64,11 +65,10 @@ class CommandExecutor (config : Config) extends Retry {
     command match {
       case cmd : ParseCommand => {
         val arcname = cmd.arcName;
-        val file = new File("%s.json.gz".format(arcname));
-        if (!file.exists) {
+        if (!cmd.jsonfile.exists) {
           catchAndLogExceptions("Top-level parser caught exception: {}") {
             httpClient.getUri(new URI(cmd.uri)) { stream =>
-              indexer.arc2json(stream, arcname, file);
+              indexer.arc2json(stream, arcname, cmd.jsonfile);
             }
           }
         }

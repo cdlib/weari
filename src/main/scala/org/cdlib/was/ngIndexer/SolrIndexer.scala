@@ -273,7 +273,9 @@ object SolrIndexer {
         override def run {
           while (!finished && !q.isEmpty) {
             val uri = q.dequeue;
-            executor.exec(ParseCommand(uri=uri));
+            val Utility.ARC_RE(arcname) = new URI(uri).getPath;
+            executor.exec(ParseCommand(uri=uri,
+                                       jsonfile=new File("%s.json.gz".format(arcname))));
           }
         }
       }
