@@ -13,7 +13,7 @@ import org.scalatest.junit.JUnitRunner;
 class CommandSpec extends FeatureSpec {
   feature ("We can parse JSON commands.") {
     scenario ("Parse command") {
-      val str = """ [ { "command" : "parse", "uri" : "http://example.org/ARC.arc.gz" } ] """;
+      val str = """ [ { "command" : "parse", "uri" : "http://example.org/ARC.arc.gz", "jsonpath" : "/tmp/json" } ] """;
       Command.parse(str) match {
         case (p : ParseCommand) :: Nil => assert (p.uri == "http://example.org/ARC.arc.gz");
         case x @ _ => {

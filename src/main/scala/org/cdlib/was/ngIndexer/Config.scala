@@ -2,6 +2,8 @@
 
 package org.cdlib.was.ngIndexer;
 
+import java.io.File;
+
 import org.cdlib.ssconf.SSConfig;
 import org.cdlib.ssconf.Value;
 
@@ -13,4 +15,6 @@ trait Config extends SSConfig {
   val queueRunners    = new Value(3);
   val commitThreshold = new Value(10000);
   val parseTimeout    = new Value(30000); /* 30 sec */
+  val jsonCacheDir    = new Value(new File(System.getProperty("java.io.tmpdir")));
+  val arcServerBase   = new Value("http://localhost:54480/arcs/%s");
 }

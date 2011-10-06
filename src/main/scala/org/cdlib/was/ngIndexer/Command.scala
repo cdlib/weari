@@ -31,8 +31,10 @@ case class IndexCommand (val uri : String,
 }
 
 case class ParseCommand (val uri : String,
-                         val jsonfile : File) extends Command {
+                         val jsonpath : String) extends Command {
   val Utility.ARC_RE(arcName) = new URI(uri).getPath;
+
+  def jsonfile = new File(jsonpath);
 }
 
 object Command extends Logger {

@@ -275,7 +275,7 @@ object SolrIndexer {
             val uri = q.dequeue;
             val Utility.ARC_RE(arcname) = new URI(uri).getPath;
             executor.exec(ParseCommand(uri=uri,
-                                       jsonfile=new File("%s.json.gz".format(arcname))));
+                                       jsonpath="%s.json.gz".format(arcname)));
           }
         }
       }
