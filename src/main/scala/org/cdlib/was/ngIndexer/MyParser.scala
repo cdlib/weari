@@ -65,6 +65,7 @@ class MyParser extends Logger {
                       toList.distinct.sortWith((a,b)=>(a < b));
       }
     }
+    rec.close;
     return ParsedArchiveRecord(rec,
                                indexContentHandler.contentString(maxSize),
                                tikaMediaType,

@@ -21,7 +21,7 @@ import org.cdlib.was.ngIndexer.SolrDocumentModifier.{shouldIndexContentType,upda
 case class ParsedArchiveRecord (
   /* being a case class makes this easy to serialize as JSON */
   val filename : String,
-  val digest : String,
+  val digest : Option[String],
   val url : String,
   val date : Date,
   val title : Option[String],
@@ -32,7 +32,7 @@ case class ParsedArchiveRecord (
   val outlinks : Seq[Long]) extends WASArchiveRecord {
 
   def getFilename = filename;
-  def getDigestStr = Some(digest);
+  def getDigestStr = digest;
   def getUrl = url;
   def getDate = date;
   def getLength = length;
@@ -67,7 +67,7 @@ object ParsedArchiveRecord {
             outlinks : Seq[Long]) = {
     val suppliedContentType = rec.getContentType;
     new ParsedArchiveRecord(filename = rec.getFilename,
-                            digest = rec.getDigestStr.getOrElse("-"),
+                            digest = rec.getDigestStr,
                             url = rec.getUrl,
                             date = rec.getDate,
                             title = title,

@@ -49,7 +49,7 @@ class WarcSpec extends FeatureSpec {
       }
       for ((k,v) <- arcData) {
         val j1 = parse(v);
-        val j2 = parse(warcData.get(k).getOrElse(""));
+        val j2 = parse(warcData.get(k).get);
         for (field <- List("digest", "url", "date", "title", "content")) {
           assert((j1 \ field) === (j2 \ field));
         }
