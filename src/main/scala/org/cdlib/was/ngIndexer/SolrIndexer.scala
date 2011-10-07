@@ -50,14 +50,14 @@ class SolrIndexer extends Retry with Logger {
       return None;
     }
     val parsed = catchAndLogExceptions("Caught exception parsing %s in arc %s: {}".format(rec.getUrl, rec.getFilename)) {
-      parser.parse(rec, Some(rec.getContentType.mediaType), rec.getUrl, rec.getDate)
+      parser.parse(rec);
     }
     rec.close;
     if (rec.getDigestStr.isEmpty) {
       /* need to check now because the ARC needs to be closed before we can get it */
       return None;
     } else {
-      return Some(ParsedArchiveRecord(rec, parsed));
+      return parsed;
     }
   }
   

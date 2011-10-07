@@ -88,14 +88,14 @@ class ArchiveListLoader extends LoadFunc {
         case None => return null;
         case Some(rec) => {
           var tuple = tupleFactory.newTupleNoCopy(new java.util.ArrayList[java.lang.Object]());
-          val result = parser.parse(rec, null2option(rec.getContentType.mediaType), rec.getUrl, rec.getDate)
+          val parsed = parser.parse(rec);
           val outlinks = bagFactory.newDistinctBag;
-          for (link <- result.outlinks) { outlinks.add(tupleFactory.newTuple(link)); }
-          tuple.append(rec.getUrl)
-          tuple.append(result.content);
-          tuple.append(result.contentType.mediaType);
-          tuple.append(result.title);
-          tuple.append(rec.getDigestStr.getOrElse("-"));
+          for (link <- parsed.outlinks) { outlinks.add(tupleFactory.newTuple(link)); }
+          tuple.append(parsed.getUrl)
+          tuple.append(parsed.content);
+//          tuple.append(parsed.detectedContentType.mediaType);
+          tuple.append(parsed.title);
+          tuple.append(parsed.getDigestStr.getOrElse("-"));
           tuple.append(outlinks);
           return tuple;
         }

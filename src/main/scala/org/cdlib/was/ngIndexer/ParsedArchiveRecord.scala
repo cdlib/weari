@@ -24,12 +24,12 @@ case class ParsedArchiveRecord (
   val digest : String,
   val url : String,
   val date : Date,
-  val title : String,
+  val title : Option[String],
   val length : Long,
   val content : Option[String],
   val suppliedContentType : ContentType,
   val detectedContentType : Option[ContentType],
-  val outlinks : Option[Seq[Long]]) extends WASArchiveRecord {
+  val outlinks : Seq[Long]) extends WASArchiveRecord {
 
   def getFilename = filename;
   def getDigestStr = Some(digest);
@@ -61,23 +61,25 @@ case class ParsedArchiveRecord (
 
 object ParsedArchiveRecord {
   def apply(rec : WASArchiveRecord,
-            parseResult : Option[MyParseResult]) : ParsedArchiveRecord = {
+            content  : Option[String],
+            detectedContentType : Option[ContentType],
+            title    : Option[String],
+            outlinks : Seq[Long]) = {
     val suppliedContentType = rec.getContentType;
-    val detectedContentType = parseResult.map(_.contentType)
     new ParsedArchiveRecord(filename = rec.getFilename,
                             digest = rec.getDigestStr.getOrElse("-"),
                             url = rec.getUrl,
                             date = rec.getDate,
-                            title = parseResult.flatMap(_.title).getOrElse(""),
+                            title = title,
                             length = rec.getLength,
                             content = if (shouldIndexContentType(suppliedContentType) ||
                                           shouldIndexContentType(detectedContentType.getOrElse(ContentType.DEFAULT))) {
-                              parseResult.flatMap(_.content);
+                              content;
                             } else { 
                               None;
                             },
                             suppliedContentType = suppliedContentType,
                             detectedContentType = detectedContentType,
-                            outlinks = parseResult.map(_.outlinks));
+                            outlinks = outlinks);
   }
 }
