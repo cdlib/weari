@@ -1,6 +1,6 @@
 /* Copyright (c) 2011 The Regents of the University of California */
 
-package org.cdlib.was.ngIndexer;
+package org.cdlib.was.ngIndexer.solr;
 
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.impl.{CommonsHttpSolrServer,StreamingUpdateSolrServer};
@@ -8,6 +8,8 @@ import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.{ModifiableSolrParams,SolrParams};
+
+import org.cdlib.was.ngIndexer._;
 
 /** A class for handling a distributed solr system.
   *

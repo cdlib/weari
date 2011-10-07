@@ -15,7 +15,7 @@ import org.archive.util.BloomFilter64bit;
  */
 class QuickIdFilter (q : String , server : SolrServer, n : Int) {
   def this (q : String, server : SolrServer) = this(q, server, 100000);
-  val docs = new SolrDocumentCollection(server, new SolrQuery(q).setParam("fl", "id").setRows(1000));
+  val docs = new solr.SolrDocumentCollection(server, new SolrQuery(q).setParam("fl", "id").setRows(1000));
   val bf = new BloomFilter64bit(n, 12);
   for (doc <- docs) {
     bf.add(doc.get("id").asInstanceOf[String]);

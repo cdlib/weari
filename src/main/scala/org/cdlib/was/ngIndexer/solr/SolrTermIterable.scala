@@ -1,6 +1,6 @@
 /* Copyright (c) 2011 The Regents of the University of California */
 
-package org.cdlib.was.ngIndexer;
+package org.cdlib.was.ngIndexer.solr;
 
 import org.apache.solr.client.solrj.{SolrQuery,SolrServer};
 import org.apache.solr.client.solrj.response.QueryResponse;

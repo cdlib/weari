@@ -23,7 +23,7 @@ class SolrWebGraph (url : String) extends WebGraph {
 
   val urlsSize = 3500000;
   lazy val urls : Seq[String] = {
-    val terms = new SolrTermIterable(server, SolrFields.CANONICALURL_FIELD);
+    val terms = new solr.SolrTermIterable(server, SolrFields.CANONICALURL_FIELD);
     var newUrls = new ArrayBuffer[String]() { ensureSize(urlsSize); };
     val it = terms.iterator;
     while (it.hasNext) { newUrls += it.next; }
@@ -67,7 +67,7 @@ class SolrWebGraph (url : String) extends WebGraph {
     def url = urls(position);
 
     val docIterable = 
-      new SolrAllDocumentIterable(server, SolrFields.CANONICALURL_FIELD, urls);
+      new solr.SolrAllDocumentIterable(server, SolrFields.CANONICALURL_FIELD, urls);
     var docIt = docIterable.iterator;
 
     def checkUrl(d : SolrDocument) = 

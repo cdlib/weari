@@ -34,7 +34,7 @@ object SolrDocumentModifier extends Logger {
                       (f : (SolrInputDocument) => Option[SolrInputDocument]) {
     val q = new SolrQuery;
     q.setQuery(query);
-    val coll = new SolrDocumentCollection(server, q);
+    val coll = new solr.SolrDocumentCollection(server, q);
     for (doc <- coll) {
       val idoc = toSolrInputDocument(doc);
       f(idoc) match {

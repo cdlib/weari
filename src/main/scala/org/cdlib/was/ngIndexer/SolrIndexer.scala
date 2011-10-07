@@ -65,7 +65,7 @@ class SolrIndexer extends Retry with Logger {
     val q = new SolrQuery;
     q.setQuery("id:\"%s\"".format(id));
     try {
-      return Some((new SolrDocumentCollection(server, q)).head);
+      return Some((new solr.SolrDocumentCollection(server, q)).head);
     } catch {
       case ex : NoSuchElementException => {
         return None;
