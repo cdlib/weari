@@ -15,6 +15,9 @@ import org.cdlib.was.ngIndexer.webgraph.WebGraphContentHandler;
 
 import org.xml.sax.ContentHandler;
 
+/**
+ * Used for parsing archive records.
+ */
 class MyParser extends Logger {
   /* return max size of content 1Mb */
   val maxSize = 100000;
@@ -27,6 +30,9 @@ class MyParser extends Logger {
      outlinks indexed */
   val webGraphTypeRE = Pattern.compile("^(.*html.*|application/pdf)$");
 
+  /**
+   * Parse a WASArchiveRecord.
+   */
   def parse (rec : WASArchiveRecord with InputStream) : ParsedArchiveRecord = {
     val url = rec.getUrl;
     val contentType = rec.getContentType;
