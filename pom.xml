@@ -165,12 +165,18 @@
       <groupId>org.apache.solr</groupId>
       <artifactId>solr-solrj</artifactId>
       <version>3.2.0</version>
+      <exclusions>
+        <exclusion>
+          <groupId>log4j</groupId>
+          <artifactId>log4j</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-jdk14</artifactId>
-      <version>1.5.5</version>
-    </dependency>
+       <groupId>org.slf4j</groupId>
+       <artifactId>slf4j-jdk14</artifactId>
+       <version>1.5.5</version>
+     </dependency>
     <dependency>
       <groupId>it.unimi.dsi</groupId>
       <artifactId>webgraph</artifactId>
@@ -190,11 +196,23 @@
       <groupId>org.apache.zookeeper</groupId>
       <artifactId>zookeeper</artifactId>
       <version>3.3.3</version>
+      <exclusions>
+        <exclusion>
+          <groupId>log4j</groupId>
+          <artifactId>log4j</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.cdlib.mrt</groupId>
       <artifactId>cdl-zk-queue</artifactId>
       <version>0.2-SNAPSHOT</version>
+      <exclusions>
+        <exclusion>
+          <groupId>log4j</groupId>
+          <artifactId>log4j</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.cdlib</groupId>
@@ -223,8 +241,9 @@
     <repository>
       <id>builds.archive.org</id>
       <name>builds.archive.org</name>
-      <url>http://builds.archive.org:8080/maven2/</url>
+      <url>http://builds.archive.org:8080/maven2</url>
     </repository>
+    
   </repositories>
 
 
