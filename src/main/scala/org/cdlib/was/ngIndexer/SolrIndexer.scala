@@ -2,7 +2,7 @@
 
 package org.cdlib.was.ngIndexer;
 
-import java.io.{BufferedWriter,File,FileInputStream,FileNotFoundException,FileOutputStream,InputStream,InputStreamReader,IOException,OutputStream,OutputStreamWriter};
+import java.io.{BufferedWriter,File,FileInputStream,FileNotFoundException,FileOutputStream,InputStream,InputStreamReader,IOException,OutputStream,OutputStreamWriter,StringWriter,Writer};
 
 import java.net.URI;
 
@@ -73,6 +73,18 @@ class SolrIndexer extends Retry with Logger {
     }
   }
 
+  def writeRec (rec : ParsedArchiveRecord, writer : Writer) {
+    implicit val formats = DefaultFormats;
+    Serialization.write(rec, writer);
+    writer.write(",\n", 0, 2);
+  }
+  
+  def rec2json (rec : ParsedArchiveRecord) : String = {
+    val w = new StringWriter;
+    writeRec(rec, w);
+    return w.toString;
+  }
+
   /**
    * Convert an ARC file into a gzipped JSON file representing the parsed
    * content ready for indexing.
@@ -81,13 +93,9 @@ class SolrIndexer extends Retry with Logger {
                 arcName : String,
                 file : File) {
     val gzos = new GZIPOutputStream(new FileOutputStream(file));
-    implicit val formats = DefaultFormats;
     val writer = new BufferedWriter(new OutputStreamWriter(gzos, "UTF-8"));
     writer.write("[", 0, 1);
-    processStream(arcName, stream) { (rec) =>
-      Serialization.write(rec, writer);
-      writer.write(",\n", 0, 2);
-    }
+    processStream(arcName, stream) (writeRec(_, writer));
     writer.write("]", 0, 1);
     writer.close;
   }
@@ -201,7 +209,7 @@ class SolrIndexer extends Retry with Logger {
     }
   }
 
-  def eachRecord (arcFile : java.io.File)
+  def eachRecord (arcFile : File)
                  (f: (ArchiveRecordWrapper)=>Unit) {
     val reader = ArchiveReaderFactory.get(arcFile)
     val it = reader.iterator;
@@ -216,7 +224,7 @@ class SolrIndexer extends Retry with Logger {
     reader.close;
   }
 
-  def eachRecord (stream : java.io.InputStream, arcName : String)
+  def eachRecord (stream : InputStream, arcName : String)
                  (f: (ArchiveRecordWrapper)=>Unit) {
     val reader = ArchiveReaderFactory.get(arcName, stream, true);
     val it = reader.iterator;
