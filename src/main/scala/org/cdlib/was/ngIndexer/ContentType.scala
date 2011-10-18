@@ -79,4 +79,7 @@ object ContentType {
       return Some(ContentType (mediaType.get._1, mediaType.get._2, charset))
     }
   }
+  
+  def forceParse (line : String) = 
+    parse(line).getOrElse(ContentType.DEFAULT);
 }
