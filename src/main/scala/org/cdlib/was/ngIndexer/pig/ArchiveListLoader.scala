@@ -35,6 +35,7 @@ class ArchiveListLoader extends LoadFunc {
   var reader : ArchiveReader = null;
   var it : java.util.Iterator[ArchiveRecord] = null;
   var arcName : String = _;
+  val indexer = new SolrIndexer;
 
   def setupNextArchiveReader : Boolean = {
     if (!in.nextKeyValue()) {
@@ -65,38 +66,44 @@ class ArchiveListLoader extends LoadFunc {
     }
   }      
   
-  def getNextArchiveRecord : Option[ArchiveRecordWrapper] = {
+  def getNextArchiveRecord : Option[ParsedArchiveRecord] = {
     if (it == null || !it.hasNext) {
       /* try to get a new ArchiveReader, otherwise return null */
       if (!setupNextArchiveReader) {
         return None;
       }
     }
-    val next = it.next;
-    val rec = new ArchiveRecordWrapper(next, arcName);
-    if (!rec.isHttpResponse) {
+    val rec = new ArchiveRecordWrapper(it.next, arcName);
+    if (!rec.isHttpResponse || rec.getStatusCode != 200) {
+      rec.close;
       /* try again */
       return getNextArchiveRecord;
     } else {
-      return Some(rec);
+      val retval = indexer.parseArchiveRecord(rec);
+      if (retval.isEmpty) {
+        println("GOT EMPTY PARSE!: %s".format(rec.getUrl));
+      }
+      return retval;
     }
   }
 
   override def getNext : Tuple = {
     try {
       getNextArchiveRecord match {
-        case None => return null;
+        case None => {
+          return null;
+        }
         case Some(rec) => {
           var tuple = tupleFactory.newTupleNoCopy(new java.util.ArrayList[java.lang.Object]());
-          val parsed = parser.parse(rec);
           val outlinks = bagFactory.newDistinctBag;
-          for (link <- parsed.outlinks) { outlinks.add(tupleFactory.newTuple(link)); }
-          tuple.append(parsed.getUrl)
-          tuple.append(parsed.content);
-//          tuple.append(parsed.detectedContentType.mediaType);
-          tuple.append(parsed.title);
-          tuple.append(parsed.getDigestStr.getOrElse("-"));
-          tuple.append(outlinks);
+          for (link <- rec.outlinks) { outlinks.add(tupleFactory.newTuple(link)); }
+          tuple.append(rec.getUrl)
+          tuple.append(rec.content.getOrElse("-"));
+          tuple.append(rec.detectedContentType.getOrElse(ContentType.DEFAULT).mediaType);
+          tuple.append(rec.suppliedContentType.mediaType);
+          tuple.append(rec.title);
+          /*tuple.append(rec.getDigestStr.getOrElse("-"));
+          tuple.append(outlinks); */
           return tuple;
         }
       }
