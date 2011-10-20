@@ -6,25 +6,23 @@ import java.util.ArrayList;
 
 import java.net.URI;
 
-import org.apache.hadoop._;
-import org.apache.hadoop.fs._;
-import org.apache.hadoop.io._;
-import org.apache.hadoop.mapreduce._;
-import org.apache.hadoop.mapreduce.lib.input._;
+import org.apache.hadoop.io.{Text};
+import org.apache.hadoop.mapreduce.{Job,RecordReader};
+import org.apache.hadoop.mapreduce.lib.input.{FileInputFormat,TextInputFormat};
 
 import org.apache.http.HttpResponse;
 import org.apache.http.util.EntityUtils;
 
-import org.apache.pig._;
+import org.apache.pig.{LoadFunc,PigException};
 import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.PigSplit;
-import org.apache.pig.data._;
+import org.apache.pig.data.{BagFactory,Tuple,TupleFactory};
 
 import org.archive.io.{ArchiveReader,ArchiveReaderFactory,ArchiveRecord};
 import org.cdlib.was.ngIndexer._;
-import org.cdlib.was.ngIndexer.Utility.null2option;
+import org.cdlib.was.ngIndexer.Utility.{date2string,null2option};
 
-class ArchiveListLoader extends LoadFunc {
+class ArchiveURLParserLoader extends LoadFunc {
   val tupleFactory = TupleFactory.getInstance();
   val bagFactory = BagFactory.getInstance();
   val client = new SimpleHttpClient;
@@ -81,7 +79,7 @@ class ArchiveListLoader extends LoadFunc {
     } else {
       val retval = indexer.parseArchiveRecord(rec);
       if (retval.isEmpty) {
-        println("GOT EMPTY PARSE!: %s".format(rec.getUrl));
+        throw new Exception("GOT EMPTY PARSE!: %s".format(rec.getUrl));
       }
       return retval;
     }
@@ -90,21 +88,27 @@ class ArchiveListLoader extends LoadFunc {
   override def getNext : Tuple = {
     try {
       getNextArchiveRecord match {
-        case None => {
-          return null;
-        }
+        case None => null;
         case Some(rec) => {
           var tuple = tupleFactory.newTupleNoCopy(new java.util.ArrayList[java.lang.Object]());
           val outlinks = bagFactory.newDistinctBag;
-          for (link <- rec.outlinks) { outlinks.add(tupleFactory.newTuple(link)); }
-          tuple.append(rec.getUrl)
-          tuple.append(rec.content.getOrElse("-"));
-          tuple.append(rec.detectedContentType.getOrElse(ContentType.DEFAULT).mediaType);
-          tuple.append(rec.suppliedContentType.mediaType);
-          tuple.append(rec.title);
-          /*tuple.append(rec.getDigestStr.getOrElse("-"));
-          tuple.append(outlinks); */
-          return tuple;
+          for (link <- rec.outlinks) { 
+            outlinks.add(tupleFactory.newTuple(link));
+          }
+          for (value <- Seq(rec.getFilename,                // 0
+                            rec.getUrl,                     // 1
+                            rec.getDigestStr.getOrElse(""), // 2
+                            date2string(rec.getDate),       // 3
+                            rec.getLength,                  // 4
+                            rec.content.getOrElse(""),      // 5
+                            rec.detectedContentType.        // 
+                              getOrElse(ContentType.DEFAULT).mediaType,
+                            rec.suppliedContentType.mediaType,  // 7
+                            rec.title.getOrElse(""),        // 8
+                            outlinks)) {                    // 9
+            tuple.append(value);
+          }
+          tuple;
         }
       }
     } catch {
