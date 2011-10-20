@@ -21,6 +21,8 @@ import org.archive.io.warc.{WARCConstants,WARCRecord};
 import org.archive.util.ArchiveUtils;
 import org.apache.http.message.BasicLineParser;
 
+import org.cdlib.was.ngIndexer.Utility.string2date;
+
 import scala.util.matching.Regex;
 
 /**
@@ -102,20 +104,7 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String)
 
   lazy val getLength = rec.getHeader.getLength;
 
-  val dateFormatter = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-  dateFormatter.setTimeZone(java.util.TimeZone.getTimeZone("UTC"))
-
-  lazy val getDate : java.util.Date = {
-    val dateString = rec.getHeader.getDate;
-    if (dateString.length == 14) {
-      ArchiveUtils.parse14DigitDate(dateString);
-    } else if (dateString.length == 20) {
-      dateFormatter.parse(dateString);
-    } else {
-      System.err.println("Unparseable date: %s".format(dateString));
-      null;
-    }
-  }
+  lazy val getDate : java.util.Date = rec.getHeader.getDate;
 
   val SHA1_RE = new Regex("""^sha1:([a-zA-Z0-9]+)$""");
 
