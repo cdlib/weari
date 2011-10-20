@@ -76,7 +76,6 @@ class SolrIndexer extends Retry with Logger {
   def writeRec (rec : ParsedArchiveRecord, writer : Writer) {
     implicit val formats = DefaultFormats;
     Serialization.write(rec, writer);
-    writer.write(",\n", 0, 2);
   }
   
   def rec2json (rec : ParsedArchiveRecord) : String = {
@@ -94,9 +93,12 @@ class SolrIndexer extends Retry with Logger {
                 file : File) {
     val gzos = new GZIPOutputStream(new FileOutputStream(file));
     val writer = new BufferedWriter(new OutputStreamWriter(gzos, "UTF-8"));
-    writer.write("[", 0, 1);
-    processStream(arcName, stream) (writeRec(_, writer));
-    writer.write("]", 0, 1);
+    writer.write("[");
+    processStream(arcName, stream) { rec =>
+      writeRec(rec, writer);
+      writer.write(",\n");
+    }
+    writer.write("]");
     writer.close;
   }
 
