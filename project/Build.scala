@@ -25,7 +25,7 @@ object MyBuild extends Build {
                 
   lazy val root = Project("root",
                           file("."),
-                          settings = buildSettings ++ Seq(distTask) ++ SbtOneJar.oneJarSettings ++ // ++ sbtassembly.Plugin.assemblySettings ++
+                          settings = buildSettings ++ Seq(distTask) ++ SbtOneJar.oneJarSettings ++
                             Seq(name := "was-ng-indexer",
                                 distFiles := Seq(),
                                 distPath <<= (target) { (target) => target / "dist" / "artifacts.zip" },
