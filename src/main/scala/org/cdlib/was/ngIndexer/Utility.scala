@@ -3,6 +3,9 @@
 package org.cdlib.was.ngIndexer;
 
 import java.io.{BufferedInputStream,File,InputStream,FileOutputStream,OutputStream};
+import java.util.Date;
+
+import org.archive.util.ArchiveUtils;
 
 import scala.util.matching.Regex;
 
@@ -66,6 +69,19 @@ object Utility {
     readBytes(in, (bytesRead, buffer) =>
       out.write(buffer, 0, bytesRead));
   }
+
+  val dateFormatter = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+  dateFormatter.setTimeZone(java.util.TimeZone.getTimeZone("UTC"))
+  
+  implicit def date2string (d : Date) : String =
+    dateFormatter.format(d);
+    
+  implicit def string2date (s : String) : Date = s match {
+    case ds : String if ds.length == 14 =>
+      ArchiveUtils.parse14DigitDate(s);
+    case ds : String if ds.length == 20 =>
+      dateFormatter.parse(s);
+    }
 
   def timeout[T] (msec : Int) (f: => T) : Option[T] = {
     class TimeoutThread extends Thread {
