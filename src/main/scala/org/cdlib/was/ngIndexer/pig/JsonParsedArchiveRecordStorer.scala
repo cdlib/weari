@@ -25,8 +25,43 @@ import scala.collection.JavaConversions.asScalaIterator;
  * Class to store a parsed archive record as JSON.
  */
 class JsonParsedArchiveRecordStorer extends StoreFunc {
-  class LineRecordWriter (os : OutputStream) 
-        extends RecordWriter[Text, ParsedArchiveRecord] {
+
+  class MultiLineRecordWriter (job : TaskAttemptContext,
+                               basePath : Path)
+  extends RecordWriter[Text, ParsedArchiveRecord] {
+    var writerMap = Map[String, LineRecordWriter]();
+    def write (key : Text, value : ParsedArchiveRecord) {
+      val arcName = value.getFilename;
+      if (!writerMap.contains(arcName)) {
+        val path = new Path(basePath,
+                            "%s.json".format(arcName));
+        writerMap += (arcName -> new LineRecordWriter(job, path));
+      }
+      writerMap(arcName).write(key,value);
+    }
+    
+    def close (job : TaskAttemptContext) = writerMap.values.map(_.close(job));
+  }
+
+  class LineRecordWriter (job : TaskAttemptContext, 
+                          var path : Path)
+  extends RecordWriter[Text,ParsedArchiveRecord] {
+    
+    val conf = job.getConfiguration;
+    val codec : Option[compress.CompressionCodec] = 
+      if (FileOutputFormat.getCompressOutput(job)) {
+        val codecClass = 
+          FileOutputFormat.getOutputCompressorClass(job, classOf[compress.GzipCodec]);
+          Some(ReflectionUtils.newInstance(codecClass, conf).asInstanceOf[compress.CompressionCodec]);
+        } else {
+          None;
+        }
+    
+    path = new Path("%s%s".format(path.toString, codec.map(_.getDefaultExtension).getOrElse("")))
+    val fileOutRaw = path.getFileSystem(conf).create(path, false);
+    val fileOut = codec.map(_.createOutputStream(fileOutRaw)).getOrElse(fileOutRaw);
+    fileOut.write("[\n".getBytes("UTF-8"));
+    val os = new FinishJsonArrayOutputStream(fileOut);
 
     val indexer = new SolrIndexer;
     
@@ -53,7 +88,7 @@ class JsonParsedArchiveRecordStorer extends StoreFunc {
   }
   
   class FinishJsonArrayOutputStream (os : OutputStream) 
-        extends FilterOutputStream (os) {
+  extends FilterOutputStream (os) {
     override def close = {
       write("]\n".getBytes("UTF-8"));
       super.close;
@@ -61,23 +96,10 @@ class JsonParsedArchiveRecordStorer extends StoreFunc {
   }
       
   class MyOutputFormat
-        extends FileOutputFormat[Text, ParsedArchiveRecord] {
+  extends FileOutputFormat[Text, ParsedArchiveRecord] {
 
-    def getRecordWriter(job : TaskAttemptContext) : LineRecordWriter = {
-      val conf = job.getConfiguration;
-      var codec : Option[compress.CompressionCodec] = 
-        if (FileOutputFormat.getCompressOutput(job)) {
-          val codecClass = 
-            FileOutputFormat.getOutputCompressorClass(job, classOf[compress.GzipCodec]);
-          Some(ReflectionUtils.newInstance(codecClass, conf).asInstanceOf[compress.CompressionCodec]);
-        } else {
-          None;
-        }
-      val file = getDefaultWorkFile(job, codec.map(_.getDefaultExtension).getOrElse(""))
-      val fileOutRaw = file.getFileSystem(conf).create(file, false);
-      val fileOut = codec.map(_.createOutputStream(fileOutRaw)).getOrElse(fileOutRaw);
-      fileOut.write("[\n".getBytes("UTF-8"));
-      return new LineRecordWriter(new FinishJsonArrayOutputStream(fileOut));
+    def getRecordWriter(job : TaskAttemptContext) = {
+      new MultiLineRecordWriter(job, getDefaultWorkFile(job, ""));
     }
   }
 
