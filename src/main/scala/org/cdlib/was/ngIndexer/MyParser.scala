@@ -38,7 +38,7 @@ class MyParser extends Logger {
     val contentType = rec.getContentType;
     val date = rec.getDate;
     val tikaMetadata = new Metadata;
-    val indexContentHandler = new NgIndexerContentHandler(true);
+    val indexContentHandler = new NgIndexerContentHandler(false);
     val wgContentHandler = new WebGraphContentHandler(url, date);
     val contentHandler = new 
       MultiContentHander(List[ContentHandler](wgContentHandler, indexContentHandler));
