@@ -8,6 +8,8 @@ import org.apache.http.message.{BasicHeaderValueParser,ParserCursor};
 
 import org.apache.http.util.CharArrayBuffer;
 
+import org.cdlib.was.ngIndexer.Utility.null2option;
+
 import scala.util.matching.Regex;
 
 /**
@@ -64,19 +66,19 @@ object ContentType {
     val buff = new CharArrayBuffer(80);
     buff.append(line);
     val parsed = headerValueParser.parseElements(buff, new ParserCursor(0, buff.length));
-    val mediaType = parsed(0).getName match {
-      case null => None;
-      case MIME_RE(topType, subType) => Some(Pair(topType, subType));
-      case _ => None;
-    }
-    val charset = parsed(0).getParameterByName("charset") match {
-      case null => None;
-        case p : NameValuePair => Some(p.getValue);
-    }
-    if (mediaType.isEmpty) {
+    if (parsed.isEmpty) {
       return None;
     } else {
-      return Some(ContentType (mediaType.get._1, mediaType.get._2, charset))
+      val mediaType = null2option(parsed(0).getName) match {
+        case Some(MIME_RE(topType, subType)) => Some(Pair(topType, subType));
+        case _ => None;
+      }
+      val charset = null2option(parsed(0).getParameterByName("charset")).map(_.getValue);
+      if (mediaType.isEmpty) {
+        return None;
+      } else {
+        return Some(ContentType (mediaType.get._1, mediaType.get._2, charset))
+      }
     }
   }
   
