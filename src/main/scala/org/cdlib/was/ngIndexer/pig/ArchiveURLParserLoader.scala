@@ -73,7 +73,11 @@ class ArchiveURLParserLoader extends LoadFunc {
     }
     val rec = new ArchiveRecordWrapper(it.next, arcName);
     if (!rec.isHttpResponse || rec.getStatusCode != 200) {
-      rec.close;
+      try {
+        rec.close;
+      } catch {
+        case ex : Exception => ()
+      }
       /* try again */
       return getNextArchiveRecord;
     } else {
