@@ -2,7 +2,7 @@
 
 package org.cdlib.was.ngIndexer;
 
-import java.io.{BufferedInputStream,File,InputStream,FileOutputStream,OutputStream};
+import java.io.{BufferedInputStream,File,InputStream,FileInputStream,FileOutputStream,OutputStream};
 import java.util.Date;
 
 import org.archive.util.ArchiveUtils;
@@ -56,6 +56,15 @@ object Utility {
       f (out);
     } finally {
       out.close();
+    }
+  }
+
+  def withFileInputStream[A] (file : File) (f : InputStream => A) : A = {
+    val in = new FileInputStream(file)
+    try {
+      f(in);
+    } finally {
+      in.close();
     }
   }
 
