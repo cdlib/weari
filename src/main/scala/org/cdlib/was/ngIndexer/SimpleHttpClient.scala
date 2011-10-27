@@ -12,7 +12,9 @@ import org.apache.http.params.{BasicHttpParams,HttpConnectionParams,HttpProtocol
 import org.apache.http.{HttpException,HttpResponse,HttpVersion};
 import org.apache.http.util.EntityUtils;
 
-import java.io.{InputStream,IOException};
+import org.cdlib.was.ngIndexer.Utility.{withFileInputStream,writeStreamToTempFile};
+
+import java.io.{File,InputStream,IOException};
 
 import java.net.URI;
 
@@ -90,14 +92,17 @@ class SimpleHttpClient {
    * GET a URI, following redirects. Call the given function on the body
    * if we get a 200 response.
    */
-  def getUri[T] (uri : URI) (f : (InputStream)=>T) : Option[T] = {
-    return mkRequest(new HttpGet(uri)) {
-      case (200, resp) => Some(f(resp.getEntity.getContent));
-      case ((301 | 302 | 303), resp) => getRedir(resp).flatMap(newUri=>getUri(newUri)(f));
-      case (_,   _)    => None;
-    }
-  }
-  
+  def getUri[T] (uri : URI) (f : (InputStream)=>T) : Option[T] = 
+    getUriResponse(uri).map(resp => f(resp.getEntity.getContent));
+
+  /**
+   * Get a Uri, and return a tempfile with it's contents if the Uri was fetched successfully.
+   */
+  def getUriToTempfile (uri : URI) : Option[File] = 
+    getUri(uri) { is =>
+      writeStreamToTempFile ("tmphttp", is);
+    }              
+      
   /**
    * Get a URI, returning the response. Follows redirects. Return
    * None if we get a non-200 response.
