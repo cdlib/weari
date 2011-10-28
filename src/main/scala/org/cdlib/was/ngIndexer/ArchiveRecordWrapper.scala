@@ -75,13 +75,13 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String)
   }
 
   /**
-   * Return the response code. Returns None if this is not an HTTP response
+   * Return the response code. Returns -1 if this is not an HTTP response
    * record, or there was a failure in parsing.
    */
   def getStatusCode : Int = {
     if (!ready) cueUp;
     if (statusCode.isEmpty) {
-      throw new Exception();
+      return -1;
     } else {
       return statusCode.get;
     }
