@@ -47,7 +47,7 @@ class MyParser extends Logger {
       tikaMetadata.set(HttpHeaders.CONTENT_LOCATION, url);
       tikaMetadata.set(HttpHeaders.CONTENT_TYPE, contentType.mediaType);
       
-        parser.parse(rec, contentHandler, tikaMetadata, parseContext);
+      parser.parse(rec, contentHandler, tikaMetadata, parseContext);
       /* tika returns the charset wrong */
       val tikaMediaType = 
         ContentType.parse(tikaMetadata.get(HttpHeaders.CONTENT_TYPE)).map { t=>
