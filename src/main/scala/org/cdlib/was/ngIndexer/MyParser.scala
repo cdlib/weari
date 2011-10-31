@@ -32,44 +32,46 @@ class MyParser extends Logger {
 
   /**
    * Parse a WASArchiveRecord.
+   * Throws exceptions from tika.
    */
   def parse (rec : WASArchiveRecord with InputStream) : ParsedArchiveRecord = {
-    val url = rec.getUrl;
-    val contentType = rec.getContentType;
-    val date = rec.getDate;
-    val tikaMetadata = new Metadata;
-    val indexContentHandler = new NgIndexerContentHandler(false);
-    val wgContentHandler = new WebGraphContentHandler(url, date);
-    val contentHandler = new 
+    try {
+      val url = rec.getUrl;
+      val contentType = rec.getContentType;
+      val date = rec.getDate;
+      val tikaMetadata = new Metadata;
+      val indexContentHandler = new NgIndexerContentHandler(false);
+      val wgContentHandler = new WebGraphContentHandler(url, date);
+      val contentHandler = new 
       MultiContentHander(List[ContentHandler](wgContentHandler, indexContentHandler));
-    tikaMetadata.set(HttpHeaders.CONTENT_LOCATION, url);
-    tikaMetadata.set(HttpHeaders.CONTENT_TYPE, contentType.mediaType);
-
-    timeout(30000) {
-      parser.parse(rec, contentHandler, tikaMetadata, parseContext);
-    }
-    /* tika returns the charset wrong */
-    val tikaMediaType = 
-      ContentType.parse(tikaMetadata.get(HttpHeaders.CONTENT_TYPE)).map { t=>
-        ContentType(t.top, t.sub,
-                    null2option(tikaMetadata.get(HttpHeaders.CONTENT_ENCODING)))
-    }
-
-    /* finish webgraph */
-    var outlinks : Seq[Long] = List[Long]();
-    if (tikaMediaType.isDefined && webGraphTypeRE.matcher(tikaMediaType.get.mediaType).matches) {
-      val outlinksRaw = wgContentHandler.outlinks;
-      if (outlinksRaw.size > 0) {
-        outlinks = (for (l <- outlinksRaw) 
-                    yield UriUtils.fingerprint(l.to)).
-                      toList.distinct.sortWith((a,b)=>(a < b));
+      tikaMetadata.set(HttpHeaders.CONTENT_LOCATION, url);
+      tikaMetadata.set(HttpHeaders.CONTENT_TYPE, contentType.mediaType);
+      
+        parser.parse(rec, contentHandler, tikaMetadata, parseContext);
+      /* tika returns the charset wrong */
+      val tikaMediaType = 
+        ContentType.parse(tikaMetadata.get(HttpHeaders.CONTENT_TYPE)).map { t=>
+          ContentType(t.top, t.sub,
+                      null2option(tikaMetadata.get(HttpHeaders.CONTENT_ENCODING)))
       }
+
+      /* finish webgraph */
+      var outlinks : Seq[Long] = List[Long]();
+      if (tikaMediaType.isDefined && webGraphTypeRE.matcher(tikaMediaType.get.mediaType).matches) {
+        val outlinksRaw = wgContentHandler.outlinks;
+        if (outlinksRaw.size > 0) {
+            outlinks = (for (l <- outlinksRaw) 
+                        yield UriUtils.fingerprint(l.to)).
+          toList.distinct.sortWith((a,b)=>(a < b));
+        }
+      }
+      return ParsedArchiveRecord(rec,
+                                 indexContentHandler.contentString(maxSize),
+                                   tikaMediaType,
+                                 null2option(tikaMetadata.get("title")),
+                                 outlinks);
+    } finally {
+      rec.close;
     }
-    rec.close;
-    return ParsedArchiveRecord(rec,
-                               indexContentHandler.contentString(maxSize),
-                               tikaMediaType,
-                               null2option(tikaMetadata.get("title")),
-                               outlinks);
   }
 }
