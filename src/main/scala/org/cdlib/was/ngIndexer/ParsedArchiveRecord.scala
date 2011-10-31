@@ -60,6 +60,9 @@ case class ParsedArchiveRecord (
 }
 
 object ParsedArchiveRecord {
+  def apply(rec : WASArchiveRecord) : ParsedArchiveRecord =
+    apply(rec, None, None, None, Seq[Long]());
+
   def apply(rec : WASArchiveRecord,
             content  : Option[String],
             detectedContentType : Option[ContentType],
