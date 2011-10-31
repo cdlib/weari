@@ -40,8 +40,9 @@ class SolrIndexer extends Retry with Logger {
   val parser = new MyParser;
 
   /**
-   * Take an archive record & return a solr document, or none if we
-   * cannot parse.
+   * Take an archive record & return a solr document, or None if it is
+   * not a 200 response. If the parse failed, log errors and return a
+   * record without content.
    */
   def parseArchiveRecord(rec : WASArchiveRecord with InputStream) : 
       Option[ParsedArchiveRecord] = {
@@ -51,15 +52,7 @@ class SolrIndexer extends Retry with Logger {
     }
 
     val parsed = catchAndLogExceptions("Caught exception parsing %s in arc %s: {}".format(rec.getUrl, rec.getFilename)) {
-      try {
-        parser.parse(rec);
-      } finally {
-        try {
-          rec.close;
-        } catch {
-          case ex : Exception => ()
-        }
-      }
+      parser.parse(rec);
     }
     if (rec.getDigestStr.isEmpty) {
       /* need to check now because the ARC needs to be closed before we can get it */
@@ -68,11 +61,7 @@ class SolrIndexer extends Retry with Logger {
       if (parsed.isDefined) {
         return parsed;
       } else {
-        return Some(ParsedArchiveRecord(rec,
-                                        None,
-                                        None,
-                                        None,
-                                        Seq[Long]()));
+        return Some(ParsedArchiveRecord(rec));
       }
     }
   }
