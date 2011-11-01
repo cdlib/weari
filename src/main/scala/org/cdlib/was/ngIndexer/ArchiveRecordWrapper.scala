@@ -136,8 +136,8 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String)
   }
   
   override def close = {
+    if (!this.closed) rec.close;
     this.closed = true;
-    rec.close;
   }
 
   override def mark (readlimit : Int) = {
