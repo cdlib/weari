@@ -71,9 +71,7 @@ class MyParser extends Logger {
                                  null2option(tikaMetadata.get("title")),
                                  outlinks);
     } finally {
-      catchAndLogExceptions {
-        rec.close;
-      }
+      rec.close;
     }
   }
 }
