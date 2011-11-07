@@ -34,7 +34,7 @@ object Utility {
    * @param f a function taking two arguments, an Int and Array[byte]. Used for side effects.
    * @return Unit
    */
-  def readBytes (stream : InputStream, f : (Int, Array[Byte]) => Unit) : Unit = {
+  def readBytes (stream : InputStream) (f : (Int, Array[Byte]) => Unit) : Unit = {
     var buffer = new Array[Byte](1024);
     var bytesRead = stream.read(buffer);
     while (bytesRead != -1)  {
@@ -50,7 +50,7 @@ object Utility {
    * @param file The File to open.
    * @param f a function taking two arguments, an Int and Array[byte]. Used for side effects.
    */
-  def withFileOutputStream[A] (file : File, f : OutputStream => A) : A = {
+  def withFileOutputStream[A] (file : File) (f : OutputStream => A) : A = {
     val out = new FileOutputStream(file);
     try {
       f (out);
@@ -69,15 +69,21 @@ object Utility {
   }
 
   def readStreamIntoFile (file : File, in : InputStream) = {
-    withFileOutputStream (file, (out) =>
-      readBytes(in, (bytesRead, buffer) =>
-        out.write(buffer, 0, bytesRead)));
+    withFileOutputStream (file) { out =>
+      readBytes(in) { (bytesRead, buffer) =>
+        out.write(buffer, 0, bytesRead);
+      }
+    }
   }
 
   def flushStream (in : InputStream, out : OutputStream) : Unit = {
-    readBytes(in, (bytesRead, buffer) =>
-      out.write(buffer, 0, bytesRead));
+    readBytes(in) { (bytesRead, buffer) =>
+      out.write(buffer, 0, bytesRead);
+    }
   }
+
+  def dumpStream (in : InputStream) : Unit =
+    readBytes(in) { (bytesRead, buffer) => () };
 
   val dateFormatter = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
   dateFormatter.setTimeZone(java.util.TimeZone.getTimeZone("UTC"))
