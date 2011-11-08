@@ -304,8 +304,56 @@ object SolrIndexer {
     implicit val config = loadConfigOrExit;
 
     try {
+      val indexer = new SolrIndexer;
       val command = args(0);
       command match {
+        case "test" => {
+          import Utility.{withFileOutputStream,flushStream};
+          for (urlS <- args.drop(1)) {
+            System.err.println("Processing %s".format(urlS));
+            val uri = new URI(urlS.toString);
+            val matcher = Utility.ARC_RE.pattern.matcher(uri.getPath);
+            if (!matcher.matches) {
+              System.err.println("No arc name");
+              System.exit(1);
+            } else {
+              val arcName = matcher.group(1);
+              var tmpfile : Option[File] = None;
+              indexer.httpClient.getUri(uri) { is =>
+                tmpfile = Some(new File(new File(System.getProperty("java.io.tmpdir")), arcName));
+                System.err.println("Fetching %s to %s".format(urlS, tmpfile.get));
+                withFileOutputStream(tmpfile.get) { os =>
+                  flushStream(is, os);
+                }
+              }
+              if (tmpfile.isEmpty) {
+                System.err.println("Didn't get file?");
+              } else {
+                val reader = ArchiveReaderFactory.get(tmpfile.get);
+                val it = reader.iterator;
+                System.err.println("Iterating...");
+                while (it.hasNext) {
+                  val rec = new ArchiveRecordWrapper(it.next, arcName);
+                  try {
+                    if (!rec.isHttpResponse || rec.getStatusCode != 200) {
+                      System.err.println("rec not 200: %s".format(rec.getUrl));
+                      /* try again */
+                    } else {
+                      System.err.println("Parsing %s".format(rec.getUrl));
+                      val retval = indexer.parseArchiveRecord(rec);
+                      if (retval.isEmpty) {
+                        /* this should not happen */
+                        throw new Exception("Got empty parse: %s".format(rec.getUrl));
+                      }
+                    }
+                  } finally {
+                    if (rec != null) rec.close;
+                  }
+                }
+              }
+            }
+          }
+        }
         case "parse" => {
           parse(args);
         }
