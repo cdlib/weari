@@ -66,7 +66,7 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String)
     if (((rec.getClass == classOf[WARCRecord]) &&
          (rec.getHeader.getMimetype == "application/http; msgtype=response")) ||
         ((rec.getClass == classOf[ARCRecord]) &&
-         rec.asInstanceOf[ARCRecord].getMetaData.getUrl.startsWith("http:"))) {
+         rec.asInstanceOf[ARCRecord].getMetaData.getUrl.startsWith("http"))) {
            httpResponse = true;
            parseWarcHttpHeaders;
          }
