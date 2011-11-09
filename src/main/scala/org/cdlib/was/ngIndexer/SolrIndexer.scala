@@ -17,8 +17,6 @@ import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.util.ClientUtils.toSolrInputDocument;
 import org.apache.solr.common.{SolrDocument, SolrInputDocument};
 
-import org.archive.io.{ArchiveReaderFactory,ArchiveRecord};
-
 import org.cdlib.ssconf.Configurator;
 
 import org.cdlib.was.ngIndexer.SolrFields._;
@@ -200,7 +198,7 @@ class SolrIndexer extends Retry with Logger {
    */
   def processFile (file : File)
                   (func : (ParsedArchiveRecord) => Unit) {
-    eachRecord(file) { rec =>
+    for (rec <- ArchiveReaderFactoryWrapper.get(file)) {
       catchAndLogExceptions("Caught exception processing %s: {}".format(file.getName)) {
         parseArchiveRecord(rec).map(func);
       }
@@ -209,43 +207,12 @@ class SolrIndexer extends Retry with Logger {
 
   def processStream (arcName : String, stream : InputStream)
                     (func : (ParsedArchiveRecord) => Unit) {
-    eachRecord(stream, arcName) { rec =>
+    for (rec <- ArchiveReaderFactoryWrapper.get(arcName, stream, true)) {
       catchAndLogExceptions("Caught exception processing %s: {}".format(arcName)) {
         parseArchiveRecord(rec).map(func);
       }
     }
   }
-
-  def eachRecord (arcFile : File)
-                 (f: (ArchiveRecordWrapper)=>Unit) {
-    val reader = ArchiveReaderFactory.get(arcFile)
-    val it = reader.iterator;
-    while (it.hasNext) {
-      val next = it.next;
-      val rec = new ArchiveRecordWrapper(next, arcFile.getName);
-      if (rec.isHttpResponse) {
-        f (rec);
-      }
-      next.close;
-    }
-    reader.close;
-  }
-
-  def eachRecord (stream : InputStream, arcName : String)
-                 (f: (ArchiveRecordWrapper)=>Unit) {
-    val reader = ArchiveReaderFactory.get(arcName, stream, true);
-    val it = reader.iterator;
-    while (it.hasNext) {
-      val next = it.next;
-      val rec = new ArchiveRecordWrapper(next, arcName);
-      if (rec.isHttpResponse) {
-        f (rec);
-      }
-      next.close;
-    }
-    reader.close;
-  }
-
 }
 
 object SolrIndexer {
@@ -329,17 +296,15 @@ object SolrIndexer {
               if (tmpfile.isEmpty) {
                 System.err.println("Didn't get file?");
               } else {
-                val reader = ArchiveReaderFactory.get(tmpfile.get);
+                val reader = ArchiveReaderFactoryWrapper.get(tmpfile.get);
                 val it = reader.iterator;
                 System.err.println("Iterating...");
                 while (it.hasNext) {
-                  val rec = new ArchiveRecordWrapper(it.next, arcName);
+                  val rec = it.next;
                   try {
                     if (!rec.isHttpResponse || rec.getStatusCode != 200) {
-                      System.err.println("rec not 200: %s".format(rec.getUrl));
                       /* try again */
                     } else {
-                      System.err.println("Parsing %s".format(rec.getUrl));
                       val retval = indexer.parseArchiveRecord(rec);
                       if (retval.isEmpty) {
                         /* this should not happen */
