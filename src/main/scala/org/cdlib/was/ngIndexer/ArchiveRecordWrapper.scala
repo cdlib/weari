@@ -15,10 +15,11 @@ import org.apache.http.util.CharArrayBuffer;
 
 import org.apache.tika.metadata.HttpHeaders;
 
-import org.archive.io.{ArchiveReaderFactory,ArchiveRecord,ArchiveRecordHeader};
+import org.archive.io.ArchiveRecord;
 import org.archive.io.arc.ARCRecord;
 import org.archive.io.warc.{WARCConstants,WARCRecord};
 import org.archive.util.ArchiveUtils;
+
 import org.apache.http.message.BasicLineParser;
 
 import org.cdlib.was.ngIndexer.Utility.string2date;
@@ -30,7 +31,7 @@ import scala.util.matching.Regex;
  * interface.
  */
 class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String) 
-  extends InputStream with WASArchiveRecord {
+  extends InputStream with WASArchiveRecord with Logger {
 
   private var statusCode : Option[Int] = None;
   private var ready : Boolean = false;
@@ -45,17 +46,13 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String)
   def parseWarcHttpHeaders {
     val lineParser = new BasicLineParser;
     val firstLine = ArchiveRecordWrapper.readLine(rec);
-    try {
+    catchAndLogExceptions {
       val statusLine = lineParser.parseStatusLine(firstLine, new ParserCursor(0, firstLine.length - 1));
       val headers = ArchiveRecordWrapper.readHeaderLines(rec).map(lineParser.parseHeader(_));
         val headerMap = headers.map {(h)=> h.getName.toLowerCase->h }.toMap;
       statusCode = Some(statusLine.getStatusCode);
       contentTypeStr = 
         headerMap.get(HttpHeaders.CONTENT_TYPE.toLowerCase).map(_.getValue);
-    } catch {
-      case ex : ParseException => {
-        ex.printStackTrace(System.err);
-      }
     }
   }
   
