@@ -14,6 +14,7 @@ class ArchiveReaderWrapper (wrapped : ArchiveReader)
 
   wrapped match {
     case arcReader : ARCReader => {
+      /* we parse headers ourselves, and bad headers sometimes make for bad reads */
       arcReader.setParseHttpHeaders(false);
     }
   }
