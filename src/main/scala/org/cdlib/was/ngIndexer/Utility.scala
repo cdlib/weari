@@ -98,7 +98,7 @@ object Utility {
       dateFormatter.parse(s);
     }
 
-  def timeout[T] (msec : Int) (f: => T) : Option[T] = {
+  def timeout[T] (msec : Int) (f: => T) (finalBlock: => Unit) : Option[T] = {
     class TimeoutThread extends Thread {
       var retval : Option[T] = None;
       var ex : Option[Throwable] = None;
@@ -111,7 +111,9 @@ object Utility {
           case t : java.io.InterruptedIOException => ()
           case t : Throwable => {
             ex = Some(t);
-          }
+          } 
+        } finally {
+          finalBlock;
         }
       }
     }
@@ -121,6 +123,7 @@ object Utility {
     while (thread.isAlive) {
       if (System.currentTimeMillis > endTimeMillis) {
         thread.interrupt;
+        thread.join;
       }
       try { Thread.sleep(50); }
       catch { case ex : InterruptedException => () }
