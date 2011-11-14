@@ -3,6 +3,7 @@
 package org.cdlib.was.ngIndexer;
 
 import java.io.InputStream;
+import java.security.MessageDigest;
 
 import org.apache.http.{Header,HeaderElement,NameValuePair};
 import org.apache.http.ParseException;
@@ -18,11 +19,11 @@ import org.apache.tika.metadata.HttpHeaders;
 import org.archive.io.ArchiveRecord;
 import org.archive.io.arc.ARCRecord;
 import org.archive.io.warc.{WARCConstants,WARCRecord};
-import org.archive.util.ArchiveUtils;
+import org.archive.util.{ArchiveUtils,Base32};
 
 import org.apache.http.message.BasicLineParser;
 
-import org.cdlib.was.ngIndexer.Utility.string2date;
+import org.cdlib.was.ngIndexer.Utility.{dumpStream,string2date};
 
 import scala.util.matching.Regex;
 
@@ -39,6 +40,12 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String)
   private var httpResponse : Boolean = false;
   private var contentType : Option[ContentType] = None;
   private var closed : Boolean = false;
+  private var digest : Option[MessageDigest] = 
+    rec match {
+      case arc : ARCRecord =>
+        Some(MessageDigest.getInstance("SHA-1"));
+      case _ => None;
+    }
 
   /**
    * Parse the headers from a WARCRecord.
@@ -111,9 +118,9 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String)
       case arc : ARCRecord => {
         if (!this.closed) {
             /* must wait until finished */
-          None;
+          throw new Exception("You must close the ARC record before getting the digest string!");
         }
-        Some(rec.getDigestStr);
+        this.digest.map(dig=>Base32.encode(dig.digest));
       }
       case warc : WARCRecord => {
         warc.getHeader.getHeaderValue(WARCConstants.HEADER_KEY_PAYLOAD_DIGEST) match {
@@ -133,6 +140,7 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String)
   }
   
   override def close = {
+    dumpStream(this);
     if (!this.closed) rec.close;
     this.closed = true;
   }
@@ -146,17 +154,23 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String)
 
   override def read = {
     if (!ready) cueUp; 
-    rec.read;
+    val retval = rec.read;
+    digest.map(_.update(retval.asInstanceOf[Byte]));
+    retval;
   }
 
   override def read (buff : Array[Byte]) = {
     if (!ready) cueUp; 
-    rec.read(buff);
+    val retval = rec.read(buff);
+    if (retval > 0) digest.map(_.update(buff, 0, retval));
+    retval;
   }
 
   override def read (buff : Array[Byte], off : Int, len : Int) = {
     if (!ready) cueUp; 
-    rec.read(buff, off, len);
+    val retval = rec.read(buff, off, len);
+    if (retval > 0) digest.map(_.update(buff, off, retval));
+    retval;
   }
 
   override def reset = {
