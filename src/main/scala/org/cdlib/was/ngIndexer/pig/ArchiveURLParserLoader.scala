@@ -1,95 +1,101 @@
 /* Copyright (c) 2011 The Regents of the University of California */
 
+
 package org.cdlib.was.ngIndexer.pig;
+
+import java.io.{File,FileInputStream};
+
+import java.security.{MessageDigest=>JavaMessageDigest};
 
 import java.util.ArrayList;
 
 import java.net.URI;
 
 import org.apache.hadoop.io.{Text};
-import org.apache.hadoop.mapreduce.{Job,RecordReader};
+import org.apache.hadoop.mapreduce.{Job,JobContext,RecordReader};
 import org.apache.hadoop.mapreduce.lib.input.{FileInputFormat,TextInputFormat};
-
-import org.apache.http.HttpResponse;
-import org.apache.http.util.EntityUtils;
 
 import org.apache.pig.{LoadFunc,PigException};
 import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.PigSplit;
 import org.apache.pig.data.{BagFactory,Tuple,TupleFactory};
 
-import org.archive.io.{ArchiveReader,ArchiveReaderFactory,ArchiveRecord};
 import org.cdlib.was.ngIndexer._;
 import org.cdlib.was.ngIndexer.Utility.{date2string,null2option};
 
-class ArchiveURLParserLoader extends LoadFunc {
+class ArchiveURLParserLoader extends LoadFunc with Logger {
   val tupleFactory = TupleFactory.getInstance();
   val bagFactory = BagFactory.getInstance();
-  val client = new SimpleHttpClient;
-  val parser = new MyParser;
-
-  var in : RecordReader[_,_] = null;
-  var response : HttpResponse = null;
-  var reader : ArchiveReader = null;
-  var it : java.util.Iterator[ArchiveRecord] = null;
-  var arcName : String = _;
+  
   val indexer = new SolrIndexer;
+  var in : RecordReader[_,_] = null;
+
+  var it : Option[Iterator[ArchiveRecordWrapper]] = None;
+  var arcName : Option[String] = None;
+  var tmpfile : Option[File] = None;
 
   def setupNextArchiveReader : Boolean = {
     if (!in.nextKeyValue()) {
       return false;
     } else {
-      if (this.response != null) {
-        EntityUtils.consume(response.getEntity);
-      }
-      this.reader = null;
-      this.it = null;
+      /* clean up */
+      this.tmpfile.map(_.delete);
+      this.it = None; 
+      this.tmpfile = None;
+      this.arcName = None;
+
       val value = this.in.getCurrentValue.asInstanceOf[Text]
       val uri = new URI(value.toString);
       val matcher = Utility.ARC_RE.pattern.matcher(uri.getPath);
       if (!matcher.matches) {
         return false;
       } else {
-        arcName = matcher.group(1);
-        client.getUriResponse(uri) match {
-          case None => return setupNextArchiveReader;
-          case Some(response) => {
-            this.response = response;
-            reader = ArchiveReaderFactory.get(arcName, response.getEntity.getContent, true);
-            it = reader.iterator;
-            return true;
+        this.arcName = Some(matcher.group(1));
+        indexer.httpClient.getUri(uri) {(is) =>
+          this.tmpfile = Some(new File(new File(System.getProperty("java.io.tmpdir")), this.arcName.getOrElse("")));
+          Utility.withFileOutputStream(this.tmpfile.get) { os =>
+            Utility.flushStream(is, os);
           }
+          this.it = Some(ArchiveReaderFactoryWrapper.get(this.tmpfile.get).iterator);
         }
+        return this.it.isDefined;
       }
     }
   }      
-  
+
   def getNextArchiveRecord : Option[ParsedArchiveRecord] = {
-    if (it == null || !it.hasNext) {
-      /* try to get a new ArchiveReader, otherwise return null */
-      if (!setupNextArchiveReader) {
-        return None;
+    var rec : ArchiveRecordWrapper = null;
+    try {
+      if (this.it.isEmpty || !this.it.get.hasNext) {
+        /* try to get a new ArchiveReader, otherwise return null */
+        if (!setupNextArchiveReader) {
+          return None;
+        }
+      } 
+      rec = this.it.get.next;
+      if (!rec.isHttpResponse || rec.getStatusCode != 200) {
+        /* try again */
+          return getNextArchiveRecord;
+      } else {
+        val retval = indexer.parseArchiveRecord(rec);
+        if (retval.isEmpty) {
+          /* this should not happen */
+          throw new Exception("Got empty parse: %s".format(rec.getUrl));
+        }
+        return retval;
       }
-    }
-    val rec = new ArchiveRecordWrapper(it.next, arcName);
-    if (!rec.isHttpResponse || rec.getStatusCode != 200) {
-      try {
-        rec.close;
-      } catch {
-        case ex : Exception => ()
+    } catch {
+      case ex : Exception => {
+        /* try again */
+        logger.error("Caught exception parsing %s: %s".format(this.arcName.getOrElse(""), ex));
+        return getNextArchiveRecord;
       }
-      /* try again */
-      return getNextArchiveRecord;
-    } else {
-      val retval = indexer.parseArchiveRecord(rec);
-      if (retval.isEmpty) {
-        throw new Exception("GOT EMPTY PARSE!: %s".format(rec.getUrl));
-      }
-      return retval;
+    } finally {
+      if (rec != null) rec.close;
     }
   }
-
-  override def getNext : Tuple = {
+  
+  def getNext : Tuple = {
     try {
       getNextArchiveRecord match {
         case None => null;
@@ -122,7 +128,7 @@ class ArchiveURLParserLoader extends LoadFunc {
     }
   }
   
-  override def getInputFormat = new TextInputFormat;
+  override def getInputFormat = new ArcListInputFormat;
 
   override def prepareToRead(reader : RecordReader[_,_], split : PigSplit) {
     in = reader;
