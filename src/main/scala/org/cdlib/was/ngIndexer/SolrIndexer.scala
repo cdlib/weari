@@ -213,7 +213,7 @@ class SolrIndexer extends Retry with Logger {
 
   def processStream (arcName : String, stream : InputStream)
                     (func : (ParsedArchiveRecord) => Unit) {
-    for (rec <- ArchiveReaderFactoryWrapper.get(arcName, stream, true)) {
+    for (rec <- ArchiveReaderFactoryWrapper.get(arcName, stream)) {
       catchAndLogExceptions("Caught exception processing %s: {}".format(arcName)) {
         parseArchiveRecord(rec).map(func);
       }
