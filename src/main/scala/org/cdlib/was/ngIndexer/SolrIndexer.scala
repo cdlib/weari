@@ -34,8 +34,10 @@ import sun.misc.{Signal, SignalHandler};
  */
 class SolrIndexer extends Retry with Logger {
   val httpClient = new SimpleHttpClient;
-
   val parser = new MyParser;
+
+  /* max size, in bytes, of files to parse. If file is larger, do not parse */
+  val MAX_PARSE_SIZE = 5000000;
 
   /**
    * Take an archive record & return a solr document, or None if it is
@@ -49,8 +51,12 @@ class SolrIndexer extends Retry with Logger {
       return None;
     }
 
-    val parsed = catchAndLogExceptions("Caught exception parsing %s in arc %s: {}".format(rec.getUrl, rec.getFilename)) {
-      parser.parse(rec);
+    val parsed = if (rec.getLength > MAX_PARSE_SIZE) {
+      None;
+    } else {
+      catchAndLogExceptions("Caught exception parsing %s in arc %s: {}".format(rec.getUrl, rec.getFilename)) {
+        parser.parse(rec);
+      } 
     }
     if (rec.getDigestStr.isEmpty) {
       /* need to check now because the ARC needs to be closed before we can get it */
