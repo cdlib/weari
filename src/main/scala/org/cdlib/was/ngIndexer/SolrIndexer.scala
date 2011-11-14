@@ -56,8 +56,9 @@ class SolrIndexer extends Retry with Logger {
     } else {
       catchAndLogExceptions("Caught exception parsing %s in arc %s: {}".format(rec.getUrl, rec.getFilename)) {
         parser.parse(rec);
-      } 
+      }
     }
+    rec.close;
     if (rec.getDigestStr.isEmpty) {
       /* need to check now because the ARC needs to be closed before we can get it */
       throw new Exception("No digest string found.");
