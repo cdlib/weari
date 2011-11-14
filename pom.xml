@@ -18,6 +18,33 @@
   </properties>
 
   <dependencies>
+    <!-- transitive deps with conflicting versions -->
+    <dependency>
+      <groupId>commons-collections</groupId>
+      <artifactId>commons-collections</artifactId>
+      <version>3.2</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-httpclient</groupId>
+      <artifactId>commons-httpclient</artifactId>
+      <version>3.1</version>
+    </dependency>
+    <dependency>
+      <groupId>asm</groupId>
+      <artifactId>asm</artifactId>
+      <version>3.3</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-net</groupId>
+      <artifactId>commons-net</artifactId>
+      <version>2.0</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>servlet-api</artifactId>
+      <version>2.5</version>
+    </dependency>
+
     <dependency>
       <groupId>org.scalatra</groupId>
       <artifactId>scalatra-scalate_2.9.1</artifactId>
@@ -164,6 +191,10 @@
           <groupId>commons-logging</groupId>
           <artifactId>commons-logging-api</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>jdom</groupId>
+          <artifactId>jdom</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -174,7 +205,7 @@
     <dependency>
       <groupId>org.apache.tika</groupId>
       <artifactId>tika-parsers</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <version>1.0</version>
     </dependency>
     <dependency>
       <groupId>org.apache.solr</groupId>
