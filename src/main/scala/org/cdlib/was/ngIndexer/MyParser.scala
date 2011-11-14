@@ -66,6 +66,8 @@ class MyParser extends Logger {
               toList.distinct.sortWith((a,b)=>(a < b));
             }
           }
+      /* we do this now to ensure that we get the digest string */
+      rec.close;
       return ParsedArchiveRecord(rec,
                                  indexContentHandler.contentString(maxSize),
                                  tikaMediaType,
