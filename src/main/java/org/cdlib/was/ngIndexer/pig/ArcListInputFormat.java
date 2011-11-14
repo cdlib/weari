@@ -62,7 +62,7 @@ public class ArcListInputFormat extends TextInputFormat {
     }
 
     public static long getMaxSplitSize(JobContext job) {
-        return 2048L;
+        return 512L;
     }
 
     /** 
