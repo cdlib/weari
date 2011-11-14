@@ -17,6 +17,7 @@ class ArchiveReaderWrapper (wrapped : ArchiveReader)
       /* we parse headers ourselves, and bad headers sometimes make for bad reads */
       arcReader.setParseHttpHeaders(false);
     }
+    case _ => ()
   }
   
   def iterator : Iterator[ArchiveRecordWrapper] = {
