@@ -39,5 +39,8 @@ object ArchiveReaderFactoryWrapper {
 
   def get (id : String, is : InputStream, atFirstRecord : Boolean) =
     new ArchiveReaderWrapper (ArchiveReaderFactory.get(id, is, atFirstRecord));
+
+  def get (id : String, is : InputStream) : ArchiveReaderWrapper =
+    get (id, is, true);
     
 }
