@@ -57,17 +57,18 @@ class MyParser extends Logger {
 
       /* finish webgraph */
       var outlinks : Seq[Long] = List[Long]();
-      if (tikaMediaType.isDefined && webGraphTypeRE.matcher(tikaMediaType.get.mediaType).matches) {
-        val outlinksRaw = wgContentHandler.outlinks;
-        if (outlinksRaw.size > 0) {
-            outlinks = (for (l <- outlinksRaw) 
-                        yield UriUtils.fingerprint(l.to)).
-          toList.distinct.sortWith((a,b)=>(a < b));
-        }
-      }
+      if (tikaMediaType.isDefined && 
+          webGraphTypeRE.matcher(tikaMediaType.get.mediaType).matches) {
+            val outlinksRaw = wgContentHandler.outlinks;
+            if (outlinksRaw.size > 0) {
+              outlinks = (for (l <- outlinksRaw) 
+                          yield UriUtils.fingerprint(l.to)).
+              toList.distinct.sortWith((a,b)=>(a < b));
+            }
+          }
       return ParsedArchiveRecord(rec,
                                  indexContentHandler.contentString(maxSize),
-                                   tikaMediaType,
+                                 tikaMediaType,
                                  null2option(tikaMetadata.get("title")),
                                  outlinks);
     } finally {
