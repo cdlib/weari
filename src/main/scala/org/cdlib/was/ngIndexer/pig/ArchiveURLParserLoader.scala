@@ -64,35 +64,38 @@ class ArchiveURLParserLoader extends LoadFunc with Logger {
   }      
 
   def getNextArchiveRecord : Option[ParsedArchiveRecord] = {
-    var rec : ArchiveRecordWrapper = null;
-    try {
-      if (this.it.isEmpty || !this.it.get.hasNext) {
-        /* try to get a new ArchiveReader, otherwise return null */
-        if (!setupNextArchiveReader) {
-          return None;
+    var rec : Option[ArchiveRecordWrapper] = None;
+    while (rec.isEmpty) {
+      try {
+        if (this.it.isEmpty || !this.it.get.hasNext) {
+          /* try to get a new ArchiveReader, otherwise return null */
+          if (!setupNextArchiveReader) {
+            return None;
+          }
+        } 
+        rec = Some(this.it.get.next);
+        if (!rec.get.isHttpResponse || rec.get.getStatusCode != 200) {
+          /* try again */
+          rec = None;
+        } else {
+          val retval = indexer.parseArchiveRecord(rec.get);
+          if (retval.isEmpty) {
+            /* this should not happen */
+            throw new Exception("Got empty parse: %s".format(rec.get.getUrl));
+          }
+          return retval;
         }
-      } 
-      rec = this.it.get.next;
-      if (!rec.isHttpResponse || rec.getStatusCode != 200) {
-        /* try again */
-          return getNextArchiveRecord;
-      } else {
-        val retval = indexer.parseArchiveRecord(rec);
-        if (retval.isEmpty) {
-          /* this should not happen */
-          throw new Exception("Got empty parse: %s".format(rec.getUrl));
+      } catch {
+        case ex : Exception => {
+          /* try again */
+          logger.error("Caught exception parsing %s: %s".format(this.arcName.getOrElse(""), ex));
         }
-        return retval;
+      } finally {
+        rec.map(_.close);
+        rec = None;
       }
-    } catch {
-      case ex : Exception => {
-        /* try again */
-        logger.error("Caught exception parsing %s: %s".format(this.arcName.getOrElse(""), ex));
-        return getNextArchiveRecord;
-      }
-    } finally {
-      if (rec != null) rec.close;
     }
+    return None;
   }
   
   def getNext : Tuple = {
