@@ -17,6 +17,8 @@ import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.util.ClientUtils.toSolrInputDocument;
 import org.apache.solr.common.{SolrDocument, SolrInputDocument};
 
+import org.apache.tika.exception.TikaException;
+
 import org.cdlib.ssconf.Configurator;
 
 import org.cdlib.was.ngIndexer.SolrFields._;
@@ -54,8 +56,13 @@ class SolrIndexer extends Retry with Logger {
     val parsed = if (rec.getLength > MAX_PARSE_SIZE) {
       None;
     } else {
-      catchAndLogExceptions("Caught exception parsing %s in arc %s: {}".format(rec.getUrl, rec.getFilename)) {
-        parser.parse(rec);
+      try {
+        Some(parser.parse(rec));
+      } catch {
+        case ex : TikaException => {
+          logger.error("Caught exception parsing %s in arc %s: {}".format(rec.getUrl, rec.getFilename), ex);
+          None;
+        }
       }
     }
     rec.close;

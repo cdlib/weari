@@ -65,8 +65,8 @@ class ArchiveURLParserLoader extends LoadFunc with Logger {
 
   def getNextArchiveRecord : Option[ParsedArchiveRecord] = {
     var rec : Option[ArchiveRecordWrapper] = None;
-    while (rec.isEmpty) {
-      try {
+    try {
+      while (rec.isEmpty) {
         if (this.it.isEmpty || !this.it.get.hasNext) {
           /* try to get a new ArchiveReader, otherwise return null */
           if (!setupNextArchiveReader) {
@@ -76,7 +76,7 @@ class ArchiveURLParserLoader extends LoadFunc with Logger {
         rec = Some(this.it.get.next);
         if (!rec.get.isHttpResponse || rec.get.getStatusCode != 200) {
           /* try again */
-          rec = None;
+            rec = None;
         } else {
           val retval = indexer.parseArchiveRecord(rec.get);
           if (retval.isEmpty) {
@@ -85,14 +85,20 @@ class ArchiveURLParserLoader extends LoadFunc with Logger {
           }
           return retval;
         }
-      } catch {
-        case ex : Exception => {
-          /* try again */
-          logger.error("Caught exception parsing %s: %s".format(this.arcName.getOrElse(""), ex));
+        try {
+          rec.map(_.close);
+          rec = None;
+        } catch {
+          case ex : Exception => {
+            logger.error("Caught exception CLOSING %s: {}".format(this.arcName.getOrElse("")));
+            throw ex;
+          }
         }
-      } finally {
-        rec.map(_.close);
-        rec = None;
+      }
+    } catch {
+      case ex : Exception => {
+        logger.error("Caught exception READING %s: {}".format(this.arcName.getOrElse("")));
+        throw ex;
       }
     }
     return None;
@@ -112,7 +118,7 @@ class ArchiveURLParserLoader extends LoadFunc with Logger {
                             rec.getUrl,                     // 1
                             rec.getDigestStr.getOrElse(""), // 2
                             date2string(rec.getDate),       // 3
-                            rec.getLength,                  // 4
+                          rec.getLength,                  // 4
                             rec.content.getOrElse(""),      // 5
                             rec.detectedContentType.        // 
                               getOrElse(ContentType.DEFAULT).mediaType,
