@@ -51,29 +51,25 @@ class SolrIndexer extends Retry with Logger {
     if (!rec.isHttpResponse || (rec.getStatusCode != 200)) {
       rec.close;
       return None;
-    }
-
-    val parsed = if (rec.getLength > MAX_PARSE_SIZE) {
-      None;
     } else {
-      try {
-        Some(parser.parse(rec));
-      } catch {
-        case ex : TikaException => {
-          logger.error("Caught exception parsing %s in arc %s: {}".format(rec.getUrl, rec.getFilename), ex);
-          None;
+      val parsed = if (rec.getLength > MAX_PARSE_SIZE) {
+        None;
+      } else {
+        try {
+          Some(parser.parse(rec));
+        } catch {
+          case ex : TikaException => {
+            logger.error("Caught exception parsing %s in arc %s: {}".format(rec.getUrl, rec.getFilename), ex);
+            None;
+          }
         }
       }
-    }
-    rec.close;
-    if (rec.getDigestStr.isEmpty) {
-      /* need to check now because the ARC needs to be closed before we can get it */
-      throw new Exception("No digest string found.");
-    } else {
-      if (parsed.isDefined) {
-        return parsed;
+      rec.close;
+      if (rec.getDigestStr.isEmpty) {
+        /* need to check now because the ARC needs to be closed before we can get it */
+        throw new Exception("No digest string found.");
       } else {
-        return Some(ParsedArchiveRecord(rec));
+        return Some(parsed.getOrElse(ParsedArchiveRecord(rec)));
       }
     }
   }
