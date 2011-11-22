@@ -2,8 +2,9 @@
 
 package org.cdlib.was.ngIndexer;
 
-import java.io.{BufferedInputStream,File,InputStream,FileInputStream,FileOutputStream,OutputStream};
+import java.io.{BufferedInputStream,EOFException,File,InputStream,FileInputStream,FileOutputStream,OutputStream};
 import java.util.Date;
+import java.util.zip.GZIPInputStream;
 
 import org.archive.util.ArchiveUtils;
 
@@ -96,7 +97,22 @@ object Utility {
       ArchiveUtils.parse14DigitDate(s);
     case ds : String if ds.length == 20 =>
       dateFormatter.parse(s);
+  }
+  
+  /**
+   * Check the integrity of a gzipped file.
+   */
+  def checkGzip (f : File) : Boolean = {
+    try {
+      withFileInputStream (f) { is =>
+        val gis = new GZIPInputStream(is);
+        dumpStream(gis);
+        return true;
+      }
+    } catch {
+      case ex : EOFException => return false;
     }
+  }
 
   def timeout[T] (msec : Int) (f: => T) (finalBlock: => Unit) : Option[T] = {
     class TimeoutThread extends Thread {
