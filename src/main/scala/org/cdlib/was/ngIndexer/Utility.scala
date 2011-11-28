@@ -11,7 +11,8 @@ import org.archive.util.ArchiveUtils;
 import scala.util.matching.Regex;
 
 object Utility {
-  val ARC_RE = new Regex(""".*?([A-Za-z0-9\.-]+arc.gz).*""");
+  /* some of arcs end in .open or .gz.gz - we should fix */
+  val ARC_RE = new Regex(""".*?([A-Za-z0-9\.-]+arc\.gz)(\.open|\.gz)?""");
 
   /**
    * Convert a possibly null thing into an Option version.
