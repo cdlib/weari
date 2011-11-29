@@ -65,7 +65,7 @@ class JsonParsedArchiveRecordStorer extends StoreFunc {
 
     val indexer = new SolrIndexer;
     
-    val w = new OutputStreamWriter(os);
+    val w = new OutputStreamWriter(os, "UTF-8");
     
     var firstRecord = true;
     
