@@ -4,16 +4,13 @@ package org.cdlib.was.ngIndexer;
 
 import java.net.URI;
 
-import java.io.{File,FileReader};
+import java.io.{File,FileInputStream};
 
 import org.apache.solr.client.solrj.impl.StreamingUpdateSolrServer;
 
 import org.cdlib.was.ngIndexer.SolrFields._;
 
 import scala.util.matching.Regex;
-
-import net.liftweb.json._;
-import net.liftweb.json.JsonAST.JValue;
 
 abstract class Command {
   def arcName : String;
@@ -35,28 +32,6 @@ case class ParseCommand (val uri : String,
   val Utility.ARC_RE(arcName) = new URI(uri).getPath;
 
   def jsonfile = new File(jsonpath);
-}
-
-object Command extends Logger {
-  implicit val formats = DefaultFormats;
-
-  def parse (j : JValue) : List[Command] = {
-    /* there has to be a better way */
-    j.children.flatMap { (cmd) => 
-      val cmdname = cmd \ "command";
-      if (cmdname == JString("parse")) {
-        Some(cmd.extract[ParseCommand])
-      } else if (cmdname == JString("index")) {
-        Some(cmd.extract[IndexCommand]);
-      } else None;
-    }
-  }
-
-  def parse (in : String) : List[Command] = 
-    parse(JsonParser.parse(in));
-  
-  def parse (file : File) : List[Command] =
-    parse(JsonParser.parse(new FileReader(file), true));
 }
 
 class CommandExecutor (config : Config) extends Retry {

@@ -2,13 +2,13 @@
 
 package org.cdlib.was.ngIndexer;
 
+import com.codahale.jerkson.Json;
+
 import java.io.{BufferedWriter,File,FileInputStream,FileNotFoundException,FileOutputStream,InputStream,InputStreamReader,IOException,OutputStream,OutputStreamWriter,StringWriter,Writer};
 
 import java.net.URI;
 
 import java.util.zip.{GZIPInputStream,GZIPOutputStream};
-
-import net.liftweb.json.{DefaultFormats,JsonParser,Serialization};
 
 import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
 import org.apache.solr.client.solrj.impl.StreamingUpdateSolrServer;
@@ -87,14 +87,7 @@ class SolrIndexer extends Retry with Logger {
   }
 
   def writeRec (rec : ParsedArchiveRecord, writer : Writer) {
-    implicit val formats = DefaultFormats;
-    Serialization.write(rec, writer);
-  }
-  
-  def rec2json (rec : ParsedArchiveRecord) : String = {
-    val w = new StringWriter;
-    writeRec(rec, w);
-    return w.toString;
+    writer.write(Json.generate(rec));
   }
 
   /**
@@ -115,13 +108,17 @@ class SolrIndexer extends Retry with Logger {
     writer.close;
   }
 
+  def arc2json (arcFile : File, jsonFile : File) {
+    val Utility.ARC_RE(arcName) = arcFile.getName;
+    arc2json(new FileInputStream(arcFile), arcName, jsonFile);
+  }
+
   /**
    * Convert a gzipped JSON file (see #arc2json) into a sequence of ParsedArchiveRecord
    */
   def json2records (file : File) : Seq[ParsedArchiveRecord] = {
-    implicit val formats = DefaultFormats;
     val gzis = new GZIPInputStream(new FileInputStream(file));
-    return JsonParser.parse(new InputStreamReader(gzis, "UTF-8"), true).extract[List[ParsedArchiveRecord]];
+    return Json.stream[ParsedArchiveRecord](gzis).toSeq;
   }
 
   /**
@@ -284,6 +281,9 @@ object SolrIndexer {
       val indexer = new SolrIndexer;
       val command = args(0);
       command match {
+        case "arc2json" => {
+          indexer.arc2json(new File(args(1)), new File(args(2)));
+        }
         case "test" => {
           import Utility.{withFileOutputStream,flushStream};
           for (urlS <- args.drop(1)) {
@@ -316,6 +316,7 @@ object SolrIndexer {
                       /* try again */
                     } else {
                       val retval = indexer.parseArchiveRecord(rec);
+                      println(Json.generate(retval));
                       if (retval.isEmpty) {
                         /* this should not happen */
                         throw new Exception("Got empty parse: %s".format(rec.getUrl));
@@ -354,15 +355,6 @@ object SolrIndexer {
                               filter)
               }
             }
-          }
-        }
-        case "json" => {
-          val cmds = Command.parse(new File(args(1)));
-          val sortedCmds = cmds.sortWith(_.arcName < _.arcName);
-          val executor = new CommandExecutor(config);
-          sortedCmds.map { cmd =>
-            executor.exec(cmd);
-            System.out.println("Indexed %s".format(cmd.arcName));
           }
         }
         case _ => {

@@ -2,11 +2,9 @@
 
 package org.cdlib.was.ngIndexer.tests;
 
-import java.io.{File,FileInputStream,FileOutputStream,InputStreamReader};
+import com.codahale.jerkson.Json;
 
-import net.liftweb.json._;
-import net.liftweb.json.Serialization.{read, write};
-import net.liftweb.json.{DefaultFormats,Serialization};
+import java.io.{File,FileInputStream,FileOutputStream,InputStreamReader};
 
 import org.apache.solr.common.SolrInputDocument;
 
@@ -28,7 +26,6 @@ class WarcSpec extends FeatureSpec {
   val indexer = new SolrIndexer;
   val warcName = "IAH-20080430204825-00000-blackbook.warc.gz";
   val arcName = "IAH-20080430204825-00000-blackbook.arc.gz";
-  implicit val formats = DefaultFormats;
 
   feature ("We can read a WARC file.") {
     scenario ("(W)ARC files should return the same data.") {
@@ -38,28 +35,30 @@ class WarcSpec extends FeatureSpec {
       for (rec <- ArchiveReaderFactoryWrapper.get(warcName, cl.getResourceAsStream(warcName))) {
         if (rec.isHttpResponse) {
           indexer.parseArchiveRecord(rec).map { res =>
-            warcData += (rec.getUrl -> Serialization.write(res));
+            warcData += (rec.getUrl -> Json.generate(res));
           }
         }
       }
       for (rec <- ArchiveReaderFactoryWrapper.get(arcName, cl.getResourceAsStream(arcName))) {
         indexer.parseArchiveRecord(rec).map { res =>
-          arcData += (rec.getUrl -> Serialization.write(res))
+          arcData += (rec.getUrl -> Json.generate(res))
         }
       }
       for ((k,v) <- arcData) {
-        val j1 = parse(v);
-        val j2 = parse(warcData.get(k).get);
-        for (field <- List("digest", "url", "date", "title", "content")) {
-          assert((j1 \ field) === (j2 \ field));
-        }
+        val j1 = Json.parse[ParsedArchiveRecord](v);
+        val j2 = Json.parse[ParsedArchiveRecord](warcData.get(k).get);
+        assert(j1.digest == j2.digest);
+        assert(j1.url == j2.url);
+        assert(j1.date == j2.date);
+        assert(j1.title == j2.title);
+        assert(j1.content == j2.content);
       }
     }
     
     scenario ("We can round trip JSON.") {
       for (rec <- ArchiveReaderFactoryWrapper.get (arcName, cl.getResourceAsStream(arcName))) {
         indexer.parseArchiveRecord(rec).map { res =>
-          assert (parse(Serialization.write(res)).extract[ParsedArchiveRecord] == res);
+          assert (Json.parse[ParsedArchiveRecord](Json.generate(res)) == res);
         }
       }
     }

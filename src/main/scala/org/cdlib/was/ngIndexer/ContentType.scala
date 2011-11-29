@@ -1,7 +1,7 @@
 /* Copyright (c) 2011 The Regents of the University of California */
 package org.cdlib.was.ngIndexer;
 
-import net.liftweb.json.{Formats,JField,JObject,JString,JValue,MappingException,Serializer,TypeInfo};
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.{BasicHeaderValueParser,ParserCursor};
@@ -16,6 +16,7 @@ import scala.util.matching.Regex;
  * Represents a content-type, including a media type and
  * encoding, as supplied by, e.g., the Content-Type header.
  */
+@JsonIgnoreProperties(Array("mediaType", "mediaTypeGroup"))
 case class ContentType (val top     : String,
                         val sub     : String,
                         val charset : Option[String]) {

@@ -3,8 +3,6 @@
 package org.cdlib.was.ngIndexer;
 
 import java.util.Date;
-import net.liftweb.json.{DefaultFormats,JsonParser,NoTypeHints,Serialization}
-import net.liftweb.json.JsonAST.JValue;
 
 import org.archive.net.UURIFactory;
 import java.io.{File,InputStreamReader,Writer};

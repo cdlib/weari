@@ -13,6 +13,7 @@
   <!-- try to make maven quiet -->
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <scala.version>2.9.1</scala.version>
   </properties>
 
   <dependencies>
@@ -215,18 +216,13 @@
     </dependency>
     <dependency>
       <groupId>org.scalatest</groupId>
-      <artifactId>scalatest_2.9.1</artifactId>
+      <artifactId>scalatest_${scala.version}</artifactId>
       <version>1.6.1</version>
     </dependency>
     <dependency>
       <groupId>org.cdlib</groupId>
       <artifactId>ssconf</artifactId>
-      <version>0.1-SNAPSHOT_2.9.1</version>
-    </dependency>
-    <dependency>
-      <groupId>net.liftweb</groupId>
-      <artifactId>lift-json_2.9.1</artifactId>
-      <version>2.4-M4</version>
+      <version>0.1-SNAPSHOT_${scala.version}</version>
     </dependency>
     <dependency>
       <groupId>log4j</groupId>
@@ -236,12 +232,17 @@
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
-      <version>2.9.1</version>
+      <version>${scala.version}</version>
     </dependency>
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-compiler</artifactId>
-      <version>2.9.1</version>
+      <version>${scala.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.codahale</groupId>
+      <artifactId>jerkson_${scala.version}</artifactId>
+      <version>0.5.0</version>
     </dependency>
 </dependencies>
 
@@ -263,6 +264,10 @@
       <url>http://builds.archive.org:8080/maven2</url>
     </repository>
     
+    <repository>
+      <id>repo.codahale.com</id>
+      <url>http://repo.codahale.com</url>
+    </repository>
   </repositories>
 
 
@@ -316,7 +321,7 @@
           </execution>
         </executions>
         <configuration>
-          <scalaVersion>2.9.1</scalaVersion>
+          <scalaVersion>${scala.version}</scalaVersion>
           <launchers>
             <launcher>
               <id>solr</id>
