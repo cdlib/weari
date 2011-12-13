@@ -24,28 +24,49 @@ class TestParser < Test::Unit::TestCase
   end
   
   context "parsers" do
-    should "create a pig job" do
-      arc_list = ["CDL-1.arc.gz", "CDL-2.warc.gz"]
-      pig = mock()
-      ganapati = mock()
-      parser = Weari::Parser.new(:ganapati => ganapati, :pig => pig, :weari_java_home => "/tmp/weari_java")
-      
-      ganapati.expects(:put).with do |source, target|
+    setup do
+      @arc_list = ["CDL-1.arc.gz", "CDL-2.warc.gz"]
+      @ganapati = mock()
+      @pig = mock()
+      @pig_job = mock()
+      @parser = Weari::Parser.new(:ganapati => @ganapati, :pig => @pig, :weari_java_home => "/tmp/weari_java")
+      # stub out a bunch of stuff by default
+      @ganapati.stubs(:exists?).returns(false)
+      @ganapati.stubs(:put)
+      @ganapati.stubs(:rm)
+      @ganapati.stubs(:mkdir)
+      @ganapati.stubs(:ls).returns([])
+      @pig_job.stubs(:run)
+      @pig_job.stubs(:<<)
+      @pig.stubs(:new_job).returns(@pig_job)
+    end
+    
+    should "create an arc list" do
+      @ganapati.unstub(:put)
+      @ganapati.expects(:put).with do |source, target|
         # Check generated arc list
-        assert_equal(arc_list.join("\n") + "\n", File.open(source).read())
+        assert_equal(@arc_list.join("\n") + "\n", File.open(source).read())
         true
       end
-      # stub out a bunch of stuff which we can't really test
-      ganapati.stubs(:rm)
-      ganapati.stubs(:mkdir)
-      ganapati.stubs(:ls).returns([])
-      pig_job = mock()
-      pig_job.stubs(:run)
-      pig_job.stubs(:<<)
-      pig.expects(:new_job).returns(pig_job)
       
       # parse ARCS
-      parser.parse_arcs(arc_list)
+      @parser.parse_arcs(@arc_list)
+    end
+
+    should "not reparse an existing arc" do
+      @ganapati.unstub(:exists?)
+      @ganapati.expects(:exists?).with("json/#{@arc_list[0]}.json.gz").returns(false)
+      @ganapati.expects(:exists?).with("json/#{@arc_list[1]}.json.gz").returns(true)
+
+      @ganapati.unstub(:put)
+      @ganapati.expects(:put).with do |source, target|
+        # Check generated arc list
+        assert_equal(@arc_list[0] + "\n", File.open(source).read())
+        true
+      end
+      
+      # parse ARCS
+      @parser.parse_arcs(@arc_list)
     end
   end
 end

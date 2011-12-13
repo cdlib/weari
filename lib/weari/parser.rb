@@ -8,6 +8,7 @@ require 'tempfile'
 module Weari
   class Parser
     def initialize(opts)
+      @group_size = opts[:group_size] || 100
       raise ArgumentError.new("Missing :hdfs_script option!") if
         (opts[:ganapati].nil? && opts[:hdfs_thrift].nil?)
       @ganapati = opts[:ganapati] ||
@@ -53,22 +54,44 @@ module Weari
       return arclist_hdfs
     end
 
+    def reparse_arcs(arcs)
+      arcs.each do |arcname|
+        @ganapati.rm(json_path(arcname)) if parsed?(arcname)
+      end
+      parse_arcs(arcs)
+    end
+
+    def mk_arcname(arc_uri)
+      return arc_uri.to_s.split(/\//)[-1]
+    end
+    
+    def mk_json_path(arc)
+      return "json/#{mk_arcname(arc)}.json.gz"
+    end
+    
+    def parsed?(arc)
+      @ganapati.exists?(mk_json_path(arc))
+    end
+    
     def parse_arcs(arcs)
-      # Where to put the output
-      outputdir = (0...10).map{ ('a'..'z').to_a[rand(26)] }.join 
-
-      # generate list of arcs
-      arclist_hdfs = mk_arc_list(arcs)
-
-      # build pig script
-      pig_job = @pig.new_job(:jars => Dir[File.join(@weari_java_home, "lib", "*")])
-      pig_job << "Data = LOAD '#{arclist_hdfs}' USING org.cdlib.was.ngIndexer.pig.ArchiveURLParserLoader() AS (filename:chararray, url:chararray, digest:chararray, date:chararray, length:long, content:chararray, detectedMediaType:chararray, suppliedMediaType:chararray, title:chararray, outlinks);"
-      pig_job << "STORE Data INTO '#{outputdir}.json.gz' USING org.cdlib.was.ngIndexer.pig.JsonParsedArchiveRecordStorer();"
-      
-      pig_job.run
-      # remove arclist
-      @ganapati.rm(arclist_hdfs)
-      refile_json("#{outputdir}.json.gz")
+      # remove already parsed arcs, group into manageable size
+      arcs.delete_if {|arc| parsed?(arc)}.each_slice(@group_size) do |arc_slice|
+        # Where to put the output
+        outputdir = (0...10).map{ ('a'..'z').to_a[rand(26)] }.join 
+        
+        # generate list of arcs
+        arclist_hdfs = mk_arc_list(arc_slice)
+        
+        # build pig script
+        pig_job = @pig.new_job(:jars => Dir[File.join(@weari_java_home, "lib", "*")])
+        pig_job << "Data = LOAD '#{arclist_hdfs}' USING org.cdlib.was.ngIndexer.pig.ArchiveURLParserLoader() AS (filename:chararray, url:chararray, digest:chararray, date:chararray, length:long, content:chararray, detectedMediaType:chararray, suppliedMediaType:chararray, title:chararray, outlinks);"
+        pig_job << "STORE Data INTO '#{outputdir}.json.gz' USING org.cdlib.was.ngIndexer.pig.JsonParsedArchiveRecordStorer();"
+        
+        pig_job.run
+        # remove arclist
+        @ganapati.rm(arclist_hdfs)
+        refile_json("#{outputdir}.json.gz")
+      end
     end
   end
 end
