@@ -73,25 +73,54 @@ module Weari
       @ganapati.exists?(mk_json_path(arc))
     end
     
-    def parse_arcs(arcs)
-      # remove already parsed arcs, group into manageable size
-      arcs.delete_if {|arc| parsed?(arc)}.each_slice(@group_size) do |arc_slice|
-        # Where to put the output
-        outputdir = (0...10).map{ ('a'..'z').to_a[rand(26)] }.join 
-        
-        # generate list of arcs
-        arclist_hdfs = mk_arc_list(arc_slice)
-        
-        # build pig script
-        pig_job = @pig.new_job(:jars => Dir[File.join(@weari_java_home, "lib", "*")])
-        pig_job << "Data = LOAD '#{arclist_hdfs}' USING org.cdlib.was.ngIndexer.pig.ArchiveURLParserLoader() AS (filename:chararray, url:chararray, digest:chararray, date:chararray, length:long, content:chararray, detectedMediaType:chararray, suppliedMediaType:chararray, title:chararray, outlinks);"
-        pig_job << "STORE Data INTO '#{outputdir}.json.gz' USING org.cdlib.was.ngIndexer.pig.JsonParsedArchiveRecordStorer();"
-        
-        pig_job.run
-        # remove arclist
-        @ganapati.rm(arclist_hdfs)
-        refile_json("#{outputdir}.json.gz")
+    def parse_arcs_retry(arcs)
+      if (self._parse_arcs(arcs)) then
+        # success!
+        return []
+      else
+        if (arcs.size < 2) then
+          # bad ARC
+          return arcs
+        else
+          # split in 2, append the results
+          i = arcs.size/2
+          return parse_arcs_retry(arcs.take(i)) + 
+            parse_arcs_retry(arcs.drop(i))
+        end
       end
+    end
+
+    def parse_arcs(arcs)
+      failed_arcs = []
+      # remove already parsed arcs
+      arcs = arcs.delete_if { |arc| parsed?(arc) }
+      # group into manageable size
+      arcs.each_slice(@group_size) do |arc_slice|
+        failed_arcs = failed_arcs + parse_arcs_retry(arc_slice)
+      end
+      return failed_arcs
+    end
+    
+    # raw parse arcs
+    def _parse_arcs(arcs)
+      # Where to put the output
+      outputdir = (0...10).map{ ('a'..'z').to_a[rand(26)] }.join 
+      
+      # generate list of arcs
+      arclist_hdfs = mk_arc_list(arcs)
+      
+      # build pig script
+      pig_job = @pig.new_job(:jars => Dir[File.join(@weari_java_home, "lib", "*")])
+      pig_job << "Data = LOAD '#{arclist_hdfs}' \
+          USING org.cdlib.was.ngIndexer.pig.ArchiveURLParserLoader() \
+          AS (filename:chararray, url:chararray, digest:chararray, date:chararray, length:long, content:chararray, detectedMediaType:chararray, suppliedMediaType:chararray, title:chararray, outlinks);"
+      pig_job << "STORE Data INTO '#{outputdir}.json.gz' \
+        USING org.cdlib.was.ngIndexer.pig.JsonParsedArchiveRecordStorer();"
+      
+      success = pig_job.run
+      refile_json("#{outputdir}.json.gz") if success
+      @ganapati.rm(arclist_hdfs)
+      return success
     end
   end
 end

@@ -36,7 +36,7 @@ class TestParser < Test::Unit::TestCase
       @ganapati.stubs(:rm)
       @ganapati.stubs(:mkdir)
       @ganapati.stubs(:ls).returns([])
-      @pig_job.stubs(:run)
+      @pig_job.stubs(:run).returns(true)
       @pig_job.stubs(:<<)
       @pig.stubs(:new_job).returns(@pig_job)
     end
@@ -67,6 +67,25 @@ class TestParser < Test::Unit::TestCase
       
       # parse ARCS
       @parser.parse_arcs(@arc_list)
+    end
+    
+    should "reparse until it works" do
+      @arcs = ["CDL-1.arc.gz",
+               "CDL-2.warc.gz",
+               "CDL-3.arc.gz",
+               "CDL-4.arc.gz",
+               "CDL-5.arc.gz" ]
+      # we expect first to try all 5 ARCS
+      @parser.expects(:_parse_arcs).with(@arcs).returns(false)
+      # this failed, so we divide in half
+      @parser.expects(:_parse_arcs).with(@arcs.take(2)).returns(false)
+      @parser.expects(:_parse_arcs).with(@arcs.drop(2)).returns(true)
+      # the first group failed (CDL-1, CDL-2) so we expect it to split
+      # that group in half
+      @parser.expects(:_parse_arcs).with([@arcs[0]]).returns(true)
+      @parser.expects(:_parse_arcs).with([@arcs[1]]).returns(false)
+
+      assert_equal([@arcs[1]], @parser.parse_arcs(@arcs))
     end
   end
 end

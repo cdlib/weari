@@ -31,8 +31,9 @@ module Weari
       end
       script_file << @script
       script_file.close
-      @pig.run_job(script_file.path)
+      retval = @pig.run_job(script_file.path)
       script_file.unlink
+      return retval
     end
   end
 end
