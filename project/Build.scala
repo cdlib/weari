@@ -1,4 +1,4 @@
-import com.github.retronym.SbtOneJar;
+import java.io.File;
 import sbt._;
 import Keys._;
 
@@ -9,11 +9,23 @@ object MyBuild extends Build {
   lazy val distPath = SettingKey[File]("dist-path", "Path to generate the distribution zip to")
   lazy val dist = TaskKey[File]("dist", "Generate distribution zip file")
 
+  def distinctJars(jars : Seq[Pair[File,String]]) : Seq[Pair[File,String]] = {
+    var seen = Map[String,Boolean]();
+    var retval = List[Pair[File,String]]();
+    for (jar <- jars) {
+      if (!seen.contains(jar._2)) {
+        seen += (jar._2->true);
+        retval = jar :: retval;
+        } 
+    }
+    return for (v <- retval) yield v;
+  }
+
   val distTask = dist <<= (distPath in Runtime, fullClasspath in Runtime) map { (dest, cp) =>
     val jars = for (attributedjar <- cp;
                     val jar = attributedjar.data)
       yield (jar, "lib/%s".format(jar.getName))
-    IO.zip(jars, dest);
+    IO.zip(distinctJars(jars), dest);
     dest;
   }
 
@@ -25,7 +37,7 @@ object MyBuild extends Build {
                 
   lazy val root = Project("root",
                           file("."),
-                          settings = buildSettings ++ Seq(distTask) ++ SbtOneJar.oneJarSettings ++
+                          settings = buildSettings ++ Seq(distTask) ++ 
                             Seq(name := "was-ng-indexer",
                                 distFiles := Seq(),
                                 distPath <<= (target) { (target) => target / "dist" / "artifacts.zip" },
@@ -35,5 +47,6 @@ object MyBuild extends Build {
                                                             "junit" % "junit" % "4.8.2" % "test"),
                                 resolvers := Seq("cdl-public" at "http://mvn.cdlib.org/content/repositories/public",
                                                  "cdl-thirdparty" at "http://mvn.cdlib.org/content/repositories/thirdparty",
-                                                 "archive.org" at "http://builds.archive.org:8080/maven2/")));
+                                                 "archive.org" at "http://builds.archive.org:8080/maven2/",
+                                                 "Local Maven Repository" at Path.userHome.asURL + "/.m2/repository")));
 }
