@@ -7,7 +7,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.cdlib.was</groupId>
-  <artifactId>ng-indexer</artifactId>
+  <artifactId>weari</artifactId>
   <version>0.1-SNAPSHOT</version>
 
   <!-- try to make maven quiet -->

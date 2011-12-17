@@ -38,7 +38,7 @@ object MyBuild extends Build {
   lazy val root = Project("root",
                           file("."),
                           settings = buildSettings ++ Seq(distTask) ++ 
-                            Seq(name := "was-ng-indexer",
+                            Seq(name := "weari",
                                 distFiles := Seq(),
                                 distPath <<= (target) { (target) => target / "dist" / "artifacts.zip" },
                                 exportJars := true,
