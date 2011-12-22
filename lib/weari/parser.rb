@@ -112,7 +112,7 @@ module Weari
       # build pig script
       pig_job = @pig.new_job(:jars => Dir[File.join(@weari_java_home, "lib", "*")])
       pig_job << "Data = LOAD '#{arclist_hdfs}' \
-          USING org.cdlib.weari.pig.ArchiveURLParserLoader() \
+          USING org.cdlib.was.weari.pig.ArchiveURLParserLoader() \
           AS (filename:chararray, url:chararray, digest:chararray, date:chararray, length:long, content:chararray, detectedMediaType:chararray, suppliedMediaType:chararray, title:chararray, outlinks);"
       pig_job << "STORE Data INTO '#{outputdir}.json.gz' \
         USING org.cdlib.was.weari.pig.JsonParsedArchiveRecordStorer();"
