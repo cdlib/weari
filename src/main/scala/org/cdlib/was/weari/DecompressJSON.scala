@@ -27,11 +27,20 @@ object DecompressJSON extends Logger {
       if (!fs.isFile(newPath)) {
         val in = fs.open(path);
         catchAndLogExceptions("Problem with file %s: {}.".format(path.toString)) {
-          val gzin = new GZIPInputStream(in);
-          val out = fs.create(newPath);
-          flushStream(gzin, out);
-          out.close;
-          gzin.close;
+          try {
+            val gzin = new GZIPInputStream(in);
+            val out = fs.create(newPath);
+            flushStream(gzin, out);
+            out.close;
+            gzin.close;
+          } catch {
+            case ex : IOException => {
+              if (ex.getMessage == "Not in GZIP format.") {
+                val mvPath = newPath(path.getParent, "%s.bad".format(path.getName))
+                fs.rename(path, mvPath);
+              }
+            }
+          }   
         }
       }
     }
