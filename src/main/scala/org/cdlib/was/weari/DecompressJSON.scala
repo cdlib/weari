@@ -36,7 +36,7 @@ object DecompressJSON extends Logger {
           } catch {
             case ex : IOException => {
               if (ex.getMessage == "Not in GZIP format.") {
-                val mvPath = newPath(path.getParent, "%s.bad".format(path.getName))
+                val mvPath = new Path(path.getParent, "%s.bad".format(path.getName))
                 fs.rename(path, mvPath);
               }
             }
