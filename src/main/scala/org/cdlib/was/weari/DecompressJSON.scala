@@ -26,7 +26,7 @@ object DecompressJSON extends Logger {
       val newPath = new Path(path.getParent, name.substring(0, name.length-3));
       if (!fs.isFile(newPath)) {
         val in = fs.open(path);
-        catchAndLogExceptions {
+        catchAndLogExceptions("Problem with file %s: {}.".format(path.toString)) {
           val gzin = new GZIPInputStream(in);
           val out = fs.create(newPath);
           flushStream(gzin, out);
