@@ -1,3 +1,5 @@
+package org.cdlib.was.weari;
+
 import java.io.{File,InputStream,IOException,OutputStream};
 import java.util.zip.GZIPInputStream;
 import org.apache.hadoop.conf.Configuration;
