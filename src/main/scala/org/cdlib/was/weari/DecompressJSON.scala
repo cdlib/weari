@@ -43,6 +43,8 @@ object DecompressJSON extends Logger {
           }   
         }
       }
+      /* slow down to allow HDFS to recover */
+      Thread.sleep(1000); 
     }
   }
 }
