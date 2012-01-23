@@ -81,6 +81,6 @@ class TestSolr < Test::Unit::TestCase
       assert_equal(["SPEC-A", "SPEC-B"], c["specification"])
       assert_equal([now, nowp], c["date"])
       assert_equal("foo", c["content"])
-    end      
+    end
   end
 end

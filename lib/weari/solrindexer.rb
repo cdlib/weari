@@ -40,9 +40,7 @@ module Weari
         if MERGE_FIELDS[k] then
           merged[k] = merged[k] + [v]
         else
-          if (merged[k] != v) then
-            raise RecordMergeException.new
-          end
+          raise RecordMergeException.new if (merged[k] != v)
         end
       end
       return merged
