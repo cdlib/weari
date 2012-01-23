@@ -30,7 +30,7 @@ class TestSolr < Test::Unit::TestCase
       
       json_doc = {
         "url" => "http://example.org/",
-        "suppliedContentType" => { "top" => "text",
+        "suppliedContentType" => { "top" => "application",
           "sub" => "xml+xhtml" },
         "detectedContentType" => { "top" => "text",
           "sub" => "html" }
@@ -40,7 +40,7 @@ class TestSolr < Test::Unit::TestCase
                    doc.xpath('/add/doc/field[@name="url"]').text)
       assert_equal("text/html",
                    doc.xpath('/add/doc/field[@name="mediatypedet"]').text)
-      assert_equal("text/xml+xhtml",
+      assert_equal("application/xml+xhtml",
                    doc.xpath('/add/doc/field[@name="mediatypesup"]').text)
     end
   end
