@@ -38,11 +38,14 @@ module Weari
       end
       b.each do |k, v|
         if MERGE_FIELDS[k] then
-          merged[k] = merged[k] + v
+          merged[k] = merged[k] + [v]
         else
-          raise RecordMergeException.new
+          if (merged[k] != v) then
+            raise RecordMergeException.new
+          end
         end
       end
+      return merged
     end
 
     def add_fields(xml, name, values)
