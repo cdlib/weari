@@ -14,7 +14,7 @@ Rake::TestTask.new(:test) do |t|
 end
 
 RDoc::Task.new do |rd|
-  rd.title = "Merritt Ingest Client"
+  rd.title = "Web ARchiving Indexing - Ruby"
   rd.rdoc_files.include("README", "lib/**/*.rb")
 
   rd.options += ['-f', 'darkfish',]

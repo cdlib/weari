@@ -55,8 +55,8 @@ class TestParser < Test::Unit::TestCase
 
     should "not reparse an existing arc" do
       @ganapati.unstub(:exists?)
-      @ganapati.expects(:exists?).with("json/#{@arc_list[0]}.json.gz").returns(false)
-      @ganapati.expects(:exists?).with("json/#{@arc_list[1]}.json.gz").returns(true)
+      @ganapati.expects(:exists?).with("json/#{@arc_list[0]}.json").returns(false)
+      @ganapati.expects(:exists?).with("json/#{@arc_list[1]}.json").returns(true)
 
       @ganapati.unstub(:put)
       @ganapati.expects(:put).with do |source, target|

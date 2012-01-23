@@ -4,10 +4,12 @@
 require 'weari/pig'
 require 'ganapati'
 require 'tempfile'
+require 'json'
 
 module Weari
   class Parser
     def initialize(opts)
+      @json_dir = opts[:json_dir] || "json"
       @group_size = opts[:group_size] || 100
       raise ArgumentError.new("Missing :hdfs_script option!") if
         (opts[:ganapati].nil? && opts[:hdfs_thrift].nil?)
@@ -25,11 +27,11 @@ module Weari
     end
 
     def refile_json(source)
-      @ganapati.mkdir("json")
+      @ganapati.mkdir(@json_dir)
       @ganapati.ls(source).each do |path|
-        if path.match(/\.json\.gz$/) then
+        if path.match(/\.json$/) then
           name = path.split(/\//)[-1]
-          @ganapati.mv(path, "json/#{name}")
+          @ganapati.mv(path, "#{@json_dir}/#{name}")
         else
           if (@ganapati.stat(path).isdir)
             refile_json(path)
@@ -66,13 +68,19 @@ module Weari
     end
     
     def mk_json_path(arc)
-      return "json/#{mk_arcname(arc)}.json.gz"
+      return "#{@json_dir}/#{mk_arcname(arc)}.json"
     end
     
     def parsed?(arc)
       @ganapati.exists?(mk_json_path(arc))
     end
     
+    def get_json(arc)
+      json_path = mk_json_path(arc)
+      data = @ganapati.open(json_path).read()
+      return JSON.parse(data)
+    end
+
     def parse_arcs_retry(arcs)
       if (self._parse_arcs(arcs)) then
         # success!
@@ -114,11 +122,11 @@ module Weari
       pig_job << "Data = LOAD '#{arclist_hdfs}' \
           USING org.cdlib.was.weari.pig.ArchiveURLParserLoader() \
           AS (filename:chararray, url:chararray, digest:chararray, date:chararray, length:long, content:chararray, detectedMediaType:chararray, suppliedMediaType:chararray, title:chararray, outlinks);"
-      pig_job << "STORE Data INTO '#{outputdir}.json.gz' \
+      pig_job << "STORE Data INTO '#{outputdir}.json' \
         USING org.cdlib.was.weari.pig.JsonParsedArchiveRecordStorer();"
       
       success = pig_job.run
-      refile_json("#{outputdir}.json.gz") if success
+      refile_json("#{outputdir}.json") if success
       @ganapati.rm(arclist_hdfs)
       return success
     end

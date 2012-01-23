@@ -6,45 +6,53 @@ require 'rubygems'
 require 'fakeweb'
 require 'shoulda'
 require 'weari'
+require 'weari/solrindexer'
+require 'rsolr'
+require 'nokogiri'
 
 class TestSolr < Test::Unit::TestCase
+  def setup
+    @merge_query = "*:*"
+    @rsolr = RSolr.connect(:url=>"http://localhost/solr")
+    @rsolr_mock = mock()
+    @rsolr_mock.stubs(:get)
+    @parser = mock()
+    @merge_query = "*:*"
+  end
+  
   context "solr client" do
     should "be able to be initialized" do
-      client = Weari::Solr.connect(:url  => "http://localhost:8983/solr",
-                                   :hdfs => "localhost:52563")
+      client = Weari::SolrIndexer.new(@rsolr_mock, @parser, @merge_query)
     end
 
     should "convert json docs" do
-      solr = Weari::Solr.connect(:url  => "http://example.org:8983/",
-                                 :hdfs => "localhost:52563")
+      solr = Weari::SolrIndexer.new(@rsolr_mock, @parser, @merge_query)
+      
       json_doc = {
         "url" => "http://example.org/",
         "suppliedContentType" => { "top" => "text",
           "sub" => "xml+xhtml" },
         "detectedContentType" => { "top" => "text",
           "sub" => "html" }
-
       }
-      xml_data = <<EOXML
-<?xml version="1.0" encoding="UTF-8"?>
-<add>
-  <doc>
-    <field name="mediatypesup"><![CDATA[text/xml+xhtml]]></field>
-    <field name="url"><![CDATA[http://example.org/]]></field>
-    <field name="mediatypedet"><![CDATA[text/html]]></field>
-    <field name="foo"><![CDATA[bar]]></field>
-  </doc>
-</add>
-EOXML
-      assert_equal(xml_data, solr.json2solr(json_doc, { "foo" => "bar" }))
+      doc = Nokogiri::XML(solr.json2solr(json_doc, { "foo" => "bar" }))
+      assert_equal("http://example.org/",
+                   doc.xpath('/add/doc/field[@name="url"]').text)
+      assert_equal("text/html",
+                   doc.xpath('/add/doc/field[@name="mediatypedet"]').text)
+      assert_equal("text/xml+xhtml",
+                   doc.xpath('/add/doc/field[@name="mediatypesup"]').text)
     end
-    
-    should "commit" do
-      solr = Weari::Solr.connect(:url => "http://localhost/solr")
-      FakeWeb.register_uri(:post, /http:\/\/localhost\/solr\/update/,
-                           :content_type => "text/plain; charset=UTF-8",
-                           :body => "{'responseHeader'=>{'status'=>0,'QTime'=>12}}")
-      solr.commit
+  end
+  
+  context "solr client record merging" do
+    should "throw an error when merging un-mergeable records" do
+      client = Weari::SolrIndexer.new(@rsolr_mock, @parser, @merge_query)
+      a = {"id" => "a"}
+      b = {"id" => "b"}
+      assert_raise(Weari::RecordMergeException) do
+        client.merge_records(a,b)
+      end
     end
   end
 end
