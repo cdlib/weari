@@ -2,9 +2,14 @@
 # Copyright:: Copyright (c) 2011, Regents of the University of California
 
 module Weari
-  %W(Builder Parser Pig PigJob SolrIndexer).each do |n|
-    autoload n.to_sym, "weari/#{n.downcase}"
+  autoload :Builder, "weari/builder"
+  autoload :Parser,  "weari/parser"
+  autoload :Pig,     "weari/pig"
+  autoload :PigJob,  "weari/pigjob"
+
+  module Solr
+    autoload :CachingEnumerable, "weari/solr/caching_enumerable"
+    autoload :Indexer,           "weari/solr/indexer"
+    autoload :Merger,            "weari/solr/merger"
   end
-  
-  VERSION = "0.0.1"
 end
