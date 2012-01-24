@@ -8,8 +8,9 @@ module Weari
   autoload :PigJob,  "weari/pigjob"
 
   module Solr
-    autoload :CachingEnumerable, "weari/solr/caching_enumerable"
-    autoload :Indexer,           "weari/solr/indexer"
-    autoload :Merger,            "weari/solr/merger"
+    autoload :CachingEnumerable,  "weari/solr/caching_enumerable"
+    autoload :DocumentEnumerable, "weari/solr/document_enumerable"
+    autoload :Indexer,            "weari/solr/indexer"
+    autoload :Merger,             "weari/solr/merger"
   end
 end

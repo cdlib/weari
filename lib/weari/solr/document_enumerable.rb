@@ -1,4 +1,6 @@
-require 'weari/solr/caching_enumerable'
+require 'rubygems'
+
+require 'weari'
 
 module Weari
   module Solr

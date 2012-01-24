@@ -3,8 +3,9 @@
 
 require 'rubygems'
 
-require 'weari'
 require 'shoulda'
+
+require 'weari'
 
 class TestBuilder < Test::Unit::TestCase
   context "building xml" do

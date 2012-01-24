@@ -4,6 +4,7 @@
 require 'rubygems'
 
 require 'bloomfilter-rb'
+require 'weari'
 
 module Weari
   module Solr

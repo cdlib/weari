@@ -3,8 +3,9 @@
 
 require 'rubygems'
 
-require 'weari/solr/caching_enumerable'
 require 'shoulda'
+
+require 'weari'
 
 class TestSolrCachingEnumerable < Test::Unit::TestCase
   context "caching enumerable" do

@@ -5,6 +5,7 @@ require 'rubygems'
 
 require 'fakeweb'
 require 'shoulda'
+
 require 'weari'
 
 class TestSolrMerger < Test::Unit::TestCase

@@ -3,9 +3,10 @@
 
 require 'rubygems'
 
-require 'weari'
-require 'shoulda'
 require 'mocha'
+require 'shoulda'
+
+require 'weari'
 
 class TestParser < Test::Unit::TestCase
   context "creating a parser" do

@@ -6,9 +6,9 @@ require 'rubygems'
 require 'fakeweb'
 require 'shoulda'
 
-require 'weari'
-require 'rsolr'
 require 'nokogiri'
+require 'rsolr'
+require 'weari'
 
 class TestSolr < Test::Unit::TestCase
   def setup

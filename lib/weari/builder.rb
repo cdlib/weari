@@ -2,6 +2,7 @@
 # Copyright:: Copyright (c) 2011, Regents of the University of California
 
 require 'rubygems'
+
 require 'nokogiri'
 
 module Weari

@@ -1,3 +1,6 @@
+require 'rubygems'
+
+
 module Weari
   module Solr
 
