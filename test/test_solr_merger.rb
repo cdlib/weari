@@ -45,4 +45,17 @@ class TestSolrMerger < Test::Unit::TestCase
       assert_equal("foo", c["content"])
     end
   end
+  
+  should "merge identical documents into the same document" do
+    a = {
+      "id"            => "a",
+      "content"       => "foo",
+      "arcname"       => ["ARC-A.arc.gz"],
+      "job"           => ["JOB-A"],
+      "specification" => ["SPEC-A"],
+      "date"          => [Time.new]
+    }
+    c = Weari::Solr::Merger.merge_records(a,a)
+    assert_equal(a, c)
+  end
 end

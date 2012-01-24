@@ -66,14 +66,16 @@ module Weari
         merged = {}
         a.each do |k, v|
           if MERGE_FIELDS[k] then
-            merged[k] = [v]
-          else
-            merged[k] = v
+            v = [v] if (v.class != Array)
           end
+          merged[k] = v
         end
         b.each do |k, v|
           if MERGE_FIELDS[k] then
-            merged[k] = merged[k] + [v]
+            v = [v] if (v.class != Array)
+            if !merged[k].member?(v[0]) then
+              merged[k] = merged[k] + v
+            end
           else
             raise RecordMergeException.new if (merged[k] != v)
           end
