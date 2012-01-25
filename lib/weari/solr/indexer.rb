@@ -44,8 +44,6 @@ module Weari
                                  when "date"
                                    # convert from epoch
                                    ["date", Time.at(v/1000).utc.strftime("%Y-%m-%dT%H:%M:%SZ")]
-                                 when "tags"
-                                   ["tag", v]
                                  else
                                    [k, v]
                                  end
@@ -81,9 +79,9 @@ module Weari
       
       # Index some JSON files.
       def index(arc_names, options={})
-        extra_fields = options['extra_fields'] || {}
-        extra_id = options['extra_id']
-        dedup_by = options['dedup_by']
+        extra_fields = options[:extra_fields] || {}
+        extra_id = options[:extra_id]
+        dedup_by = options[:dedup_by]
 
         # Check that all arcs are parsed
         arc_names.each do |n| 
