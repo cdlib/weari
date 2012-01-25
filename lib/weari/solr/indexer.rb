@@ -81,7 +81,6 @@ module Weari
       def index(arc_names, options={})
         extra_fields = options[:extra_fields] || {}
         extra_id = options[:extra_id]
-        dedup_by = options[:dedup_by]
 
         # Check that all arcs are parsed
         arc_names.each do |n| 
