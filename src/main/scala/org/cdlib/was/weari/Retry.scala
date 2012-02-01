@@ -25,7 +25,11 @@ trait Retry extends Logger {
       }
     }
   }
-  
+
+  def retryOrThrow (times : Int) (what : =>Unit) {
+    retry(times) (what) {ex=>()}
+  }
+
   def retryLog (times : Int) (what : =>Unit) {
     retry (times) (what) { (ex)=>
       logger.error("Caught exception {} ; retrying.", ex.toString);
