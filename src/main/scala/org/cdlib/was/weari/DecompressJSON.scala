@@ -10,10 +10,12 @@ import org.apache.hadoop.fs.Path;
 
 import org.cdlib.was.weari.Utility.{flushStream};
 
+import grizzled.slf4j.Logging;
+
 /**
  * Utility to decompress gz files in a Hadoop FS.
  */
-object DecompressJSON extends Logger {
+object DecompressJSON extends Logging with ExceptionLogger {
 
   def main (args : Array[String]) {
     val glob = new Path(args(0));
