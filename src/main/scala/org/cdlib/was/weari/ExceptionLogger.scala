@@ -6,9 +6,9 @@ import java.io.{PrintWriter,StringWriter};
 
 import org.slf4j.LoggerFactory;
 
-trait Logger { self =>
+import grizzled.slf4j.Logging;
 
-  val logger = LoggerFactory.getLogger(self.getClass)
+trait ExceptionLogger { self : Logging => 
 
   def getStackTrace(th : Throwable) : String = {
     val result = new StringWriter;
@@ -25,7 +25,7 @@ trait Logger { self =>
       Some(f);
     } catch {
       case ex : Exception => {
-        logger.error(formatStr, ex.toString);
+        logger.error(formatStr, ex);
         logger.debug(getStackTrace(ex));
       }
       None;
