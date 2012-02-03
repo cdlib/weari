@@ -27,12 +27,14 @@ import org.cdlib.was.weari.Utility.{dumpStream,string2date};
 
 import scala.util.matching.Regex;
 
+import grizzled.slf4j.Logging;
+
 /**
  * A wrapper for ArchiveRecord objects to provide a more consistent
  * interface.
  */
 class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String) 
-  extends InputStream with WASArchiveRecord with Logger {
+  extends InputStream with WASArchiveRecord with Logging with ExceptionLogger {
 
   private var statusCode : Option[Int] = None;
   private var ready : Boolean = false;
