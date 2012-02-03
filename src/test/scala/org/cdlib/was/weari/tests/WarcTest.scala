@@ -23,7 +23,7 @@ import scala.collection.mutable.HashMap;
 class WarcSpec extends FeatureSpec {
   val cl = classOf[WarcSpec].getClassLoader;
   val config = new Config {};
-  val indexer = new SolrIndexer;
+  val parser = new MyParser;
   val warcName = "IAH-20080430204825-00000-blackbook.warc.gz";
   val arcName = "IAH-20080430204825-00000-blackbook.arc.gz";
 
@@ -34,13 +34,13 @@ class WarcSpec extends FeatureSpec {
 
       for (rec <- ArchiveReaderFactoryWrapper.get(warcName, cl.getResourceAsStream(warcName))) {
         if (rec.isHttpResponse) {
-          indexer.parseArchiveRecord(rec).map { res =>
+          parser.safeParse(rec).map { res =>
             warcData += (rec.getUrl -> Json.generate(res));
           }
         }
       }
       for (rec <- ArchiveReaderFactoryWrapper.get(arcName, cl.getResourceAsStream(arcName))) {
-        indexer.parseArchiveRecord(rec).map { res =>
+        parser.safeParse(rec).map { res =>
           arcData += (rec.getUrl -> Json.generate(res))
         }
       }
@@ -57,18 +57,18 @@ class WarcSpec extends FeatureSpec {
     
     scenario ("We can round trip JSON.") {
       for (rec <- ArchiveReaderFactoryWrapper.get (arcName, cl.getResourceAsStream(arcName))) {
-        indexer.parseArchiveRecord(rec).map { res =>
+        parser.safeParse(rec).map { res =>
           assert (Json.parse[ParsedArchiveRecord](Json.generate(res)) == res);
         }
       }
     }
     
-    scenario ("can serialize an arc to JSON") {
-      val tmpfile = File.createTempFile("ng-indexer", ".json.gz");
-      indexer.arc2json(cl.getResourceAsStream(arcName), arcName, tmpfile);
+    // scenario ("can serialize an arc to JSON") {
+    //   val tmpfile = File.createTempFile("ng-indexer", ".json.gz");
+    //   indexer.arc2json(cl.getResourceAsStream(arcName), arcName, tmpfile);
 
-      /* and read it */
-      indexer.json2records(tmpfile);
-    }
+    //   /* and read it */
+    //   indexer.json2records(tmpfile);
+    // }
   }
 }
