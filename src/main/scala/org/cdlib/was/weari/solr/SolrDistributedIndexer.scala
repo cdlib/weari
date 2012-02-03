@@ -11,6 +11,8 @@ import org.apache.solr.common.params.{ModifiableSolrParams,SolrParams};
 
 import org.cdlib.was.weari._;
 
+import grizzled.slf4j.Logging;
+
 /** A class for handling a distributed solr system.
   *
   * Uses a consistent hash of servers.
@@ -18,7 +20,7 @@ import org.cdlib.was.weari._;
 class SolrDistributedServer (serverInit : Seq[Tuple3[String,String,Int]],
                              queueSize : Int = 1000,
                              queueRunners : Int = 3,
-                             commitThreshold : Int = 10000) extends Logger {
+                             commitThreshold : Int = 10000) extends Logging {
   val commitLock = new Object;
   var commitCounter = 0;
   
