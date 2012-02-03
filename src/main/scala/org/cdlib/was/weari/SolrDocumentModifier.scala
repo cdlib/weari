@@ -18,7 +18,7 @@ import org.cdlib.was.weari.SolrFields._;
 
 import scala.collection.JavaConversions.collectionAsScalaIterable;
 
-object SolrDocumentModifier extends Logger {
+object SolrDocumentModifier {
   /**
    * Remove a single value from a document's field.
    */
