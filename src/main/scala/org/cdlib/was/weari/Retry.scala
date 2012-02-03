@@ -2,7 +2,9 @@
 
 package org.cdlib.was.weari;
 
-trait Retry extends Logger {
+import grizzled.slf4j.Logging;
+
+trait Retry extends Logging {
   /**
    * Retry an operation a number of times.
    * @param times Time to try to retry.
@@ -32,7 +34,7 @@ trait Retry extends Logger {
 
   def retryLog (times : Int) (what : =>Unit) {
     retry (times) (what) { (ex)=>
-      logger.error("Caught exception {} ; retrying.", ex.toString);
+      error("Caught exception {} ; retrying.", ex);
     }
   }
 }
