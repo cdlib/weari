@@ -1,4 +1,3 @@
-import com.github.retronym.SbtOneJar;
 import java.io.File;
 import sbt._;
 import Keys._;
@@ -46,7 +45,6 @@ object MyBuild extends Build {
     Project("root",
             file("."),
             settings = buildSettings ++ 
-              SbtOneJar.oneJarSettings ++
               Seq(distTask) ++ 
               Seq(name := "weari",
                   distFiles := Seq(),
