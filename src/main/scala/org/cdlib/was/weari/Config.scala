@@ -15,4 +15,5 @@ trait Config extends SSConfig {
   val parseTimeout    = new Value(30000); /* 30 sec */
   val jsonCacheDir    = new Value(new File(System.getProperty("java.io.tmpdir")));
   val arcServerBase   = new Value("http://localhost:54480/arcs/%s");
+  val jsonBaseDir     = new Value("/user/was/json");
 }
