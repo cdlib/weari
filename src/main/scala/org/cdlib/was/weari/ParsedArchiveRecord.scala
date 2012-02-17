@@ -44,7 +44,7 @@ case class ParsedArchiveRecord (
     val uuri = UURIFactory.getInstance(url);
     updateFields(doc,
                  ARCNAME_FIELD        -> filename,
-                 ID_FIELD             -> "%s.%s".format(uuri.toString, digest),
+                 ID_FIELD             -> "%s.%s".format(uuri.toString, digest.getOrElse("-")),
                  DIGEST_FIELD         -> digest,
                  DATE_FIELD           -> date,
                  TITLE_FIELD          -> title,
