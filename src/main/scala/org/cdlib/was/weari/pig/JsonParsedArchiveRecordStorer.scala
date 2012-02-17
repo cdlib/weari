@@ -5,6 +5,8 @@ package org.cdlib.was.weari.pig;
 import java.io.{FilterOutputStream,IOException,OutputStream,OutputStreamWriter};
 import java.util.Date;
 
+import com.codahale.jerkson.Json;
+
 import org.apache.hadoop.fs.{Path};
 import org.apache.hadoop.io.{compress,Text};
 import org.apache.hadoop.mapreduce.{Job,OutputFormat,RecordWriter,TaskAttemptContext};
@@ -63,8 +65,6 @@ class JsonParsedArchiveRecordStorer extends StoreFunc {
     fileOut.write("[\n".getBytes("UTF-8"));
     val os = new FinishJsonArrayOutputStream(fileOut);
 
-    val indexer = new SolrIndexer;
-    
     val w = new OutputStreamWriter(os, "UTF-8");
     
     var firstRecord = true;
@@ -76,10 +76,10 @@ class JsonParsedArchiveRecordStorer extends StoreFunc {
         } else {
           w.write(",\n");
         }
-        indexer.writeRec(value, w);
+        w.write(Json.generate(value));
       }
     }
-    
+
     def close(context : TaskAttemptContext) {
       this.synchronized { 
         w.close();

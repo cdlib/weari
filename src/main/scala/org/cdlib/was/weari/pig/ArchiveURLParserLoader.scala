@@ -1,7 +1,5 @@
 /* Copyright (c) 2011 The Regents of the University of California */
 
-
-
 package org.cdlib.was.weari.pig;
 
 import java.io.{EOFException,File,FileInputStream};
@@ -24,11 +22,14 @@ import org.apache.pig.data.{BagFactory,Tuple,TupleFactory};
 import org.cdlib.was.weari._;
 import org.cdlib.was.weari.Utility.{date2string,flushStream,null2option,withFileOutputStream};
 
-class ArchiveURLParserLoader extends LoadFunc with Logger {
+import grizzled.slf4j.Logging;
+
+class ArchiveURLParserLoader extends LoadFunc with Logging {
   val tupleFactory = TupleFactory.getInstance();
   val bagFactory = BagFactory.getInstance();
   
-  val indexer = new SolrIndexer;
+  val httpClient = new SimpleHttpClient;
+  val parser = new MyParser;
   var in : RecordReader[_,_] = null;
 
   var it : Option[Iterator[ArchiveRecordWrapper]] = None;
@@ -65,7 +66,7 @@ class ArchiveURLParserLoader extends LoadFunc with Logger {
         } else {
           this.arcName = Some(matcher.group(1));
           /* download to a temp file with the arc name */
-          indexer.httpClient.getUri(uri) { is =>
+          httpClient.getUri(uri) { is =>
             this.tmpfile = Some(new File(new File(System.getProperty("java.io.tmpdir")), this.arcName.getOrElse("")));
             withFileOutputStream(this.tmpfile.get) { os => flushStream(is, os) } 
           }
@@ -75,7 +76,7 @@ class ArchiveURLParserLoader extends LoadFunc with Logger {
             } catch {
               case ex : EOFException => {
                 /* probably a completely empty file */
-                logger.error("Could not open arc: %s".format(this.arcName));
+                error("Could not open arc: %s".format(this.arcName));
               }
             }
           }
@@ -102,7 +103,7 @@ class ArchiveURLParserLoader extends LoadFunc with Logger {
         throw ex;
       } else {
         /* it is a bad gzip */
-        logger.error("Bad GZIP file: %s".format(this.arcName));
+        error("Bad GZIP file: %s".format(this.arcName));
         reset;
       }
     }
@@ -121,7 +122,7 @@ class ArchiveURLParserLoader extends LoadFunc with Logger {
     } catch {
       case ex : Exception => {
         /* log the exception before we rethrow it, so we know what arc was being read */
-        logger.error("Caught exception READING %s: {}".format(this.arcName.getOrElse("")), ex);
+        error("Caught exception READING %s: {}".format(this.arcName.getOrElse("")), ex);
         checkGzip(ex);
         /* set to null so we don't try to close it later & throw ANOTHER exception */
         rec = null;
@@ -134,7 +135,7 @@ class ArchiveURLParserLoader extends LoadFunc with Logger {
       } catch {
         case ex : Exception => {
           /* log the exception before we rethrow it, so we know what arc was being closed */
-          logger.error("Caught exception CLOSING %s: {}".format(this.arcName.getOrElse("")), ex);
+          error("Caught exception CLOSING %s: {}".format(this.arcName.getOrElse("")), ex);
           checkGzip(ex);
         }
       }
@@ -174,7 +175,7 @@ class ArchiveURLParserLoader extends LoadFunc with Logger {
           return null;
         } else {
           /* we have Option[Option[ParsedArchiveRecord]] here, so we need to flatten */
-          next = withNextRecord(indexer.parseArchiveRecord(_)).flatten.headOption;
+          next = withNextRecord(parser.safeParse(_)).flatten.headOption;
         }
       }
       return rec2tuple(next.get);
