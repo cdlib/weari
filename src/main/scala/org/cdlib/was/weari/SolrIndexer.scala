@@ -3,11 +3,8 @@
 package org.cdlib.was.weari;
 
 import org.apache.solr.client.solrj.util.ClientUtils.toSolrInputDocument;
-import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrServer;
-import org.apache.solr.common.SolrDocument;
-import org.apache.solr.common.SolrInputDocument;
-
+import org.apache.solr.client.solrj.{SolrServer,SolrQuery};
+import org.apache.solr.common.{SolrDocument,SolrInputDocument};
 import org.cdlib.was.weari.SolrDocumentModifier.mergeDocs;
 import org.cdlib.was.weari.SolrFields.ID_FIELD;
 
