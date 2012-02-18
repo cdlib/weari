@@ -2,32 +2,14 @@
 
 package org.cdlib.was.weari;
 
-import java.io.{BufferedWriter,File,FileInputStream,FileNotFoundException,FileOutputStream,InputStream,InputStreamReader,IOException,OutputStream,OutputStreamWriter,StringWriter,Writer};
-
-import java.net.URI;
-
-import java.util.zip.{GZIPInputStream,GZIPOutputStream};
-
-import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
-import org.apache.solr.client.solrj.impl.StreamingUpdateSolrServer;
-import org.apache.solr.client.solrj.SolrServer;
-import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.util.ClientUtils.toSolrInputDocument;
-import org.apache.solr.common.{SolrDocument, SolrInputDocument};
+import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.common.SolrDocument;
+import org.apache.solr.common.SolrInputDocument;
 
-import org.apache.tika.exception.TikaException;
-
-import org.cdlib.ssconf.Configurator;
-
-import org.cdlib.was.weari.SolrFields._;
-import org.cdlib.was.weari.Utility.null2option;
-
-import org.cdlib.was.weari.SolrDocumentModifier.{mergeDocs};
-
-import scala.collection.mutable.SynchronizedQueue;
-import scala.util.matching.Regex;
-
-import sun.misc.{Signal, SignalHandler};
+import org.cdlib.was.weari.SolrDocumentModifier.mergeDocs;
+import org.cdlib.was.weari.SolrFields.ID_FIELD;
 
 import grizzled.slf4j.Logging;
 
