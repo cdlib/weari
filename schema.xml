@@ -75,7 +75,7 @@
         <field name="canonicalurl" type="string" stored="true" indexed="true"/>
 
         <!-- from parse -->        
-        <field name="content" type="text" stored="true" indexed="true" compressed="true"/>
+        <field name="content" type="text" stored="false" indexed="true" compressed="true"/>
         <field name="title" type="text" stored="true" indexed="true"/>
 
         <!-- detected media type -->
