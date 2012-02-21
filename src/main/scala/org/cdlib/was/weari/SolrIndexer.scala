@@ -25,12 +25,10 @@ class SolrIndexer (server : SolrServer,
   def getById(id : String, server : SolrServer) : Option[SolrDocument] = {
     val q = new SolrQuery;
     q.setQuery("id:\"%s\"".format(id));
-    try {
-      return Some((new solr.SolrDocumentCollection(server, q)).head);
+    return try {
+      Some((new solr.SolrDocumentCollection(server, q)).head);
     } catch {
-      case ex : NoSuchElementException => {
-        return None;
-      }
+      case ex : NoSuchElementException => None;
     }
   }
 
