@@ -22,6 +22,11 @@ class SolrIndexer (server : SolrServer,
   val httpClient = new SimpleHttpClient;
   val parser = new MyParser;
 
+  /**
+   * Get a single document by its id. Return None if no document 
+   * has that id.
+   * 
+   */
   def getById(id : String, server : SolrServer) : Option[SolrDocument] = {
     val q = new SolrQuery;
     q.setQuery("id:\"%s\"".format(id));
@@ -44,17 +49,19 @@ class SolrIndexer (server : SolrServer,
       filter.add(id);
       server.add(doc);
     } else {
-      getById(id, server) match {
-        /* it could still be a false positive */
-        case None => server.add(doc);
-        case Some(olddoc) => {
-        val mergedDoc = mergeDocs(toSolrInputDocument(olddoc), doc);
-          server.add(mergedDoc);
-        }
-      }
+      val mergeddoc = getById(id,server).
+        map(toSolrInputDocument(_)).
+        map(mergeDocs(_, doc));
+      server.add(mergeddoc.getOrElse(doc));
     }
   }
 
+  /**
+   * Index a single ParsedArchiveRecord.
+   * Adds extraFields to document, and extraId to end of id.
+   * 
+   * @param record Record to index.
+   */
   def index (record : ParsedArchiveRecord) {
     val doc = record.toDocument;
     for ((k,v) <- extraFields) v match {
@@ -66,23 +73,19 @@ class SolrIndexer (server : SolrServer,
     retryOrThrow(3) { index(doc); }
   }
 
-  def index (recs : Seq[ParsedArchiveRecord],
-             arcName : String) : Boolean = {
+  /**
+   * Index a sequence of ParsedArchiveRecords.
+   * Commit at the end, or rollback if we get an exception.
+   */
+  def index (recs : Seq[ParsedArchiveRecord]) {
     try {
-      for (rec <- recs) { 
-        index(rec);
-      }
+      for (rec <- recs) { index(rec); }
+      server.commit;
     } catch {
       case ex : Exception => {
         server.rollback;
-        error({ "Exception while generating doc from arc (%s) %s.".format(arcName, ex) }, ex);
-        ex.printStackTrace();
-        return false;
+        throw ex;
       }
-    } finally {
-      /* ensure a commit at the end of the stream */
-      server.commit;
     }
-    return true;
   }
 }
