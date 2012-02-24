@@ -12,7 +12,7 @@ import scala.util.matching.Regex;
 
 object Utility {
   /* some of arcs end in .open or .gz.gz - we should fix */
-  val ARC_RE = new Regex(""".*?([A-Za-z0-9\.-]+arc\.gz)(?:\.open|\.gz)?""");
+  val ARC_RE = new Regex("""^.*?([A-Za-z0-9\.-]+arc\.gz)(?:\.open|\.gz)?$""");
 
   /**
    * Convert a possibly null thing into an Option version.
