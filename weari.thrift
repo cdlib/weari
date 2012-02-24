@@ -5,6 +5,10 @@ exception IndexException {
   1: string why
 }
 
+exception UnparsedException {
+  1: string arcname
+}
+
 service Server {
   void ping(),
 
@@ -13,5 +17,8 @@ service Server {
              3: list<string> arcs,
              4: string extraId,
              5: map<string,string> extraFields)
-    throws (1: IndexException ex)
+    throws (1: IndexException ex1, 2: UnparsedException ex2)
+
+  void parseArcs(1: list<string> arcs);
 }
+
