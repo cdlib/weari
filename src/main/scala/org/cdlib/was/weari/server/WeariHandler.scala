@@ -98,8 +98,8 @@ class WeariHandler(config: Config)
     val path = new Path(arclistName)
     val os = fs.create(path);
     for (arcname <- arcs) {
-      os.writeChars(arcname);
-      os.writeChar('\n');
+      val bytes = "%s\n".format(arcname).getBytes("UTF-8");
+      os.write(bytes, 0, bytes.length);
     }
     os.close;
     return path;
