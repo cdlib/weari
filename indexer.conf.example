@@ -1,2 +1,0 @@
-zooKeeperHosts := "localhost:2181";
-zooKeeperPath := "/arcIndexerQueue";
