@@ -60,6 +60,12 @@
       <artifactId>pig</artifactId>
       <version>0.9.1</version>
     </dependency>
+    <!-- needed by pig, but not included -->
+    <dependency>
+      <groupId>org.antlr</groupId>
+      <artifactId>antlr</artifactId>
+      <version>3.2</version>
+    </dependency>
     <dependency>
       <groupId>commons-codec</groupId>
       <artifactId>commons-codec</artifactId>
@@ -324,36 +330,50 @@
     </pluginManagement>
     <plugins>
       <plugin>
-        <groupId>org.scala-tools</groupId>
-        <artifactId>maven-scala-plugin</artifactId>
-        <executions>
-          <execution>
-            <goals>
-              <goal>compile</goal>
-              <goal>testCompile</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <scalaVersion>${scala.version}</scalaVersion>
-          <launchers>
-            <launcher>
-              <id>solr</id>
-              <mainClass>org.cdlib.was.ngIndexer.SolrIndexer</mainClass>
-              <jvmArgs>
-                <jvmArg>-Dorg.cdlib.was.ngIndexer.ConfigFile=${basedir}/indexer.conf"</jvmArg>
-              </jvmArgs>
-            </launcher>
-            <launcher>
-              <id>test</id>
-              <mainClass>org.scalatest.tools.Runner</mainClass>
-              <args>
-                <arg>-p</arg>
-                <arg>${basedir}/target/test-classes/</arg>
-              </args>
-            </launcher>
-          </launchers>
-        </configuration>
+      <groupId>org.scala-tools</groupId>
+      <artifactId>maven-scala-plugin</artifactId>
+      <executions>
+        <execution>
+          <id>compile</id>
+          <goals>
+            <goal>compile</goal>
+          </goals>
+          <phase>compile</phase>
+        </execution>
+        <execution>
+          <id>test-compile</id>
+          <goals>
+            <goal>testCompile</goal>
+          </goals>
+          <phase>test-compile</phase>
+        </execution>
+        <execution>
+          <phase>process-resources</phase>
+          <goals>
+            <goal>compile</goal>
+          </goals>
+        </execution>
+      </executions>
+      <configuration>
+        <scalaVersion>${scala.version}</scalaVersion>
+        <launchers>
+          <launcher>
+            <id>solr</id>
+            <mainClass>org.cdlib.was.ngIndexer.SolrIndexer</mainClass>
+            <jvmArgs>
+              <jvmArg>-Dorg.cdlib.was.ngIndexer.ConfigFile=${basedir}/indexer.conf"</jvmArg>
+            </jvmArgs>
+          </launcher>
+          <launcher>
+            <id>test</id>
+            <mainClass>org.scalatest.tools.Runner</mainClass>
+            <args>
+              <arg>-p</arg>
+              <arg>${basedir}/target/test-classes/</arg>
+            </args>
+          </launcher>
+        </launchers>
+      </configuration>
       </plugin>
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
