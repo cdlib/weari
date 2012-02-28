@@ -38,19 +38,14 @@ class WeariHandler(config: Config)
     }
 
   def getPathOptional (arcName : String): Option[Path] = {
-    val extracted = Utility.extractArcname(arcName);
-    val json = "%s.json".format(extracted);
-    val jsongz = "%s.gz".format(json);
-    val jsonPath = new Path(jsonDir, json);
-    if (fs.exists(jsonPath)) {
-      return Some(jsonPath);
-    } else {
-      val jsongzPath = new Path(jsonDir, jsongz);
-      if (fs.exists(jsongzPath)) {
-        return Some(jsongzPath);
+    Utility.extractArcname(arcName).flatMap { extracted =>
+      val jsonPath = new Path(jsonDir, "%s.json.gz".format(extracted));
+      if (fs.exists(jsonPath)) {
+        Some(jsonPath);
+      } else {
+        None;
       }
     }
-    return None;
   }
 
   /**
