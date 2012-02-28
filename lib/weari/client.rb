@@ -17,6 +17,15 @@ module Weari
     def index(solr_uri, filter, arcs, extra_id, extra_fields)
       @t_transport.open()
       @t_client.index(solr_uri, filter, arcs, extra_id, extra_fields)
+      @t_transport.close()
+    end
+
+    def is_arc_parsed(arc)
+      @t_transport.open()
+      retval = @t_client.isArcParsed(arc)
+      print retval
+      @t_transport.close()
+      return retval
     end
   end
 end
