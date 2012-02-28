@@ -15,6 +15,15 @@ object Utility {
   val ARC_RE = new Regex("""^.*?([A-Za-z0-9\.-]+arc\.gz)(?:\.open|\.gz)?$""");
 
   /**
+   * Remove .open or extra .gz at end of arc file, and junk at beginning.
+   * Returns None if we cannot extract an arcname.
+   */
+  def extractArcname(arcname : String) : Option[String] = arcname match {
+    case ARC_RE(extracted) => Some(extracted);
+    case _                 => None;
+  }
+    
+  /**
    * Convert a possibly null thing into an Option version.
    */
   def null2option[A] (what : A) : Option[A] = {
