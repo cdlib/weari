@@ -31,8 +31,9 @@ class WeariHandler(config: Config)
    * @param arc The name of the ARC file.
    * @return Path 
    */
-  def getPath(arc: String): Path = {
-    val json = "%s.json".format(arc);
+  def getPath (arcName : String): Path = {
+    val extracted = Utility.extractArcname(arcName);
+    val json = "%s.json".format(extracted);
     val jsongz = "%s.gz".format(json);
     val jsonPath = new Path(jsonDir, json);
     if (fs.exists(jsonPath)) {
@@ -43,7 +44,7 @@ class WeariHandler(config: Config)
         return jsongzPath;
       }
     }
-    throw new thrift.UnparsedException(arc);
+    throw new thrift.UnparsedException(arcName);
   }
 
   /**
@@ -113,6 +114,8 @@ class WeariHandler(config: Config)
           refileJson(path);
         } else {
           if (path.getName.endsWith(".json") || path.getName.endsWith(".json.gz")) {
+            val newPath = new Path(jsonDir, path.getName);
+            println("moving %s to %s".format(path, newPath));
             fs.rename(path, new Path(jsonDir, path.getName));
           }
         }
@@ -135,10 +138,11 @@ class WeariHandler(config: Config)
       USING org.cdlib.was.weari.pig.ArchiveURLParserLoader()
       AS (filename:chararray, url:chararray, digest:chararray, date:chararray, length:long, content:chararray, detectedMediaType:chararray, suppliedMediaType:chararray, title:chararray, outlinks);""".
         format(arcListPath));
-      
-    pigServer.store("Data", "%s.json.gz".format(mkUUID),
+    val storePath = "%s.json.gz".format(mkUUID);
+    pigServer.store("Data", storePath,
     		        "org.cdlib.was.weari.pig.JsonParsedArchiveRecordStorer");
     		              
+    refileJson(new Path(storePath));
   }	
 }
 
