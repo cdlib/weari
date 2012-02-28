@@ -57,6 +57,21 @@ require 'weari/thrift/weari_types'
                   return
                 end
 
+                def isArcParsed(arc)
+                  send_isArcParsed(arc)
+                  return recv_isArcParsed()
+                end
+
+                def send_isArcParsed(arc)
+                  send_message('isArcParsed', IsArcParsed_args, :arc => arc)
+                end
+
+                def recv_isArcParsed()
+                  result = receive_message(IsArcParsed_result)
+                  return result.success unless result.success.nil?
+                  raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'isArcParsed failed: unknown result')
+                end
+
               end
 
               class Processor
@@ -87,6 +102,13 @@ require 'weari/thrift/weari_types'
                   result = ParseArcs_result.new()
                   @handler.parseArcs(args.arcs)
                   write_result(result, oprot, 'parseArcs', seqid)
+                end
+
+                def process_isArcParsed(seqid, iprot, oprot)
+                  args = read_args(iprot, IsArcParsed_args)
+                  result = IsArcParsed_result.new()
+                  result.success = @handler.isArcParsed(args.arc)
+                  write_result(result, oprot, 'isArcParsed', seqid)
                 end
 
               end
@@ -186,6 +208,38 @@ require 'weari/thrift/weari_types'
 
                 FIELDS = {
 
+                }
+
+                def struct_fields; FIELDS; end
+
+                def validate
+                end
+
+                ::Thrift::Struct.generate_accessors self
+              end
+
+              class IsArcParsed_args
+                include ::Thrift::Struct, ::Thrift::Struct_Union
+                ARC = 1
+
+                FIELDS = {
+                  ARC => {:type => ::Thrift::Types::STRING, :name => 'arc'}
+                }
+
+                def struct_fields; FIELDS; end
+
+                def validate
+                end
+
+                ::Thrift::Struct.generate_accessors self
+              end
+
+              class IsArcParsed_result
+                include ::Thrift::Struct, ::Thrift::Struct_Union
+                SUCCESS = 0
+
+                FIELDS = {
+                  SUCCESS => {:type => ::Thrift::Types::BOOL, :name => 'success'}
                 }
 
                 def struct_fields; FIELDS; end
