@@ -31,20 +31,26 @@ class WeariHandler(config: Config)
    * @param arc The name of the ARC file.
    * @return Path 
    */
-  def getPath (arcName : String): Path = {
+  def getPath (arcName : String): Path = 
+    getPathOptional(arcName) match {
+      case Some(path) => path;
+      case None       => throw new thrift.UnparsedException(arcName);
+    }
+
+  def getPathOptional (arcName : String): Option[Path] = {
     val extracted = Utility.extractArcname(arcName);
     val json = "%s.json".format(extracted);
     val jsongz = "%s.gz".format(json);
     val jsonPath = new Path(jsonDir, json);
     if (fs.exists(jsonPath)) {
-      return jsonPath;
+      return Some(jsonPath);
     } else {
       val jsongzPath = new Path(jsonDir, jsongz);
       if (fs.exists(jsongzPath)) {
-        return jsongzPath;
+        return Some(jsongzPath);
       }
     }
-    throw new thrift.UnparsedException(arcName);
+    return None;
   }
 
   /**
@@ -91,7 +97,10 @@ class WeariHandler(config: Config)
   def ping {
     println("pinged");
   }
-  
+
+  def isArcParsed (arcName : String) : Boolean = 
+    getPathOptional(arcName).isDefined;
+
   def mkUUID : String = UUID.randomUUID().toString();
 
   def mkArcList(arcs : Seq[String]) : Path = {

@@ -20,5 +20,7 @@ service Server {
     throws (1: IndexException ex1, 2: UnparsedException ex2)
 
   void parseArcs(1: list<string> arcs);
+
+  bool isArcParsed(1: string arc);
 }
 
