@@ -35,6 +35,7 @@ class ArchiveURLParserLoader extends LoadFunc with Logging {
   var it : Option[Iterator[ArchiveRecordWrapper]] = None;
   var arcName : Option[String] = None;
   var tmpfile : Option[File] = None;
+  val tmpdir = new File(System.getProperty("java.io.tmpdir"));
 
   def reset {
     this.tmpfile.map(_.delete);
@@ -59,20 +60,20 @@ class ArchiveURLParserLoader extends LoadFunc with Logging {
         /* get a new ARC reader */
         val value = this.in.getCurrentValue.asInstanceOf[Text]
         val uri = new URI(value.toString);
-        val matcher = Utility.ARC_RE.pattern.matcher(uri.getPath);
-        if (!matcher.matches) {
-          /* this probably won't happen, but we should know about it if it does */
-          throw new Exception("Not an ARC file: %s".format(value));
-        } else {
-          this.arcName = Some(matcher.group(1));
-          /* download to a temp file with the arc name */
-          httpClient.getUri(uri) { is =>
-            this.tmpfile = Some(new File(new File(System.getProperty("java.io.tmpdir")), this.arcName.getOrElse("")));
-            withFileOutputStream(this.tmpfile.get) { os => flushStream(is, os) } 
+        Utility.extractArcname(uri.getPath) match {
+          case None => {
+            /* this probably won't happen, but we should know about it if it does */
+            throw new Exception("Not an ARC file: %s".format(value));
           }
-          if (this.tmpfile.isDefined) {
+          case arcName => {
+            this.arcName = arcName;
+            this.tmpfile = this.arcName.map(new File(tmpdir, _));
+            /* download to a temp file with the arc name */
+            httpClient.getUri(uri) { is =>
+              readStreamIntoFile(this.tmpfile.get, in);
+            }
             try {
-              this.it = Some(ArchiveReaderFactoryWrapper.get(this.tmpfile.get).iterator);
+              this.is = Some(ArchiveReaderFactoryWrapper.get(arcfile).iterator);
             } catch {
               case ex : EOFException => {
                 /* probably a completely empty file */
@@ -80,11 +81,12 @@ class ArchiveURLParserLoader extends LoadFunc with Logging {
               }
             }
           }
-          if (this.it.isDefined && this.it.get.hasNext) {
-            return true;
-          }
-          /* otherwise we keep trying */
         }
+        /* finished if we have a defined this.it and it has records */
+        if (this.it.isDefined && this.it.get.hasNext) {
+          return true;
+        }
+        /* otherwise we keep trying */
       }
       /* no more URIs in list */
       return false;
