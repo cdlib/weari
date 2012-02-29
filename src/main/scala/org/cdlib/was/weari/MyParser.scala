@@ -11,7 +11,7 @@ import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.{Metadata, HttpHeaders};
 import org.apache.tika.parser.{AutoDetectParser, ParseContext, Parser};
 
-import org.cdlib.was.weari.Utility.{null2option,timeout};
+import org.cdlib.was.weari.Utility.{null2option};
 import org.cdlib.was.weari.webgraph.WebGraphContentHandler;
 
 import org.xml.sax.ContentHandler;

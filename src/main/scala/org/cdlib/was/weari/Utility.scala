@@ -123,41 +123,4 @@ object Utility {
       case ex : EOFException => return false;
     }
   }
-
-  def timeout[T] (msec : Int) (f: => T) (finalBlock: => Unit) : Option[T] = {
-    class TimeoutThread extends Thread {
-      var retval : Option[T] = None;
-      var ex : Option[Throwable] = None;
-      override def run {
-        try {
-          retval = Some(f);
-        } catch {
-          /* finished, do nothing */ 
-          case t : InterruptedException => ()
-          case t : java.io.InterruptedIOException => ()
-          case t : Throwable => {
-            ex = Some(t);
-          } 
-        } finally {
-          finalBlock;
-        }
-      }
-    }
-    val thread = new TimeoutThread;
-    thread.start();
-    var endTimeMillis = System.currentTimeMillis + msec;
-    while (thread.isAlive) {
-      if (System.currentTimeMillis > endTimeMillis) {
-        thread.interrupt;
-        thread.join;
-      }
-      try { Thread.sleep(50); }
-      catch { case ex : InterruptedException => () }
-    }
-    if (thread.retval.isEmpty && thread.ex.isDefined) {
-      throw new Exception("%s in timeout block.".format(thread.ex.get.toString), thread.ex.get);
-    } else {
-      return thread.retval;
-    }
-  }
 }
