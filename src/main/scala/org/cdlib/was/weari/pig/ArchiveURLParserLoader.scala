@@ -20,7 +20,7 @@ import org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.PigSplit;
 import org.apache.pig.data.{BagFactory,Tuple,TupleFactory};
 
 import org.cdlib.was.weari._;
-import org.cdlib.was.weari.Utility.{date2string,flushStream,null2option,withFileOutputStream};
+import org.cdlib.was.weari.Utility.{date2string,flushStream,null2option,withFileOutputStream,readStreamIntoFile};
 
 import grizzled.slf4j.Logging;
 
@@ -69,11 +69,11 @@ class ArchiveURLParserLoader extends LoadFunc with Logging {
             this.arcName = arcName;
             this.tmpfile = this.arcName.map(new File(tmpdir, _));
             /* download to a temp file with the arc name */
-            httpClient.getUri(uri) { is =>
+            httpClient.getUri(uri) { in =>
               readStreamIntoFile(this.tmpfile.get, in);
             }
             try {
-              this.is = Some(ArchiveReaderFactoryWrapper.get(arcfile).iterator);
+              this.it = Some(ArchiveReaderFactoryWrapper.get(this.tmpfile.get).iterator);
             } catch {
               case ex : EOFException => {
                 /* probably a completely empty file */
