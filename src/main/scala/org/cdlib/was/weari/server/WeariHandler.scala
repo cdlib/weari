@@ -186,7 +186,7 @@ class WeariHandler(config: Config)
     try {
       out = fs.create(path);
       val gzout = new GZIPOutputStream(out);
-      gzout.write("{}".getBytes("UTF-8"));
+      gzout.write("[]".getBytes("UTF-8"));
       gzout.flush;
       gzout.close;
     } finally {
