@@ -42,13 +42,14 @@ class WeariHandler(config: Config)
     val server = new StreamingUpdateSolrServer(solr,
       config.queueSize(),
       config.threadCount());
+    val arcPaths = arcs.map(getPath(_));
     val filter = new QuickIdFilter(filterQuery, server);
     val indexer = new SolrIndexer(server = server,
                                   filter = filter,
                                   extraId = extraId,
                                   extraFields = extraFields.toMap);
-
-    for ((arcname, path) <- arcs.zip(arcs.map(getPath(_)))) {
+    
+    for ((arcname, path) <- arcs.zip(arcPaths)) {
       var in : InputStream = null;
       try {
         in = fs.open(path);
