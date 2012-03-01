@@ -2,20 +2,20 @@ package org.cdlib.was.weari.server;
 
 import org.cdlib.was.weari._
 import org.cdlib.was.weari.thrift
-import java.io.{InputStream, IOException}; 
+import java.io.{InputStream, IOException, OutputStream}; 
 import java.util.{ List => JList, Map => JMap }
 import java.util.UUID;
-import java.util.zip.GZIPInputStream
+import java.util.zip.{GZIPInputStream,GZIPOutputStream};
 import com.codahale.jerkson.Json.parse
+import org.apache.pig.backend.executionengine.ExecJob.JOB_STATUS;
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{ FileSystem, FSDataInputStream, FSDataOutputStream, Path }
 import org.apache.solr.client.solrj.impl.StreamingUpdateSolrServer
 import scala.collection.JavaConversions.{ collectionAsScalaIterable, mapAsScalaMap, seqAsJavaList }
 import scala.collection.immutable.HashSet
 import grizzled.slf4j.Logging;
-import org.cdlib.was.weari.thrift.UnparsedException
 import org.apache.pig.PigServer;
-import org.cdlib.was.weari.Utility.null2option;
+import org.cdlib.was.weari.Utility.{extractArcname,null2option};
     
 class WeariHandler(config: Config)
   extends thrift.Server.Iface with Logging {
@@ -23,30 +23,6 @@ class WeariHandler(config: Config)
   val conf = new Configuration();
   val fs = FileSystem.get(conf);
   val jsonDir = new Path(config.jsonBaseDir());
-
-  /**
-   * Get the HDFS path for the JSON parse of an ARC file.
-   * Can return either a .gz or a non-gzipped file.
-   * 
-   * @param arc The name of the ARC file.
-   * @return Path 
-   */
-  def getPath (arcName : String): Path = 
-    getPathOptional(arcName) match {
-      case Some(path) => path;
-      case None       => throw new thrift.UnparsedException(arcName);
-    }
-
-  def getPathOptional (arcName : String): Option[Path] = {
-    Utility.extractArcname(arcName).flatMap { extracted =>
-      val jsonPath = new Path(jsonDir, "%s.json.gz".format(extracted));
-      if (fs.exists(jsonPath)) {
-        Some(jsonPath);
-      } else {
-        None;
-      }
-    }
-  }
 
   /**
    * Index a set of ARCs on a solr server.
@@ -89,16 +65,9 @@ class WeariHandler(config: Config)
     }
   }
 
-  def ping {
-    println("pinged");
-  }
+  private def mkUUID : String = UUID.randomUUID().toString();
 
-  def isArcParsed (arcName : String) : Boolean = 
-    getPathOptional(arcName).isDefined;
-
-  def mkUUID : String = UUID.randomUUID().toString();
-
-  def mkArcList(arcs : Seq[String]) : Path = {
+  private def mkArcList(arcs : Seq[String]) : Path = {
     val arclistName = mkUUID;
     val path = new Path(arclistName)
     val os = fs.create(path);
@@ -109,7 +78,7 @@ class WeariHandler(config: Config)
     return path;
   }
 
-  def refileJson (source : Path) {
+  private def refileJson (source : Path) {
     fs.mkdirs(jsonDir);
     null2option(fs.listStatus(source)).map { children =>
       for (child <- children) {
@@ -127,7 +96,19 @@ class WeariHandler(config: Config)
     }
   }
 
-  def parseArcs (arcs: JList[String]) {
+  /**
+   * Check to see if a given ARC file has been parsed.
+   */
+  def isArcParsed (arcName : String) : Boolean = 
+    getPathOptional(arcName).isDefined;
+
+  /**
+   * Parse ARC files.
+   */
+  def parseArcs (arcs : JList[String]) =
+    parseArcs(arcs.toSeq);
+    
+  def parseArcs (arcs : Seq[String]) {
     val pigServer = new PigServer(org.apache.pig.ExecType.MAPREDUCE);
     val arcListPath = mkArcList(arcs.toSeq);
 
@@ -143,10 +124,73 @@ class WeariHandler(config: Config)
       AS (filename:chararray, url:chararray, digest:chararray, date:chararray, length:long, content:chararray, detectedMediaType:chararray, suppliedMediaType:chararray, title:chararray, outlinks);""".
         format(arcListPath));
     val storePath = "%s.json.gz".format(mkUUID);
-    pigServer.store("Data", storePath,
-    		        "org.cdlib.was.weari.pig.JsonParsedArchiveRecordStorer");
-    		              
-    refileJson(new Path(storePath));
-  }	
-}
+    val job = pigServer.store("Data", storePath,
+    		                 "org.cdlib.was.weari.pig.JsonParsedArchiveRecordStorer");
+    
+    while (!job.hasCompleted) {
+      Thread.sleep(100);
+    }
+    if (job.getStatus == JOB_STATUS.FAILED) {
+      throw new thrift.ParseException("");
+    } else {
+      refileJson(new Path(storePath));
+      for (arc <- arcs) {
+        if (!isArcParsed(arc)) {
+          /* must have been an ARC without non-404 reponses, make an */
+          /* empty JSON for it */
+          makeEmptyJson(arc);
+        }
+      }
+    }
+  }
 
+  /**
+   * Get the HDFS path for the JSON parse of an ARC file.
+   * Can return either a .gz or a non-gzipped file.
+   * 
+   * @param arc The name of the ARC file.
+   * @return Path 
+   */
+  private def getPath (arcName : String): Path = 
+    getPathOptional(arcName) match {
+      case Some(path) => path;
+      case None       => throw new thrift.UnparsedException(arcName);
+    }
+    
+  /**
+   * Get the HDFS path for the JSON parse of an ARC file.
+   * Can return either a .gz or a non-gzipped file. Returns None
+   * if no JSON file can be found.
+   * 
+   * @param arc The name of the ARC file.
+   * @return Option[Path]
+   */
+  private def getPathOptional (arcName : String): Option[Path] = {
+    extractArcname(arcName).flatMap { extracted =>
+      val jsonPath = new Path(jsonDir, "%s.json.gz".format(extracted));
+      if (fs.exists(jsonPath)) {
+        Some(jsonPath);
+      } else {
+        None;
+      }
+    }
+  }
+
+  /**
+   * Make an empty JSON file for arcs that parsed to nothing.
+   */
+  private def makeEmptyJson (arc : String) {
+    val cleanArc = extractArcname(arc).get;
+    val path = new Path(jsonDir, "%s.json.gz".format(cleanArc));
+    var out : OutputStream = null;
+    try {
+      out = fs.create(path);
+      val gzout = new GZIPOutputStream(out);
+      gzout.write("{}".getBytes("UTF-8"));
+      gzout.flush;
+      gzout.close;
+    } finally {
+      if (out != null) out.close;
+    } 
+  }
+}
