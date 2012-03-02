@@ -96,7 +96,6 @@ class SolrIndexer (server : SolrServer,
       } else {
         for (rec <- recs) index(rec);
       }
-      server.commit;
     } catch {
       case ex : Exception => {
         server.rollback;
@@ -104,4 +103,9 @@ class SolrIndexer (server : SolrServer,
       }
     }
   }
+      
+  def commit = server.commit;
+
+  def rollback = server.rollback;
+    
 }
