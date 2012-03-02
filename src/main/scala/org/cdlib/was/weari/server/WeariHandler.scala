@@ -6,7 +6,8 @@ import java.io.{InputStream, IOException, OutputStream};
 import java.util.{ List => JList, Map => JMap }
 import java.util.UUID;
 import java.util.zip.{GZIPInputStream,GZIPOutputStream};
-import com.codahale.jerkson.Json.parse
+import com.codahale.jerkson.Json;
+import com.codahale.jerkson.ParsingException;
 import org.apache.pig.backend.executionengine.ExecJob.JOB_STATUS;
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{ FileSystem, FSDataInputStream, FSDataOutputStream, Path }
@@ -48,20 +49,29 @@ class WeariHandler(config: Config)
                                   filter = filter,
                                   extraId = extraId,
                                   extraFields = extraFields.toMap);
-    
-    for ((arcname, path) <- arcs.zip(arcPaths)) {
-      var in : InputStream = null;
-      try {
-        in = fs.open(path);
-    	if (path.getName.endsWith("gz")) {
-          in = new GZIPInputStream(in);
-        }
-        indexer.index(arcname, parse[List[ParsedArchiveRecord]](in));
-      } catch {
-        case ex : Exception => {
-          error("Error while indexing %s: %s".format(arcname, ex), ex);
+    try {
+      for ((arcname, path) <- arcs.zip(arcPaths)) {
+        var in : InputStream = null;
+        try {
+          in = fs.open(path);
+    	  if (path.getName.endsWith("gz")) {
+            in = new GZIPInputStream(in);
+          }
+          indexer.index(arcname, Json.parse[List[ParsedArchiveRecord]](in));
+        } catch {
+          case ex : ParsingException =>
+            throw new thrift.BadJSONException(ex.toString, arcname);
+          case ex : Exception =>
+            throw new thrift.IndexException(ex.toString);
+        } finally {
           if (in != null) in.close;
         }
+      }
+      indexer.commit;
+    } catch {
+      case ex : Exception => {
+        indexer.rollback;
+        throw ex;
       }
     }
   }
@@ -79,19 +89,19 @@ class WeariHandler(config: Config)
     return path;
   }
 
+  /**
+   * Moves all json.gz files beneath the source to their proper resting place.
+   */
   private def refileJson (source : Path) {
     fs.mkdirs(jsonDir);
-    null2option(fs.listStatus(source)).map { children =>
-      for (child <- children) {
-        val path = child.getPath;
-        if (child.isDir) {
-          refileJson(path);
-        } else {
-          if (path.getName.endsWith(".json") || path.getName.endsWith(".json.gz")) {
-            val newPath = new Path(jsonDir, path.getName);
-            println("moving %s to %s".format(path, newPath));
-            fs.rename(path, new Path(jsonDir, path.getName));
-          }
+    for (children <- null2option(fs.listStatus(source));
+         child <- children) {
+      val path = child.getPath;
+      if (child.isDir) {
+        refileJson(path);
+      } else {
+        if (path.getName.endsWith(".json.gz")) {
+          fs.rename(path, new Path(jsonDir, path.getName));
         }
       }
     }
@@ -101,7 +111,7 @@ class WeariHandler(config: Config)
    * Check to see if a given ARC file has been parsed.
    */
   def isArcParsed (arcName : String) : Boolean = 
-    getPathOptional(arcName).isDefined;
+    getPathOption(arcName).isDefined;
 
   /**
    * Parse ARC files.
@@ -135,14 +145,16 @@ class WeariHandler(config: Config)
       throw new thrift.ParseException("");
     } else {
       refileJson(new Path(storePath));
-      for (arc <- arcs) {
-        if (!isArcParsed(arc)) {
-          /* must have been an ARC without non-404 reponses, make an */
-          /* empty JSON for it */
-          makeEmptyJson(arc);
-        }
+      for (arc <- arcs if (!isArcParsed(arc))) {
+        /* must have been an ARC without non-404 reponses, make an */
+        /* empty JSON for it */
+        makeEmptyJson(arc);
       }
     }
+  }
+
+  def deleteParse (arc : String) {
+    getPathOption(arc).map(this.fs.delete(_, false));
   }
 
   /**
@@ -153,10 +165,7 @@ class WeariHandler(config: Config)
    * @return Path 
    */
   private def getPath (arcName : String): Path = 
-    getPathOptional(arcName) match {
-      case Some(path) => path;
-      case None       => throw new thrift.UnparsedException(arcName);
-    }
+    getPathOption(arcName).getOrElse(throw new thrift.UnparsedException(arcName));
     
   /**
    * Get the HDFS path for the JSON parse of an ARC file.
@@ -166,14 +175,10 @@ class WeariHandler(config: Config)
    * @param arc The name of the ARC file.
    * @return Option[Path]
    */
-  private def getPathOptional (arcName : String): Option[Path] = {
+  private def getPathOption (arcName : String): Option[Path] = {
     extractArcname(arcName).flatMap { extracted =>
       val jsonPath = new Path(jsonDir, "%s.json.gz".format(extracted));
-      if (fs.exists(jsonPath)) {
-        Some(jsonPath);
-      } else {
-        None;
-      }
+      if (fs.exists(jsonPath)) Some(jsonPath) else None;
     }
   }
 
