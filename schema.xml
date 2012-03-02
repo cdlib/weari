@@ -94,12 +94,12 @@
 
         <field name="institution" type="string" stored="true" indexed="true"
                multiValued="false" />
-        <field name="job" type="string" stored="true" indexed="true"
-               multiValued="true" />
-        <field name="specification" type="string" stored="true" indexed="true"
-               multiValued="true"/>
         <field name="project" type="string" stored="true" indexed="true"
                multiValued="false"/>
+        <field name="specification" type="string" stored="true" indexed="true"
+               multiValued="false"/>
+        <field name="job" type="string" stored="true" indexed="true"
+               multiValued="true" />
         <field name="arcname" type="string" stored="true" indexed="true"
                multiValued="true" omitNorms="true"/>
         <field name="tag" type="string" stored="true" indexed="true"
