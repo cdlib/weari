@@ -42,7 +42,9 @@ object SolrFields {
            MEDIA_TYPE_DET_FIELD,
            MEDIA_TYPE_GROUP_DET_FIELD,
            MEDIA_TYPE_SUP_FIELD,
+           PROJECT_FIELD,
            SITE_FIELD,
+           SPECIFICATION_FIELD,
            TAG_FIELD,
            TITLE_FIELD,
            URLFP_FIELD,
@@ -51,7 +53,5 @@ object SolrFields {
   val MULTI_VALUED_FIELDS =
     List(ARCNAME_FIELD,
          DATE_FIELD,
-         JOB_FIELD,
-         PROJECT_FIELD,
-         SPECIFICATION_FIELD);
+         JOB_FIELD);
 }
