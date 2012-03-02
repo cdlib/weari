@@ -30,11 +30,8 @@ class SolrIndexer (server : SolrServer,
   def getById(id : String, server : SolrServer) : Option[SolrDocument] = {
     val q = new SolrQuery;
     q.setQuery("id:\"%s\"".format(id));
-    return try {
-      Some((new solr.SolrDocumentCollection(server, q)).head);
-    } catch {
-      case ex : NoSuchElementException => None;
-    }
+    val docs = new solr.SolrDocumentCollection(server, q);
+    return docs.headOption;
   }
 
   /**
@@ -46,7 +43,6 @@ class SolrIndexer (server : SolrServer,
   def index(doc : SolrInputDocument) {
     val id = doc.getFieldValue(ID_FIELD).asInstanceOf[String];
     if (!filter.contains(id)) {
-      filter.add(id);
       server.add(doc);
     } else {
       val mergeddoc = getById(id,server).
@@ -77,9 +73,29 @@ class SolrIndexer (server : SolrServer,
    * Index a sequence of ParsedArchiveRecords.
    * Commit at the end, or rollback if we get an exception.
    */
-  def index (recs : Seq[ParsedArchiveRecord]) {
+  def index (arc : String, recs : Seq[ParsedArchiveRecord]) {
     try {
-      for (rec <- recs) { index(rec); }
+      val q = new SolrQuery;
+      q.setQuery("arcname:\"%s\"".format(arc));
+      val olddocs = new solr.SolrDocumentCollection(server, q);
+
+      /* try a faster re-index if we have already indexed this arc */
+      if (olddocs.nonEmpty) {
+        val oldinputdocs = olddocs.map(toSolrInputDocument(_));
+        val docsMap = oldinputdocs.map(doc=>(doc.getFieldValue(ID_FIELD).asInstanceOf[String], doc)).toMap;
+        for (rec <- recs) {
+          val doc = rec.toDocument;
+          val id = doc.getFieldValue(ID_FIELD).asInstanceOf[String];
+          docsMap.get(id) match {
+            case None => 
+              throw new Exception("Bad map passed to fastIndex! Must contain all IDs.");
+            case Some(olddoc) => 
+              server.add(mergeDocs(olddoc, doc));
+          }
+        }
+      } else {
+        for (rec <- recs) index(rec);
+      }
       server.commit;
     } catch {
       case ex : Exception => {

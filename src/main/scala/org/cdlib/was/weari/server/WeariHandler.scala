@@ -56,7 +56,7 @@ class WeariHandler(config: Config)
     	if (path.getName.endsWith("gz")) {
           in = new GZIPInputStream(in);
         }
-        indexer.index(parse[List[ParsedArchiveRecord]](in));
+        indexer.index(arcname, parse[List[ParsedArchiveRecord]](in));
       } catch {
         case ex : Exception => {
           error("Error while indexing %s: %s".format(arcname, ex), ex);
