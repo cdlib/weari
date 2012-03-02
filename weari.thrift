@@ -1,8 +1,14 @@
 namespace rb weari.thrift
 namespace java org.cdlib.was.weari.thrift
 
+/* Throw when we encounter a bad JSON file. */
+exception BadJSONException {
+  1: string message,
+  2: string arcname
+}
+
 exception IndexException {
-  1: string why
+  1: string message
 }
 
 exception UnparsedException {
@@ -10,7 +16,7 @@ exception UnparsedException {
 }
 
 exception ParseException {
-  1: string why
+  1: string message
 }
 
 service Server {
@@ -19,11 +25,12 @@ service Server {
              3: list<string> arcs,
              4: string extraId,
              5: map<string,string> extraFields)
-    throws (1: IndexException ex1, 2: UnparsedException ex2);
+    throws (1: IndexException ex1, 2: UnparsedException ex2, 3: BadJSONException ex3);
 
   void parseArcs(1: list<string> arcs)
     throws (1: ParseException ex1);
 
   bool isArcParsed(1: string arc);
-}
 
+  void deleteParse(1: string arc);
+}

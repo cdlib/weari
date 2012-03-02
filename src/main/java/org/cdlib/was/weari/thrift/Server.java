@@ -31,11 +31,13 @@ public class Server {
 
   public interface Iface {
 
-    public void index(String solr, String filter, List<String> arcs, String extraId, Map<String,String> extraFields) throws IndexException, UnparsedException, org.apache.thrift.TException;
+    public void index(String solr, String filter, List<String> arcs, String extraId, Map<String,String> extraFields) throws IndexException, UnparsedException, BadJSONException, org.apache.thrift.TException;
 
     public void parseArcs(List<String> arcs) throws ParseException, org.apache.thrift.TException;
 
     public boolean isArcParsed(String arc) throws org.apache.thrift.TException;
+
+    public void deleteParse(String arc) throws org.apache.thrift.TException;
 
   }
 
@@ -46,6 +48,8 @@ public class Server {
     public void parseArcs(List<String> arcs, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.parseArcs_call> resultHandler) throws org.apache.thrift.TException;
 
     public void isArcParsed(String arc, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.isArcParsed_call> resultHandler) throws org.apache.thrift.TException;
+
+    public void deleteParse(String arc, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.deleteParse_call> resultHandler) throws org.apache.thrift.TException;
 
   }
 
@@ -69,7 +73,7 @@ public class Server {
       super(iprot, oprot);
     }
 
-    public void index(String solr, String filter, List<String> arcs, String extraId, Map<String,String> extraFields) throws IndexException, UnparsedException, org.apache.thrift.TException
+    public void index(String solr, String filter, List<String> arcs, String extraId, Map<String,String> extraFields) throws IndexException, UnparsedException, BadJSONException, org.apache.thrift.TException
     {
       send_index(solr, filter, arcs, extraId, extraFields);
       recv_index();
@@ -86,7 +90,7 @@ public class Server {
       sendBase("index", args);
     }
 
-    public void recv_index() throws IndexException, UnparsedException, org.apache.thrift.TException
+    public void recv_index() throws IndexException, UnparsedException, BadJSONException, org.apache.thrift.TException
     {
       index_result result = new index_result();
       receiveBase(result, "index");
@@ -95,6 +99,9 @@ public class Server {
       }
       if (result.ex2 != null) {
         throw result.ex2;
+      }
+      if (result.ex3 != null) {
+        throw result.ex3;
       }
       return;
     }
@@ -143,6 +150,26 @@ public class Server {
         return result.success;
       }
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "isArcParsed failed: unknown result");
+    }
+
+    public void deleteParse(String arc) throws org.apache.thrift.TException
+    {
+      send_deleteParse(arc);
+      recv_deleteParse();
+    }
+
+    public void send_deleteParse(String arc) throws org.apache.thrift.TException
+    {
+      deleteParse_args args = new deleteParse_args();
+      args.setArc(arc);
+      sendBase("deleteParse", args);
+    }
+
+    public void recv_deleteParse() throws org.apache.thrift.TException
+    {
+      deleteParse_result result = new deleteParse_result();
+      receiveBase(result, "deleteParse");
+      return;
     }
 
   }
@@ -197,7 +224,7 @@ public class Server {
         prot.writeMessageEnd();
       }
 
-      public void getResult() throws IndexException, UnparsedException, org.apache.thrift.TException {
+      public void getResult() throws IndexException, UnparsedException, BadJSONException, org.apache.thrift.TException {
         if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
@@ -271,6 +298,38 @@ public class Server {
       }
     }
 
+    public void deleteParse(String arc, org.apache.thrift.async.AsyncMethodCallback<deleteParse_call> resultHandler) throws org.apache.thrift.TException {
+      checkReady();
+      deleteParse_call method_call = new deleteParse_call(arc, resultHandler, this, ___protocolFactory, ___transport);
+      this.___currentMethod = method_call;
+      ___manager.call(method_call);
+    }
+
+    public static class deleteParse_call extends org.apache.thrift.async.TAsyncMethodCall {
+      private String arc;
+      public deleteParse_call(String arc, org.apache.thrift.async.AsyncMethodCallback<deleteParse_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+        super(client, protocolFactory, transport, resultHandler, false);
+        this.arc = arc;
+      }
+
+      public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("deleteParse", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        deleteParse_args args = new deleteParse_args();
+        args.setArc(arc);
+        args.write(prot);
+        prot.writeMessageEnd();
+      }
+
+      public void getResult() throws org.apache.thrift.TException {
+        if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
+          throw new IllegalStateException("Method call not finished!");
+        }
+        org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
+        org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        (new Client(prot)).recv_deleteParse();
+      }
+    }
+
   }
 
   public static class Processor<I extends Iface> extends org.apache.thrift.TBaseProcessor<I> implements org.apache.thrift.TProcessor {
@@ -287,6 +346,7 @@ public class Server {
       processMap.put("index", new index());
       processMap.put("parseArcs", new parseArcs());
       processMap.put("isArcParsed", new isArcParsed());
+      processMap.put("deleteParse", new deleteParse());
       return processMap;
     }
 
@@ -307,6 +367,8 @@ public class Server {
           result.ex1 = ex1;
         } catch (UnparsedException ex2) {
           result.ex2 = ex2;
+        } catch (BadJSONException ex3) {
+          result.ex3 = ex3;
         }
         return result;
       }
@@ -345,6 +407,22 @@ public class Server {
         isArcParsed_result result = new isArcParsed_result();
         result.success = iface.isArcParsed(args.arc);
         result.setSuccessIsSet(true);
+        return result;
+      }
+    }
+
+    private static class deleteParse<I extends Iface> extends org.apache.thrift.ProcessFunction<I, deleteParse_args> {
+      public deleteParse() {
+        super("deleteParse");
+      }
+
+      protected deleteParse_args getEmptyArgsInstance() {
+        return new deleteParse_args();
+      }
+
+      protected deleteParse_result getResult(I iface, deleteParse_args args) throws org.apache.thrift.TException {
+        deleteParse_result result = new deleteParse_result();
+        iface.deleteParse(args.arc);
         return result;
       }
     }
@@ -1224,6 +1302,7 @@ public class Server {
 
     private static final org.apache.thrift.protocol.TField EX1_FIELD_DESC = new org.apache.thrift.protocol.TField("ex1", org.apache.thrift.protocol.TType.STRUCT, (short)1);
     private static final org.apache.thrift.protocol.TField EX2_FIELD_DESC = new org.apache.thrift.protocol.TField("ex2", org.apache.thrift.protocol.TType.STRUCT, (short)2);
+    private static final org.apache.thrift.protocol.TField EX3_FIELD_DESC = new org.apache.thrift.protocol.TField("ex3", org.apache.thrift.protocol.TType.STRUCT, (short)3);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
@@ -1233,11 +1312,13 @@ public class Server {
 
     public IndexException ex1; // required
     public UnparsedException ex2; // required
+    public BadJSONException ex3; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
       EX1((short)1, "ex1"),
-      EX2((short)2, "ex2");
+      EX2((short)2, "ex2"),
+      EX3((short)3, "ex3");
 
       private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -1256,6 +1337,8 @@ public class Server {
             return EX1;
           case 2: // EX2
             return EX2;
+          case 3: // EX3
+            return EX3;
           default:
             return null;
         }
@@ -1303,6 +1386,8 @@ public class Server {
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRUCT)));
       tmpMap.put(_Fields.EX2, new org.apache.thrift.meta_data.FieldMetaData("ex2", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRUCT)));
+      tmpMap.put(_Fields.EX3, new org.apache.thrift.meta_data.FieldMetaData("ex3", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRUCT)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(index_result.class, metaDataMap);
     }
@@ -1312,11 +1397,13 @@ public class Server {
 
     public index_result(
       IndexException ex1,
-      UnparsedException ex2)
+      UnparsedException ex2,
+      BadJSONException ex3)
     {
       this();
       this.ex1 = ex1;
       this.ex2 = ex2;
+      this.ex3 = ex3;
     }
 
     /**
@@ -1329,6 +1416,9 @@ public class Server {
       if (other.isSetEx2()) {
         this.ex2 = new UnparsedException(other.ex2);
       }
+      if (other.isSetEx3()) {
+        this.ex3 = new BadJSONException(other.ex3);
+      }
     }
 
     public index_result deepCopy() {
@@ -1339,6 +1429,7 @@ public class Server {
     public void clear() {
       this.ex1 = null;
       this.ex2 = null;
+      this.ex3 = null;
     }
 
     public IndexException getEx1() {
@@ -1389,6 +1480,30 @@ public class Server {
       }
     }
 
+    public BadJSONException getEx3() {
+      return this.ex3;
+    }
+
+    public index_result setEx3(BadJSONException ex3) {
+      this.ex3 = ex3;
+      return this;
+    }
+
+    public void unsetEx3() {
+      this.ex3 = null;
+    }
+
+    /** Returns true if field ex3 is set (has been assigned a value) and false otherwise */
+    public boolean isSetEx3() {
+      return this.ex3 != null;
+    }
+
+    public void setEx3IsSet(boolean value) {
+      if (!value) {
+        this.ex3 = null;
+      }
+    }
+
     public void setFieldValue(_Fields field, Object value) {
       switch (field) {
       case EX1:
@@ -1407,6 +1522,14 @@ public class Server {
         }
         break;
 
+      case EX3:
+        if (value == null) {
+          unsetEx3();
+        } else {
+          setEx3((BadJSONException)value);
+        }
+        break;
+
       }
     }
 
@@ -1417,6 +1540,9 @@ public class Server {
 
       case EX2:
         return getEx2();
+
+      case EX3:
+        return getEx3();
 
       }
       throw new IllegalStateException();
@@ -1433,6 +1559,8 @@ public class Server {
         return isSetEx1();
       case EX2:
         return isSetEx2();
+      case EX3:
+        return isSetEx3();
       }
       throw new IllegalStateException();
     }
@@ -1465,6 +1593,15 @@ public class Server {
         if (!(this_present_ex2 && that_present_ex2))
           return false;
         if (!this.ex2.equals(that.ex2))
+          return false;
+      }
+
+      boolean this_present_ex3 = true && this.isSetEx3();
+      boolean that_present_ex3 = true && that.isSetEx3();
+      if (this_present_ex3 || that_present_ex3) {
+        if (!(this_present_ex3 && that_present_ex3))
+          return false;
+        if (!this.ex3.equals(that.ex3))
           return false;
       }
 
@@ -1504,6 +1641,16 @@ public class Server {
           return lastComparison;
         }
       }
+      lastComparison = Boolean.valueOf(isSetEx3()).compareTo(typedOther.isSetEx3());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetEx3()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.ex3, typedOther.ex3);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
       return 0;
     }
 
@@ -1537,6 +1684,14 @@ public class Server {
         sb.append("null");
       } else {
         sb.append(this.ex2);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("ex3:");
+      if (this.ex3 == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.ex3);
       }
       first = false;
       sb.append(")");
@@ -1599,6 +1754,15 @@ public class Server {
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
               break;
+            case 3: // EX3
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+                struct.ex3 = new BadJSONException();
+                struct.ex3.read(iprot);
+                struct.setEx3IsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
             default:
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
           }
@@ -1622,6 +1786,11 @@ public class Server {
         if (struct.ex2 != null) {
           oprot.writeFieldBegin(EX2_FIELD_DESC);
           struct.ex2.write(oprot);
+          oprot.writeFieldEnd();
+        }
+        if (struct.ex3 != null) {
+          oprot.writeFieldBegin(EX3_FIELD_DESC);
+          struct.ex3.write(oprot);
           oprot.writeFieldEnd();
         }
         oprot.writeFieldStop();
@@ -1648,19 +1817,25 @@ public class Server {
         if (struct.isSetEx2()) {
           optionals.set(1);
         }
-        oprot.writeBitSet(optionals, 2);
+        if (struct.isSetEx3()) {
+          optionals.set(2);
+        }
+        oprot.writeBitSet(optionals, 3);
         if (struct.isSetEx1()) {
           struct.ex1.write(oprot);
         }
         if (struct.isSetEx2()) {
           struct.ex2.write(oprot);
         }
+        if (struct.isSetEx3()) {
+          struct.ex3.write(oprot);
+        }
       }
 
       @Override
       public void read(org.apache.thrift.protocol.TProtocol prot, index_result struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
-        BitSet incoming = iprot.readBitSet(2);
+        BitSet incoming = iprot.readBitSet(3);
         if (incoming.get(0)) {
           struct.ex1 = new IndexException();
           struct.ex1.read(iprot);
@@ -1670,6 +1845,11 @@ public class Server {
           struct.ex2 = new UnparsedException();
           struct.ex2.read(iprot);
           struct.setEx2IsSet(true);
+        }
+        if (incoming.get(2)) {
+          struct.ex3 = new BadJSONException();
+          struct.ex3.read(iprot);
+          struct.setEx3IsSet(true);
         }
       }
     }
@@ -3134,6 +3314,604 @@ public class Server {
           struct.success = iprot.readBool();
           struct.setSuccessIsSet(true);
         }
+      }
+    }
+
+  }
+
+  public static class deleteParse_args implements org.apache.thrift.TBase<deleteParse_args, deleteParse_args._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("deleteParse_args");
+
+    private static final org.apache.thrift.protocol.TField ARC_FIELD_DESC = new org.apache.thrift.protocol.TField("arc", org.apache.thrift.protocol.TType.STRING, (short)1);
+
+    private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
+    static {
+      schemes.put(StandardScheme.class, new deleteParse_argsStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new deleteParse_argsTupleSchemeFactory());
+    }
+
+    public String arc; // required
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+      ARC((short)1, "arc");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 1: // ARC
+            return ARC;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+    public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.ARC, new org.apache.thrift.meta_data.FieldMetaData("arc", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(deleteParse_args.class, metaDataMap);
+    }
+
+    public deleteParse_args() {
+    }
+
+    public deleteParse_args(
+      String arc)
+    {
+      this();
+      this.arc = arc;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public deleteParse_args(deleteParse_args other) {
+      if (other.isSetArc()) {
+        this.arc = other.arc;
+      }
+    }
+
+    public deleteParse_args deepCopy() {
+      return new deleteParse_args(this);
+    }
+
+    @Override
+    public void clear() {
+      this.arc = null;
+    }
+
+    public String getArc() {
+      return this.arc;
+    }
+
+    public deleteParse_args setArc(String arc) {
+      this.arc = arc;
+      return this;
+    }
+
+    public void unsetArc() {
+      this.arc = null;
+    }
+
+    /** Returns true if field arc is set (has been assigned a value) and false otherwise */
+    public boolean isSetArc() {
+      return this.arc != null;
+    }
+
+    public void setArcIsSet(boolean value) {
+      if (!value) {
+        this.arc = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case ARC:
+        if (value == null) {
+          unsetArc();
+        } else {
+          setArc((String)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case ARC:
+        return getArc();
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case ARC:
+        return isSetArc();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof deleteParse_args)
+        return this.equals((deleteParse_args)that);
+      return false;
+    }
+
+    public boolean equals(deleteParse_args that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_arc = true && this.isSetArc();
+      boolean that_present_arc = true && that.isSetArc();
+      if (this_present_arc || that_present_arc) {
+        if (!(this_present_arc && that_present_arc))
+          return false;
+        if (!this.arc.equals(that.arc))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(deleteParse_args other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      deleteParse_args typedOther = (deleteParse_args)other;
+
+      lastComparison = Boolean.valueOf(isSetArc()).compareTo(typedOther.isSetArc());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetArc()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.arc, typedOther.arc);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      schemes.get(iprot.getScheme()).getScheme().read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("deleteParse_args(");
+      boolean first = true;
+
+      sb.append("arc:");
+      if (this.arc == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.arc);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class deleteParse_argsStandardSchemeFactory implements SchemeFactory {
+      public deleteParse_argsStandardScheme getScheme() {
+        return new deleteParse_argsStandardScheme();
+      }
+    }
+
+    private static class deleteParse_argsStandardScheme extends StandardScheme<deleteParse_args> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, deleteParse_args struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            case 1: // ARC
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+                struct.arc = iprot.readString();
+                struct.setArcIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, deleteParse_args struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        if (struct.arc != null) {
+          oprot.writeFieldBegin(ARC_FIELD_DESC);
+          oprot.writeString(struct.arc);
+          oprot.writeFieldEnd();
+        }
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class deleteParse_argsTupleSchemeFactory implements SchemeFactory {
+      public deleteParse_argsTupleScheme getScheme() {
+        return new deleteParse_argsTupleScheme();
+      }
+    }
+
+    private static class deleteParse_argsTupleScheme extends TupleScheme<deleteParse_args> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, deleteParse_args struct) throws org.apache.thrift.TException {
+        TTupleProtocol oprot = (TTupleProtocol) prot;
+        BitSet optionals = new BitSet();
+        if (struct.isSetArc()) {
+          optionals.set(0);
+        }
+        oprot.writeBitSet(optionals, 1);
+        if (struct.isSetArc()) {
+          oprot.writeString(struct.arc);
+        }
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, deleteParse_args struct) throws org.apache.thrift.TException {
+        TTupleProtocol iprot = (TTupleProtocol) prot;
+        BitSet incoming = iprot.readBitSet(1);
+        if (incoming.get(0)) {
+          struct.arc = iprot.readString();
+          struct.setArcIsSet(true);
+        }
+      }
+    }
+
+  }
+
+  public static class deleteParse_result implements org.apache.thrift.TBase<deleteParse_result, deleteParse_result._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("deleteParse_result");
+
+
+    private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
+    static {
+      schemes.put(StandardScheme.class, new deleteParse_resultStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new deleteParse_resultTupleSchemeFactory());
+    }
+
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+;
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+    public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(deleteParse_result.class, metaDataMap);
+    }
+
+    public deleteParse_result() {
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public deleteParse_result(deleteParse_result other) {
+    }
+
+    public deleteParse_result deepCopy() {
+      return new deleteParse_result(this);
+    }
+
+    @Override
+    public void clear() {
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof deleteParse_result)
+        return this.equals((deleteParse_result)that);
+      return false;
+    }
+
+    public boolean equals(deleteParse_result that) {
+      if (that == null)
+        return false;
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(deleteParse_result other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      deleteParse_result typedOther = (deleteParse_result)other;
+
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      schemes.get(iprot.getScheme()).getScheme().read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
+      }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("deleteParse_result(");
+      boolean first = true;
+
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class deleteParse_resultStandardSchemeFactory implements SchemeFactory {
+      public deleteParse_resultStandardScheme getScheme() {
+        return new deleteParse_resultStandardScheme();
+      }
+    }
+
+    private static class deleteParse_resultStandardScheme extends StandardScheme<deleteParse_result> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, deleteParse_result struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, deleteParse_result struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class deleteParse_resultTupleSchemeFactory implements SchemeFactory {
+      public deleteParse_resultTupleScheme getScheme() {
+        return new deleteParse_resultTupleScheme();
+      }
+    }
+
+    private static class deleteParse_resultTupleScheme extends TupleScheme<deleteParse_result> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, deleteParse_result struct) throws org.apache.thrift.TException {
+        TTupleProtocol oprot = (TTupleProtocol) prot;
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, deleteParse_result struct) throws org.apache.thrift.TException {
+        TTupleProtocol iprot = (TTupleProtocol) prot;
       }
     }
 

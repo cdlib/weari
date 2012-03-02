@@ -27,22 +27,25 @@ import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ParseException extends Exception implements org.apache.thrift.TBase<ParseException, ParseException._Fields>, java.io.Serializable, Cloneable {
-  private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("ParseException");
+public class BadJSONException extends Exception implements org.apache.thrift.TBase<BadJSONException, BadJSONException._Fields>, java.io.Serializable, Cloneable {
+  private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("BadJSONException");
 
   private static final org.apache.thrift.protocol.TField MESSAGE_FIELD_DESC = new org.apache.thrift.protocol.TField("message", org.apache.thrift.protocol.TType.STRING, (short)1);
+  private static final org.apache.thrift.protocol.TField ARCNAME_FIELD_DESC = new org.apache.thrift.protocol.TField("arcname", org.apache.thrift.protocol.TType.STRING, (short)2);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
-    schemes.put(StandardScheme.class, new ParseExceptionStandardSchemeFactory());
-    schemes.put(TupleScheme.class, new ParseExceptionTupleSchemeFactory());
+    schemes.put(StandardScheme.class, new BadJSONExceptionStandardSchemeFactory());
+    schemes.put(TupleScheme.class, new BadJSONExceptionTupleSchemeFactory());
   }
 
   public String message; // required
+  public String arcname; // required
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-    MESSAGE((short)1, "message");
+    MESSAGE((short)1, "message"),
+    ARCNAME((short)2, "arcname");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -59,6 +62,8 @@ public class ParseException extends Exception implements org.apache.thrift.TBase
       switch(fieldId) {
         case 1: // MESSAGE
           return MESSAGE;
+        case 2: // ARCNAME
+          return ARCNAME;
         default:
           return null;
       }
@@ -104,43 +109,51 @@ public class ParseException extends Exception implements org.apache.thrift.TBase
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
     tmpMap.put(_Fields.MESSAGE, new org.apache.thrift.meta_data.FieldMetaData("message", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+    tmpMap.put(_Fields.ARCNAME, new org.apache.thrift.meta_data.FieldMetaData("arcname", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
-    org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(ParseException.class, metaDataMap);
+    org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(BadJSONException.class, metaDataMap);
   }
 
-  public ParseException() {
+  public BadJSONException() {
   }
 
-  public ParseException(
-    String message)
+  public BadJSONException(
+    String message,
+    String arcname)
   {
     this();
     this.message = message;
+    this.arcname = arcname;
   }
 
   /**
    * Performs a deep copy on <i>other</i>.
    */
-  public ParseException(ParseException other) {
+  public BadJSONException(BadJSONException other) {
     if (other.isSetMessage()) {
       this.message = other.message;
     }
+    if (other.isSetArcname()) {
+      this.arcname = other.arcname;
+    }
   }
 
-  public ParseException deepCopy() {
-    return new ParseException(this);
+  public BadJSONException deepCopy() {
+    return new BadJSONException(this);
   }
 
   @Override
   public void clear() {
     this.message = null;
+    this.arcname = null;
   }
 
   public String getMessage() {
     return this.message;
   }
 
-  public ParseException setMessage(String message) {
+  public BadJSONException setMessage(String message) {
     this.message = message;
     return this;
   }
@@ -160,6 +173,30 @@ public class ParseException extends Exception implements org.apache.thrift.TBase
     }
   }
 
+  public String getArcname() {
+    return this.arcname;
+  }
+
+  public BadJSONException setArcname(String arcname) {
+    this.arcname = arcname;
+    return this;
+  }
+
+  public void unsetArcname() {
+    this.arcname = null;
+  }
+
+  /** Returns true if field arcname is set (has been assigned a value) and false otherwise */
+  public boolean isSetArcname() {
+    return this.arcname != null;
+  }
+
+  public void setArcnameIsSet(boolean value) {
+    if (!value) {
+      this.arcname = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
     case MESSAGE:
@@ -170,6 +207,14 @@ public class ParseException extends Exception implements org.apache.thrift.TBase
       }
       break;
 
+    case ARCNAME:
+      if (value == null) {
+        unsetArcname();
+      } else {
+        setArcname((String)value);
+      }
+      break;
+
     }
   }
 
@@ -177,6 +222,9 @@ public class ParseException extends Exception implements org.apache.thrift.TBase
     switch (field) {
     case MESSAGE:
       return getMessage();
+
+    case ARCNAME:
+      return getArcname();
 
     }
     throw new IllegalStateException();
@@ -191,6 +239,8 @@ public class ParseException extends Exception implements org.apache.thrift.TBase
     switch (field) {
     case MESSAGE:
       return isSetMessage();
+    case ARCNAME:
+      return isSetArcname();
     }
     throw new IllegalStateException();
   }
@@ -199,12 +249,12 @@ public class ParseException extends Exception implements org.apache.thrift.TBase
   public boolean equals(Object that) {
     if (that == null)
       return false;
-    if (that instanceof ParseException)
-      return this.equals((ParseException)that);
+    if (that instanceof BadJSONException)
+      return this.equals((BadJSONException)that);
     return false;
   }
 
-  public boolean equals(ParseException that) {
+  public boolean equals(BadJSONException that) {
     if (that == null)
       return false;
 
@@ -217,6 +267,15 @@ public class ParseException extends Exception implements org.apache.thrift.TBase
         return false;
     }
 
+    boolean this_present_arcname = true && this.isSetArcname();
+    boolean that_present_arcname = true && that.isSetArcname();
+    if (this_present_arcname || that_present_arcname) {
+      if (!(this_present_arcname && that_present_arcname))
+        return false;
+      if (!this.arcname.equals(that.arcname))
+        return false;
+    }
+
     return true;
   }
 
@@ -225,13 +284,13 @@ public class ParseException extends Exception implements org.apache.thrift.TBase
     return 0;
   }
 
-  public int compareTo(ParseException other) {
+  public int compareTo(BadJSONException other) {
     if (!getClass().equals(other.getClass())) {
       return getClass().getName().compareTo(other.getClass().getName());
     }
 
     int lastComparison = 0;
-    ParseException typedOther = (ParseException)other;
+    BadJSONException typedOther = (BadJSONException)other;
 
     lastComparison = Boolean.valueOf(isSetMessage()).compareTo(typedOther.isSetMessage());
     if (lastComparison != 0) {
@@ -239,6 +298,16 @@ public class ParseException extends Exception implements org.apache.thrift.TBase
     }
     if (isSetMessage()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.message, typedOther.message);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = Boolean.valueOf(isSetArcname()).compareTo(typedOther.isSetArcname());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetArcname()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.arcname, typedOther.arcname);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -260,7 +329,7 @@ public class ParseException extends Exception implements org.apache.thrift.TBase
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder("ParseException(");
+    StringBuilder sb = new StringBuilder("BadJSONException(");
     boolean first = true;
 
     sb.append("message:");
@@ -268,6 +337,14 @@ public class ParseException extends Exception implements org.apache.thrift.TBase
       sb.append("null");
     } else {
       sb.append(this.message);
+    }
+    first = false;
+    if (!first) sb.append(", ");
+    sb.append("arcname:");
+    if (this.arcname == null) {
+      sb.append("null");
+    } else {
+      sb.append(this.arcname);
     }
     first = false;
     sb.append(")");
@@ -294,15 +371,15 @@ public class ParseException extends Exception implements org.apache.thrift.TBase
     }
   }
 
-  private static class ParseExceptionStandardSchemeFactory implements SchemeFactory {
-    public ParseExceptionStandardScheme getScheme() {
-      return new ParseExceptionStandardScheme();
+  private static class BadJSONExceptionStandardSchemeFactory implements SchemeFactory {
+    public BadJSONExceptionStandardScheme getScheme() {
+      return new BadJSONExceptionStandardScheme();
     }
   }
 
-  private static class ParseExceptionStandardScheme extends StandardScheme<ParseException> {
+  private static class BadJSONExceptionStandardScheme extends StandardScheme<BadJSONException> {
 
-    public void read(org.apache.thrift.protocol.TProtocol iprot, ParseException struct) throws org.apache.thrift.TException {
+    public void read(org.apache.thrift.protocol.TProtocol iprot, BadJSONException struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TField schemeField;
       iprot.readStructBegin();
       while (true)
@@ -320,6 +397,14 @@ public class ParseException extends Exception implements org.apache.thrift.TBase
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 2: // ARCNAME
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+              struct.arcname = iprot.readString();
+              struct.setArcnameIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -331,7 +416,7 @@ public class ParseException extends Exception implements org.apache.thrift.TBase
       struct.validate();
     }
 
-    public void write(org.apache.thrift.protocol.TProtocol oprot, ParseException struct) throws org.apache.thrift.TException {
+    public void write(org.apache.thrift.protocol.TProtocol oprot, BadJSONException struct) throws org.apache.thrift.TException {
       struct.validate();
 
       oprot.writeStructBegin(STRUCT_DESC);
@@ -340,40 +425,55 @@ public class ParseException extends Exception implements org.apache.thrift.TBase
         oprot.writeString(struct.message);
         oprot.writeFieldEnd();
       }
+      if (struct.arcname != null) {
+        oprot.writeFieldBegin(ARCNAME_FIELD_DESC);
+        oprot.writeString(struct.arcname);
+        oprot.writeFieldEnd();
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
 
   }
 
-  private static class ParseExceptionTupleSchemeFactory implements SchemeFactory {
-    public ParseExceptionTupleScheme getScheme() {
-      return new ParseExceptionTupleScheme();
+  private static class BadJSONExceptionTupleSchemeFactory implements SchemeFactory {
+    public BadJSONExceptionTupleScheme getScheme() {
+      return new BadJSONExceptionTupleScheme();
     }
   }
 
-  private static class ParseExceptionTupleScheme extends TupleScheme<ParseException> {
+  private static class BadJSONExceptionTupleScheme extends TupleScheme<BadJSONException> {
 
     @Override
-    public void write(org.apache.thrift.protocol.TProtocol prot, ParseException struct) throws org.apache.thrift.TException {
+    public void write(org.apache.thrift.protocol.TProtocol prot, BadJSONException struct) throws org.apache.thrift.TException {
       TTupleProtocol oprot = (TTupleProtocol) prot;
       BitSet optionals = new BitSet();
       if (struct.isSetMessage()) {
         optionals.set(0);
       }
-      oprot.writeBitSet(optionals, 1);
+      if (struct.isSetArcname()) {
+        optionals.set(1);
+      }
+      oprot.writeBitSet(optionals, 2);
       if (struct.isSetMessage()) {
         oprot.writeString(struct.message);
+      }
+      if (struct.isSetArcname()) {
+        oprot.writeString(struct.arcname);
       }
     }
 
     @Override
-    public void read(org.apache.thrift.protocol.TProtocol prot, ParseException struct) throws org.apache.thrift.TException {
+    public void read(org.apache.thrift.protocol.TProtocol prot, BadJSONException struct) throws org.apache.thrift.TException {
       TTupleProtocol iprot = (TTupleProtocol) prot;
-      BitSet incoming = iprot.readBitSet(1);
+      BitSet incoming = iprot.readBitSet(2);
       if (incoming.get(0)) {
         struct.message = iprot.readString();
         struct.setMessageIsSet(true);
+      }
+      if (incoming.get(1)) {
+        struct.arcname = iprot.readString();
+        struct.setArcnameIsSet(true);
       }
     }
   }
