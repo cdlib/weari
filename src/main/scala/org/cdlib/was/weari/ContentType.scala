@@ -42,10 +42,8 @@ case class ContentType (val top     : String,
     case _ => None;
   }
   
-  override def toString = charset match {
-    case Some(cs) => "%s; charset=%s".format(mediaType, cs);
-    case None     => mediaType;
-  }
+  override def toString = 
+    charset.map("%s; charset=%s".format(mediaType, _)).getOrElse(mediaType);
 }
 
 object ContentType {
