@@ -3,7 +3,7 @@ package org.cdlib.was.weari;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
-import org.apache.http.NameValuePair;
+import org.apache.http.{HeaderElement,NameValuePair};
 import org.apache.http.message.{BasicHeaderValueParser,ParserCursor};
 
 import org.apache.http.util.CharArrayBuffer;
@@ -21,8 +21,7 @@ case class ContentType (val top     : String,
                         val sub     : String,
                         val charset : Option[String]) {
 
-  lazy val mediaType : String = 
-      "%s/%s".format(top, sub);
+  lazy val mediaType : String = "%s/%s".format(top, sub);
 
   lazy val mediaTypeGroup : Option[String] = top match {
     case "audio" => Some("audio");
@@ -47,7 +46,6 @@ case class ContentType (val top     : String,
     case Some(cs) => "%s; charset=%s".format(mediaType, cs);
     case None     => mediaType;
   }
-
 }
 
 object ContentType {
@@ -58,31 +56,32 @@ object ContentType {
 
   val headerValueParser = new BasicHeaderValueParser;
 
+  private def extractContentType (el : HeaderElement) : Option[String] =
+    null2option(el.getParameterByName("charset")).map(_.getValue);
+    
+  private def extractMediaType (el : HeaderElement) : Option[Pair[String,String]] = {
+    null2option(el.getName).flatMap { src =>
+      src match {
+        case MIME_RE(topType, subType) => Some((topType, subType));
+        case _                         => None;
+      }
+    }
+  }
+
   /**
    * Parse a Content-Type header.
    *
    * @return The optional media type, as a ContentType object.
    */
   def parse (line : String) : Option[ContentType] = {
-    val buff = new CharArrayBuffer(80);
+    var buff = new CharArrayBuffer(80);
     buff.append(line);
-    val parsed = headerValueParser.parseElements(buff, new ParserCursor(0, buff.length));
-    if (parsed.isEmpty) {
-      return None;
-    } else {
-      val mediaType = null2option(parsed(0).getName) match {
-        case Some(MIME_RE(topType, subType)) => Some(Pair(topType, subType));
-        case _ => None;
-      }
-      val charset = null2option(parsed(0).getParameterByName("charset")).map(_.getValue);
-      if (mediaType.isEmpty) {
-        return None;
-      } else {
-        return Some(ContentType (mediaType.get._1, mediaType.get._2, charset))
-      }
-    }
+    val cursor = new ParserCursor(0, buff.length);
+
+    return for { parsed <- headerValueParser.parseElements(buff, cursor).headOption
+                 (topType, subType) <- extractMediaType(parsed) }
+           yield ContentType(topType, subType, extractContentType(parsed));
   }
   
-  def forceParse (line : String) = 
-    parse(line).getOrElse(ContentType.DEFAULT);
+  def forceParse (line : String) = parse(line).getOrElse(ContentType.DEFAULT);
 }
