@@ -10,8 +10,8 @@ import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TServerTransport;
 
 import org.cdlib.was.weari.Config;
-
 import org.cdlib.was.weari.thrift;
+import org.cdlib.was.weari.Utility.null2option;
 
 import org.cdlib.ssconf.Configurator;
 
@@ -19,12 +19,9 @@ import java.util.HashMap;
 
 object Server {
   def loadConfigOrExit : Config = {
-    val configPath = System.getProperty("org.cdlib.was.weari.ConfigFile") match {
-      case null =>
-        val default = new File("indexer.conf");
-        if (default.exists) { Some(default.getPath); }
-        else { None; }
-      case path => Some(path);
+    val configPath = null2option(System.getProperty("org.cdlib.was.weari.ConfigFile")).orElse {
+      val default = new File("indexer.conf");
+      if (default.exists) Some(default.getPath) else None;
     }
     if (configPath.isEmpty) {
       System.err.println("Please define org.cdlib.was.weari.ConfigFile! or create indexer.conf file.");
