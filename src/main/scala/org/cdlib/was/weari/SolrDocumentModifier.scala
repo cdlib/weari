@@ -32,19 +32,12 @@ object SolrDocumentModifier {
   def modifyDocuments (query : String, 
                        server : CommonsHttpSolrServer)
                       (f : (SolrInputDocument) => Option[SolrInputDocument]) {
-    val q = new SolrQuery;
-    q.setQuery(query);
-    val coll = new solr.SolrDocumentCollection(server, q);
-    for (doc <- coll) {
-      val idoc = toSolrInputDocument(doc);
-      f(idoc) match {
-        case None => ();
-        case Some(idoc) => {
-          server.add(idoc);
-        }
-      }
+    val q = (new SolrQuery).setQuery(query);
+    SolrIndexer.commitOrRollback(server) {
+      for { doc <- (new solr.SolrDocumentCollection(server, q))
+            newDoc <- f(toSolrInputDocument(doc)) }
+        server.add(newDoc);
     }
-    server.commit;
   }
 
   def addFieldValue(query : String, 
@@ -80,9 +73,7 @@ object SolrDocumentModifier {
   }
 
   def noop(query : String, server : CommonsHttpSolrServer) {
-    modifyDocuments (query, server) { (idoc)=>
-      Some(idoc);
-    }
+    modifyDocuments (query, server) { Some(_) }
   }
 
   /**
