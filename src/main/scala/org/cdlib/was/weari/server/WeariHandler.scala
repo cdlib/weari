@@ -49,7 +49,7 @@ class WeariHandler(config: Config)
                                   filter = filter,
                                   extraId = extraId,
                                   extraFields = extraFields.toMap);
-    try {
+    indexer.commitOrRollback {
       for ((arcname, path) <- arcs.zip(arcPaths)) {
         var in : InputStream = null;
         try {
@@ -60,18 +60,14 @@ class WeariHandler(config: Config)
           indexer.index(arcname, Json.parse[List[ParsedArchiveRecord]](in));
         } catch {
           case ex : ParsingException =>
+            error("Bad JSON: %s".format(arcname));
             throw new thrift.BadJSONException(ex.toString, arcname);
           case ex : Exception =>
+            error("Caught exception: %s".format(ex));
             throw new thrift.IndexException(ex.toString);
         } finally {
           if (in != null) in.close;
         }
-      }
-      indexer.commit;
-    } catch {
-      case ex : Exception => {
-        indexer.rollback;
-        throw ex;
       }
     }
   }
