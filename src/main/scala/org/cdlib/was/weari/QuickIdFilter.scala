@@ -14,13 +14,17 @@ import org.archive.util.BloomFilter64bit;
  * @author Erik Hetzner <erik.hetzner@ucop.edu>
  */
 class QuickIdFilter (q : String , server : SolrServer, n : Int) {
-  def this (q : String, server : SolrServer) = this(q, server, 100000);
+  def this (q : String, server : SolrServer) = 
+    this(q, server, 100000);
+
   val docs = new solr.SolrDocumentCollection(server, new SolrQuery(q).setParam("fl", "id").setRows(1000));
+
   val bf = new BloomFilter64bit(n, 12);
-  for (doc <- docs) {
+
+  for (doc <- docs) 
     bf.add(doc.get("id").asInstanceOf[String]);
-  }
-  
+
   def contains (s : String) = bf.contains(s);
+
   def add (s : String) = bf.add(s);
 }
