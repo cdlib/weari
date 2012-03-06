@@ -53,15 +53,25 @@ class SolrIndexer (server : SolrServer,
     }
   }
 
+  /**
+   * Index a singel solr document without merging with any existing document.
+   */
   def indexNoMerge(doc : SolrInputDocument) {
     retryOrThrow(3) { 
       server.add(doc);
     }
   }
 
+  /**
+   * Return the ID field in a solr document.
+   */
   def getId (doc : SolrInputDocument) : String = 
     doc.getFieldValue(ID_FIELD).asInstanceOf[String];
-    
+
+  /**
+   * Convert a ParsedArchiveRecord into a SolrInputDocument, merging
+   * in extraFields and extraId (see SolrIndexer constructor).
+   */
   def record2inputDocument (record : ParsedArchiveRecord) : SolrInputDocument = {
     val doc = record.toDocument;
     for ((k,v) <- extraFields) v match {
@@ -72,6 +82,10 @@ class SolrIndexer (server : SolrServer,
     return doc;
   }
 
+  /**
+   * Generate a Map from IDs to SolrInputDocuments, based on a
+   * Iterable[SolrDocument].
+   */
   private def makeDocMap (docs : Iterable[SolrDocument]) : 
       Map[String,SolrInputDocument] = {
         val i = for (doc <- docs) 
@@ -85,6 +99,7 @@ class SolrIndexer (server : SolrServer,
   /**
    * Index a sequence of ParsedArchiveRecords.
    * Commit at the end, or rollback if we get an exception.
+   * Existing documents will be merged with new documents.
    */
   def index (arc : String, recs : Seq[ParsedArchiveRecord]) {
     val q = (new SolrQuery).setQuery("arcname:\"%s\"".format(arc));
@@ -93,7 +108,8 @@ class SolrIndexer (server : SolrServer,
       if (olddocs.isEmpty) {
         for (rec <- recs) indexWithMerge(record2inputDocument(rec));
       } else {
-        /* try a faster re-index if we have already indexed this arc */
+        /* If we have already indexed this ARC, we can retrieve all */
+        /* the documents in the ARC and merge faster. */
         val olddocMap = makeDocMap(olddocs)
         for (rec <- recs) {
           val doc = record2inputDocument(rec);
@@ -105,11 +121,19 @@ class SolrIndexer (server : SolrServer,
     }
   }
   
+  /**
+   * Perform f, and either commit at the end if there were no exceptions,
+   * or rollback if there were.
+   */
   def commitOrRollback[A] (f: => A) : A = 
     SolrIndexer.commitOrRollback(server) (f)    
 }
 
 object SolrIndexer {
+  /**
+   * Perform f, and either commit at the end if there were no exceptions,
+   * or rollback if there were.
+   */
   def commitOrRollback[A] (server : SolrServer) (f: => A) : A = {
     try {
       val retval = f;
