@@ -85,8 +85,7 @@ class SolrIndexer (server : SolrServer,
    * Commit at the end, or rollback if we get an exception.
    */
   def index (arc : String, recs : Seq[ParsedArchiveRecord]) {
-    val q = new SolrQuery;
-    q.setQuery("arcname:\"%s\"".format(arc));
+    val q = (new SolrQuery).setQuery("arcname:\"%s\"".format(arc));
     val olddocs = new solr.SolrDocumentCollection(server, q);
     commitOrRollback {
       if (olddocs.isEmpty) {
