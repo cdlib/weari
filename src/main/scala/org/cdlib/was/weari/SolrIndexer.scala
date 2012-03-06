@@ -39,35 +39,37 @@ class SolrIndexer (server : SolrServer,
    *
    * @param doc Document to index.
    */
-  def index(doc : SolrInputDocument) {
-    val id = getId(doc);
-    if (!filter.contains(id)) {
-      server.add(doc);
-    } else {
-      val mergeddoc = getById(id,server).
+  def indexWithMerge(doc : SolrInputDocument) {
+    retryOrThrow(3) { 
+      val id = getId(doc);
+      if (!filter.contains(id)) {
+        server.add(doc);
+      } else {
+        val mergeddoc = getById(id,server).
         map(toSolrInputDocument(_)).
         map(mergeDocs(_, doc));
-      server.add(mergeddoc.getOrElse(doc));
+        server.add(mergeddoc.getOrElse(doc));
+      }
+    }
+  }
+
+  def indexNoMerge(doc : SolrInputDocument) {
+    retryOrThrow(3) { 
+      server.add(doc);
     }
   }
 
   def getId (doc : SolrInputDocument) : String = 
     doc.getFieldValue(ID_FIELD).asInstanceOf[String];
     
-  /**
-   * Index a single ParsedArchiveRecord.
-   * Adds extraFields to document, and extraId to end of id.
-   * 
-   * @param record Record to index.
-   */
-  def index (record : ParsedArchiveRecord) {
+  def record2inputDocument (record : ParsedArchiveRecord) : SolrInputDocument = {
     val doc = record.toDocument;
     for ((k,v) <- extraFields) v match {
       case l : List[Any] => l.map(v2=>doc.addField(k, v2));
       case o : Any => doc.setField(k, o);
     }
     doc.setField(ID_FIELD, "%s.%s".format(getId(doc), extraId));
-    retryOrThrow(3) { index(doc); }
+    return doc;
   }
 
   private def makeDocMap (docs : Iterable[SolrDocument]) : 
@@ -75,7 +77,7 @@ class SolrIndexer (server : SolrServer,
         val i = for (doc <- docs) 
                 yield {
                   val idoc = toSolrInputDocument(doc);
-                  (getId(idoc), idoc) 
+                  (getId(idoc), idoc)
                 };
         return i.toMap;
       }
@@ -89,15 +91,15 @@ class SolrIndexer (server : SolrServer,
     val olddocs = new solr.SolrDocumentCollection(server, q);
     commitOrRollback {
       if (olddocs.isEmpty) {
-        for (rec <- recs) index(rec);
+        for (rec <- recs) indexWithMerge(record2inputDocument(rec));
       } else {
         /* try a faster re-index if we have already indexed this arc */
         val olddocMap = makeDocMap(olddocs)
         for (rec <- recs) {
-          val doc = rec.toDocument;
+          val doc = record2inputDocument(rec);
           val olddoc = olddocMap.get(getId(doc)).getOrElse(
-            throw new Exception("Bad map passed to fastIndex! Must contain all IDs."));
-          server.add(mergeDocs(olddoc, doc));
+            throw new Exception("Bad map passed to fastIndex! Missing at least: %s from %s".format(getId(doc), arc)));
+          indexNoMerge(mergeDocs(olddoc, doc));
         }
       }
     }
