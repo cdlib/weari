@@ -7,19 +7,35 @@
 
 module Weari
   module Thrift
+        class BadJSONException < ::Thrift::Exception
+          include ::Thrift::Struct, ::Thrift::Struct_Union
+          MESSAGE = 1
+          ARCNAME = 2
+
+          FIELDS = {
+            MESSAGE => {:type => ::Thrift::Types::STRING, :name => 'message'},
+            ARCNAME => {:type => ::Thrift::Types::STRING, :name => 'arcname'}
+          }
+
+          def struct_fields; FIELDS; end
+
+          def validate
+          end
+
+          ::Thrift::Struct.generate_accessors self
+        end
+
         class IndexException < ::Thrift::Exception
           include ::Thrift::Struct, ::Thrift::Struct_Union
           def initialize(message=nil)
             super()
-            self.why = message
+            self.message = message
           end
 
-          def message; why end
-
-          WHY = 1
+          MESSAGE = 1
 
           FIELDS = {
-            WHY => {:type => ::Thrift::Types::STRING, :name => 'why'}
+            MESSAGE => {:type => ::Thrift::Types::STRING, :name => 'message'}
           }
 
           def struct_fields; FIELDS; end
@@ -43,6 +59,27 @@ module Weari
 
           FIELDS = {
             ARCNAME => {:type => ::Thrift::Types::STRING, :name => 'arcname'}
+          }
+
+          def struct_fields; FIELDS; end
+
+          def validate
+          end
+
+          ::Thrift::Struct.generate_accessors self
+        end
+
+        class ParseException < ::Thrift::Exception
+          include ::Thrift::Struct, ::Thrift::Struct_Union
+          def initialize(message=nil)
+            super()
+            self.message = message
+          end
+
+          MESSAGE = 1
+
+          FIELDS = {
+            MESSAGE => {:type => ::Thrift::Types::STRING, :name => 'message'}
           }
 
           def struct_fields; FIELDS; end

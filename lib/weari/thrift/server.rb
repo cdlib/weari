@@ -13,20 +13,6 @@ require 'weari/thrift/weari_types'
               class Client
                 include ::Thrift::Client
 
-                def ping()
-                  send_ping()
-                  recv_ping()
-                end
-
-                def send_ping()
-                  send_message('ping', Ping_args)
-                end
-
-                def recv_ping()
-                  result = receive_message(Ping_result)
-                  return
-                end
-
                 def index(solr, filter, arcs, extraId, extraFields)
                   send_index(solr, filter, arcs, extraId, extraFields)
                   recv_index()
@@ -40,6 +26,7 @@ require 'weari/thrift/weari_types'
                   result = receive_message(Index_result)
                   raise result.ex1 unless result.ex1.nil?
                   raise result.ex2 unless result.ex2.nil?
+                  raise result.ex3 unless result.ex3.nil?
                   return
                 end
 
@@ -54,6 +41,7 @@ require 'weari/thrift/weari_types'
 
                 def recv_parseArcs()
                   result = receive_message(ParseArcs_result)
+                  raise result.ex1 unless result.ex1.nil?
                   return
                 end
 
@@ -72,17 +60,24 @@ require 'weari/thrift/weari_types'
                   raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'isArcParsed failed: unknown result')
                 end
 
+                def deleteParse(arc)
+                  send_deleteParse(arc)
+                  recv_deleteParse()
+                end
+
+                def send_deleteParse(arc)
+                  send_message('deleteParse', DeleteParse_args, :arc => arc)
+                end
+
+                def recv_deleteParse()
+                  result = receive_message(DeleteParse_result)
+                  return
+                end
+
               end
 
               class Processor
                 include ::Thrift::Processor
-
-                def process_ping(seqid, iprot, oprot)
-                  args = read_args(iprot, Ping_args)
-                  result = Ping_result.new()
-                  @handler.ping()
-                  write_result(result, oprot, 'ping', seqid)
-                end
 
                 def process_index(seqid, iprot, oprot)
                   args = read_args(iprot, Index_args)
@@ -93,6 +88,8 @@ require 'weari/thrift/weari_types'
                     result.ex1 = ex1
                   rescue Weari::Thrift::UnparsedException => ex2
                     result.ex2 = ex2
+                  rescue Weari::Thrift::BadJSONException => ex3
+                    result.ex3 = ex3
                   end
                   write_result(result, oprot, 'index', seqid)
                 end
@@ -100,7 +97,11 @@ require 'weari/thrift/weari_types'
                 def process_parseArcs(seqid, iprot, oprot)
                   args = read_args(iprot, ParseArcs_args)
                   result = ParseArcs_result.new()
-                  @handler.parseArcs(args.arcs)
+                  begin
+                    @handler.parseArcs(args.arcs)
+                  rescue Weari::Thrift::ParseException => ex1
+                    result.ex1 = ex1
+                  end
                   write_result(result, oprot, 'parseArcs', seqid)
                 end
 
@@ -111,39 +112,16 @@ require 'weari/thrift/weari_types'
                   write_result(result, oprot, 'isArcParsed', seqid)
                 end
 
+                def process_deleteParse(seqid, iprot, oprot)
+                  args = read_args(iprot, DeleteParse_args)
+                  result = DeleteParse_result.new()
+                  @handler.deleteParse(args.arc)
+                  write_result(result, oprot, 'deleteParse', seqid)
+                end
+
               end
 
               # HELPER FUNCTIONS AND STRUCTURES
-
-              class Ping_args
-                include ::Thrift::Struct, ::Thrift::Struct_Union
-
-                FIELDS = {
-
-                }
-
-                def struct_fields; FIELDS; end
-
-                def validate
-                end
-
-                ::Thrift::Struct.generate_accessors self
-              end
-
-              class Ping_result
-                include ::Thrift::Struct, ::Thrift::Struct_Union
-
-                FIELDS = {
-
-                }
-
-                def struct_fields; FIELDS; end
-
-                def validate
-                end
-
-                ::Thrift::Struct.generate_accessors self
-              end
 
               class Index_args
                 include ::Thrift::Struct, ::Thrift::Struct_Union
@@ -173,10 +151,12 @@ require 'weari/thrift/weari_types'
                 include ::Thrift::Struct, ::Thrift::Struct_Union
                 EX1 = 1
                 EX2 = 2
+                EX3 = 3
 
                 FIELDS = {
                   EX1 => {:type => ::Thrift::Types::STRUCT, :name => 'ex1', :class => Weari::Thrift::IndexException},
-                  EX2 => {:type => ::Thrift::Types::STRUCT, :name => 'ex2', :class => Weari::Thrift::UnparsedException}
+                  EX2 => {:type => ::Thrift::Types::STRUCT, :name => 'ex2', :class => Weari::Thrift::UnparsedException},
+                  EX3 => {:type => ::Thrift::Types::STRUCT, :name => 'ex3', :class => Weari::Thrift::BadJSONException}
                 }
 
                 def struct_fields; FIELDS; end
@@ -205,9 +185,10 @@ require 'weari/thrift/weari_types'
 
               class ParseArcs_result
                 include ::Thrift::Struct, ::Thrift::Struct_Union
+                EX1 = 1
 
                 FIELDS = {
-
+                  EX1 => {:type => ::Thrift::Types::STRUCT, :name => 'ex1', :class => Weari::Thrift::ParseException}
                 }
 
                 def struct_fields; FIELDS; end
@@ -240,6 +221,37 @@ require 'weari/thrift/weari_types'
 
                 FIELDS = {
                   SUCCESS => {:type => ::Thrift::Types::BOOL, :name => 'success'}
+                }
+
+                def struct_fields; FIELDS; end
+
+                def validate
+                end
+
+                ::Thrift::Struct.generate_accessors self
+              end
+
+              class DeleteParse_args
+                include ::Thrift::Struct, ::Thrift::Struct_Union
+                ARC = 1
+
+                FIELDS = {
+                  ARC => {:type => ::Thrift::Types::STRING, :name => 'arc'}
+                }
+
+                def struct_fields; FIELDS; end
+
+                def validate
+                end
+
+                ::Thrift::Struct.generate_accessors self
+              end
+
+              class DeleteParse_result
+                include ::Thrift::Struct, ::Thrift::Struct_Union
+
+                FIELDS = {
+
                 }
 
                 def struct_fields; FIELDS; end

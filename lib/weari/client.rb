@@ -8,24 +8,47 @@ module Weari
       @t_client = Weari::Thrift::Server::Client.new(@t_protocol)
     end
 
-    def parse_arcs(arcs)
+    def with_open_transport
       @t_transport.open()
-      @t_client.parseArcs(arcs)
+      retval = yield()
       @t_transport.close()
+      return retval
+    end
+    
+    def parse_arcs(arcs)
+      with_open_transport do
+        @t_client.parseArcs(arcs)
+      end
+    end
+
+    def parse_arc(arc)
+      return with_open_transport do
+        @t_client.parseArc(arc)
+      end
     end
     
     def index(solr_uri, filter, arcs, extra_id, extra_fields)
-      @t_transport.open()
-      @t_client.index(solr_uri, filter, arcs, extra_id, extra_fields)
-      @t_transport.close()
+      with_open_transport do
+        @t_client.index(solr_uri, filter, arcs, extra_id, extra_fields)
+      end
     end
 
     def is_arc_parsed(arc)
-      @t_transport.open()
-      retval = @t_client.isArcParsed(arc)
-      print retval
-      @t_transport.close()
-      return retval
+      return with_open_transport do
+        @t_client.isArcParsed(arc)
+      end
+    end
+
+    def make_empty_json(arc)
+      return with_open_transport do
+        @t_client.makeEmptyJson(arc)
+      end
+    end
+
+    def delete_parse(arc)
+      return with_open_transport do
+        @t_client.deleteParse(arc)
+      end
     end
   end
 end
