@@ -28,8 +28,7 @@ class SolrIndexer (server : SolrServer,
    * 
    */
   def getById(id : String, server : SolrServer) : Option[SolrDocument] = {
-    val q = new SolrQuery;
-    q.setQuery("id:\"%s\"".format(id));
+    val q = (new SolrQuery).setQuery("id:\"%s\"".format(id));
     val docs = new solr.SolrDocumentCollection(server, q);
     return docs.headOption;
   }
@@ -41,7 +40,7 @@ class SolrIndexer (server : SolrServer,
    * @param doc Document to index.
    */
   def index(doc : SolrInputDocument) {
-    val id = doc.getFieldValue(ID_FIELD).asInstanceOf[String];
+    val id = getId(doc);
     if (!filter.contains(id)) {
       server.add(doc);
     } else {
@@ -52,6 +51,9 @@ class SolrIndexer (server : SolrServer,
     }
   }
 
+  def getId (doc : SolrInputDocument) : String = 
+    doc.getFieldValue(ID_FIELD).asInstanceOf[String];
+    
   /**
    * Index a single ParsedArchiveRecord.
    * Adds extraFields to document, and extraId to end of id.
@@ -64,38 +66,54 @@ class SolrIndexer (server : SolrServer,
       case l : List[Any] => l.map(v2=>doc.addField(k, v2));
       case o : Any => doc.setField(k, o);
     }
-    val oldId = doc.getFieldValue(ID_FIELD).asInstanceOf[String];
-    doc.setField(ID_FIELD, "%s.%s".format(oldId, extraId));
+    doc.setField(ID_FIELD, "%s.%s".format(getId(doc), extraId));
     retryOrThrow(3) { index(doc); }
   }
 
+  private def makeDocMap (docs : Iterable[SolrDocument]) : 
+      Map[String,SolrInputDocument] = {
+        val i = for (doc <- docs) 
+                yield {
+                  val idoc = toSolrInputDocument(doc);
+                  (getId(idoc), idoc) 
+                };
+        return i.toMap;
+      }
+        
   /**
    * Index a sequence of ParsedArchiveRecords.
    * Commit at the end, or rollback if we get an exception.
    */
   def index (arc : String, recs : Seq[ParsedArchiveRecord]) {
-    try {
-      val q = new SolrQuery;
-      q.setQuery("arcname:\"%s\"".format(arc));
-      val olddocs = new solr.SolrDocumentCollection(server, q);
-
-      /* try a faster re-index if we have already indexed this arc */
-      if (olddocs.nonEmpty) {
-        val oldinputdocs = olddocs.map(toSolrInputDocument(_));
-        val docsMap = oldinputdocs.map(doc=>(doc.getFieldValue(ID_FIELD).asInstanceOf[String], doc)).toMap;
+    val q = new SolrQuery;
+    q.setQuery("arcname:\"%s\"".format(arc));
+    val olddocs = new solr.SolrDocumentCollection(server, q);
+    commitOrRollback {
+      if (olddocs.isEmpty) {
+        for (rec <- recs) index(rec);
+      } else {
+        /* try a faster re-index if we have already indexed this arc */
+        val olddocMap = makeDocMap(olddocs)
         for (rec <- recs) {
           val doc = rec.toDocument;
-          val id = doc.getFieldValue(ID_FIELD).asInstanceOf[String];
-          docsMap.get(id) match {
-            case None => 
-              throw new Exception("Bad map passed to fastIndex! Must contain all IDs.");
-            case Some(olddoc) => 
-              server.add(mergeDocs(olddoc, doc));
-          }
+          val olddoc = olddocMap.get(getId(doc)).getOrElse(
+            throw new Exception("Bad map passed to fastIndex! Must contain all IDs."));
+          server.add(mergeDocs(olddoc, doc));
         }
-      } else {
-        for (rec <- recs) index(rec);
       }
+    }
+  }
+  
+  def commitOrRollback[A] (f: => A) : A = 
+    SolrIndexer.commitOrRollback(server) (f)    
+}
+
+object SolrIndexer {
+  def commitOrRollback[A] (server : SolrServer) (f: => A) : A = {
+    try {
+      val retval = f;
+      server.commit;
+      return retval;
     } catch {
       case ex : Exception => {
         server.rollback;
@@ -103,9 +121,4 @@ class SolrIndexer (server : SolrServer,
       }
     }
   }
-      
-  def commit = server.commit;
-
-  def rollback = server.rollback;
-    
 }
