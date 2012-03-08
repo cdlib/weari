@@ -29,53 +29,6 @@ object SolrDocumentModifier {
       doc.addField(key, value);
   }
   
-  def modifyDocuments (query : String, 
-                       server : CommonsHttpSolrServer)
-                      (f : (SolrInputDocument) => Option[SolrInputDocument]) {
-    val q = (new SolrQuery).setQuery(query);
-    SolrIndexer.commitOrRollback(server) {
-      for { doc <- (new solr.SolrDocumentCollection(server, q))
-            newDoc <- f(toSolrInputDocument(doc)) }
-        server.add(newDoc);
-    }
-  }
-
-  def addFieldValue(query : String, 
-                    field : String, 
-                    value : String, 
-                    server : CommonsHttpSolrServer) {
-    modifyDocuments (query, server) { (idoc)=>
-      val oldfield = idoc.getFieldValues(field);
-      if ((oldfield != null) && !oldfield.contains(value)) {
-        idoc.addField(field, value);
-        Some(idoc);
-      } else {
-        None;
-      }
-    }
-  }
-
-  def removeFieldValue(query : String, 
-                       field : String, 
-                       removeValue : String, 
-                       server : CommonsHttpSolrServer) {
-    modifyDocuments (query, server) { (idoc)=>
-      val oldfield = idoc.getFieldValues(field);
-      if ((oldfield != null) && oldfield.contains(removeValue)) {
-        idoc.removeField(field);
-        for (value <- oldfield.filter(_ != removeValue))
-          idoc.addField(field, value);
-        Some(idoc);
-      } else {
-        None;
-      }
-    }
-  }
-
-  def noop(query : String, server : CommonsHttpSolrServer) {
-    modifyDocuments (query, server) { Some(_) }
-  }
-
   /**
    * Update the boost in a document.
    */
