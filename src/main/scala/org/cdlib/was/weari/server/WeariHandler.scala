@@ -13,6 +13,7 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{ FileSystem, FSDataInputStream, FSDataOutputStream, Path }
 import org.apache.solr.client.solrj.impl.StreamingUpdateSolrServer
 import scala.collection.JavaConversions.{ collectionAsScalaIterable, mapAsScalaMap, seqAsJavaList }
+import scala.collection.mutable.{Map,SynchronizedMap,HashMap};
 import scala.collection.immutable.HashSet
 import grizzled.slf4j.Logging;
 import org.apache.pig.PigServer;
@@ -24,6 +25,8 @@ class WeariHandler(config: Config)
   val conf = new Configuration();
   val fs = FileSystem.get(conf);
   val jsonDir = new Path(config.jsonBaseDir());
+  var locks : Map[String,AnyRef] = new HashMap[String,AnyRef] 
+    with SynchronizedMap[String,AnyRef];
 
   /**
    * Index a set of ARCs on a solr server.
@@ -49,24 +52,26 @@ class WeariHandler(config: Config)
                                   filter = filter,
                                   extraId = extraId,
                                   extraFields = extraFields.toMap);
-    indexer.commitOrRollback {
-      for ((arcname, path) <- arcs.zip(arcPaths)) {
-        var in : InputStream = null;
-        try {
-          in = fs.open(path);
-    	  if (path.getName.endsWith("gz")) {
-            in = new GZIPInputStream(in);
-          }
-          indexer.index(arcname, Json.parse[List[ParsedArchiveRecord]](in));
-        } catch {
-          case ex : ParsingException =>
-            error("Bad JSON: %s".format(arcname));
+    locks.getOrElseUpdate(solr, new Object).synchronized {
+      indexer.commitOrRollback {
+        for ((arcname, path) <- arcs.zip(arcPaths)) {
+          var in : InputStream = null;
+          try {
+            in = fs.open(path);
+    	    if (path.getName.endsWith("gz")) {
+              in = new GZIPInputStream(in);
+            }
+              indexer.index(arcname, Json.parse[List[ParsedArchiveRecord]](in));
+          } catch {
+            case ex : ParsingException =>
+              error("Bad JSON: %s".format(arcname));
             throw new thrift.BadJSONException(ex.toString, arcname);
-          case ex : Exception =>
-            error("Caught exception: %s".format(ex));
+            case ex : Exception =>
+              error("Caught exception: %s".format(ex));
             throw new thrift.IndexException(ex.toString);
-        } finally {
-          if (in != null) in.close;
+            } finally {
+              if (in != null) in.close;
+            }
         }
       }
     }
