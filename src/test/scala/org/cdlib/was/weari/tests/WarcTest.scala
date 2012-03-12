@@ -12,14 +12,10 @@ import org.archive.io.{ArchiveReaderFactory,ArchiveRecord};
 
 import org.cdlib.was.weari._;
 
-import org.junit.runner.RunWith;
-
 import org.scalatest.{FeatureSpec,GivenWhenThen,Ignore};
-import org.scalatest.junit.JUnitRunner;
 
 import scala.collection.mutable.HashMap;
 
-@RunWith(classOf[JUnitRunner])
 class WarcSpec extends FeatureSpec {
   val cl = classOf[WarcSpec].getClassLoader;
   val config = new Config {};

@@ -4,14 +4,11 @@ package org.cdlib.was.weari.tests;
 
 import com.codahale.jerkson.Json;
 
-import org.junit.runner.RunWith;
-
 import org.scalatest.{FeatureSpec,GivenWhenThen};
 import org.scalatest.junit.JUnitRunner;
 
 import org.cdlib.was.weari._;
 
-@RunWith(classOf[JUnitRunner])
 class ContentTypeSpec extends FeatureSpec {
   feature ("We can parse Content-Type headers.") {
     scenario ("text/plain") {

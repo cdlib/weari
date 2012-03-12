@@ -47,9 +47,9 @@ class WeariHandler(config: Config)
       config.queueSize(),
       config.threadCount());
     val arcPaths = arcs.map(getPath(_));
-    val filter = new QuickIdFilter(filterQuery, server);
+    val manager = new MergeManager(filterQuery, server);
     val indexer = new SolrIndexer(server = server,
-                                  filter = filter,
+                                  manager = manager,
                                   extraId = extraId,
                                   extraFields = extraFields.toMap);
     locks.getOrElseUpdate(solr, new Object).synchronized {
@@ -61,7 +61,7 @@ class WeariHandler(config: Config)
     	    if (path.getName.endsWith("gz")) {
               in = new GZIPInputStream(in);
             }
-              indexer.index(arcname, Json.parse[List[ParsedArchiveRecord]](in));
+            indexer.index(Json.parse[List[ParsedArchiveRecord]](in));
           } catch {
             case ex : ParsingException =>
               error("Bad JSON: %s".format(arcname));
@@ -69,9 +69,9 @@ class WeariHandler(config: Config)
             case ex : Exception =>
               error("Caught exception: %s".format(ex));
             throw new thrift.IndexException(ex.toString);
-            } finally {
-              if (in != null) in.close;
-            }
+          } finally {
+            if (in != null) in.close;
+          }
         }
       }
     }
