@@ -3,12 +3,13 @@
 package org.cdlib.was.weari;
 
 import java.io.{BufferedInputStream,EOFException,File,InputStream,FileInputStream,FileOutputStream,OutputStream};
-import java.util.Date;
+import java.util.{Collection=>JCollection,Date};
 import java.util.zip.GZIPInputStream;
 
 import org.archive.util.ArchiveUtils;
 
 import scala.util.matching.Regex;
+import scala.collection.JavaConversions.collectionAsScalaIterable;
 
 object Utility {
   /* some of arcs end in .open or .gz.gz - we should fix */
@@ -30,6 +31,13 @@ object Utility {
     if (what == null) None;
     else Some(what);
   }
+
+  /**
+   * Convert a possibly null Java Collection into a scala Seq.
+   * If the collection is null, returns an empty collection
+   */
+  def null2seq[A](collection : JCollection[A]) : Seq[A] = 
+    null2option(collection).map(collectionAsScalaIterable(_)).getOrElse(List[A]()).toSeq;
 
   def writeStreamToTempFile (prefix : String, in : InputStream) : File = { 
     val tempFile = File.createTempFile(prefix, null);
