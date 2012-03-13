@@ -38,9 +38,9 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int) {
   val bf = new BloomFilter64bit(n, 12);
 
   /* keeps track of what has been merged, or checked for merge, so far */
-  var tracked : Map[String,SolrInputDocument] = 
-    new HashMap[String,SolrInputDocument] 
-    with SynchronizedMap[String,SolrInputDocument];
+  var tracked : Map[String,SolrInputDocument] = null;
+  /* sets up tracked */
+  this.reset;
 
   /* initialize */
   if (server != null) {
@@ -114,7 +114,11 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int) {
     }
     return retval;
   }
-  
+
+  def reset {
+    tracked = new HashMap[String,SolrInputDocument] with SynchronizedMap[String,SolrInputDocument];
+  }
+    
   def loadDocs (q : String) {
     val newq = new SolrQuery(q).setRows(1000);
     val docs = new solr.SolrDocumentCollection(server, newq);
