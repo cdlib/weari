@@ -2,11 +2,10 @@
 
 package org.cdlib.was.weari;
 
-import org.apache.solr.client.solrj.util.ClientUtils.toSolrInputDocument;
-import org.apache.solr.client.solrj.{SolrServer,SolrQuery};
+import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.common.{SolrDocument,SolrInputDocument};
-import org.cdlib.was.weari.SolrDocumentModifier.mergeDocs;
-import org.cdlib.was.weari.SolrFields.ID_FIELD;
+import org.cdlib.was.weari.SolrFields._;
+import org.cdlib.was.weari.SolrDocumentModifier.updateFields;
 
 import grizzled.slf4j.Logging;
 
@@ -18,23 +17,6 @@ class SolrIndexer (server : SolrServer,
                    extraId : String, 
                    extraFields : Map[String, Any]) 
     extends Retry with Logging {
-
-  val httpClient = new SimpleHttpClient;
-  val parser = new MyParser;
-
-  /**
-   * Generate a Map from IDs to SolrInputDocuments, based on a
-   * Iterable[SolrDocument].
-   */
-  private def makeDocMap (docs : Iterable[SolrDocument]) : 
-      Map[String,SolrInputDocument] = {
-        val i = for (doc <- docs) 
-                yield {
-                  val idoc = toSolrInputDocument(doc);
-                  (getId(idoc), idoc)
-                };
-        return i.toMap;
-      }
 
   /**
    * Index a single Solr document. If a document with the same ID
@@ -56,21 +38,12 @@ class SolrIndexer (server : SolrServer,
   }
 
   /**
-   * Return the ID field in a solr document.
-   */
-  def getId (doc : SolrInputDocument) : String = 
-    doc.getFieldValue(ID_FIELD).asInstanceOf[String];
-
-  /**
    * Convert a ParsedArchiveRecord into a SolrInputDocument, merging
    * in extraFields and extraId (see SolrIndexer constructor).
    */
-  private def record2inputDocument (record : ParsedArchiveRecord) : SolrInputDocument = {
+  def record2inputDocument (record : ParsedArchiveRecord) : SolrInputDocument = {
     val doc = record.toDocument;
-    for ((k,v) <- extraFields) v match {
-      case l : List[Any] => l.map(v2=>doc.addField(k, v2));
-      case o : Any => doc.setField(k, o);
-    }
+    updateFields(doc, extraFields);
     doc.setField(ID_FIELD, "%s.%s".format(getId(doc), extraId));
     return doc;
   }
