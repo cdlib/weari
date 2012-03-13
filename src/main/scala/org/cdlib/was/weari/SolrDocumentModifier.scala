@@ -42,9 +42,11 @@ object SolrDocumentModifier {
                    fields : Pair[String, Any]*) {
     for (field <- fields) {
       field._2 match {
-        case null | None   => ();
-        case Some(s)       => doc.addField(field._1, s);
-        case s             => doc.addField(field._1, s);
+        case null | None    => ();
+        case Some(s)        => doc.addField(field._1, s);
+        case seq : Seq[Any] =>
+          for (v <- seq) doc.addField(field._1, v);
+        case s              => doc.addField(field._1, s);
       }
     }
   }
