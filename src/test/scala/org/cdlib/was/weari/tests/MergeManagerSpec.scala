@@ -11,17 +11,11 @@ import org.apache.solr.common.SolrInputDocument;
 
 import org.cdlib.was.weari._;
 import org.cdlib.was.weari.SolrFields._;
-import org.cdlib.was.weari.SolrDocumentModifier.updateFields;
+import org.cdlib.was.weari.SolrDocumentModifier.makeDoc;
 
 import scala.collection.JavaConversions.mapAsScalaMap;
 
 class MergeManagerSpec extends FunSpec with BeforeAndAfter with ShouldMatchers {
-  def mkDoc (fields : Pair[String,AnyRef]*) : SolrInputDocument = {
-    val doc = new SolrInputDocument;
-    updateFields(doc, fields);
-    return doc;
-  }
-
   /**
    * Convert a SolrInputDocument into something that we can compare.
    */
@@ -36,15 +30,15 @@ class MergeManagerSpec extends FunSpec with BeforeAndAfter with ShouldMatchers {
     manager = new MergeManager("*:*", null);
   }
 
-  val adoc = mkDoc(ID_FIELD -> "abc",
-                ARCNAME_FIELD -> "ARC-A.arc.gz");
-  val bdoc = mkDoc(ID_FIELD -> "abc",
-                   ARCNAME_FIELD -> "ARC-B.arc.gz");
-  val merged = mkDoc(ID_FIELD -> "abc",
-                     ARCNAME_FIELD -> "ARC-A.arc.gz",
+  val adoc = makeDoc(ID_FIELD -> "abc",
+                     ARCNAME_FIELD -> "ARC-A.arc.gz");
+  val bdoc = makeDoc(ID_FIELD -> "abc",
                      ARCNAME_FIELD -> "ARC-B.arc.gz");
+  val merged = makeDoc(ID_FIELD -> "abc",
+                       ARCNAME_FIELD -> "ARC-A.arc.gz",
+                       ARCNAME_FIELD -> "ARC-B.arc.gz");
 
-  describe ("Sample docuemnts") {
+  describe ("Sample documents") {
     it("should not be equal") {
       assert(doc2map(adoc) != doc2map(bdoc));
     }
@@ -59,5 +53,11 @@ class MergeManagerSpec extends FunSpec with BeforeAndAfter with ShouldMatchers {
       manager.merge(adoc);
       assert(doc2map(manager.merge(bdoc)) === doc2map(merged));
     }
+
+    // it("reset should work") {
+    //   manager.merge(adoc);
+    //   manager.reset;
+    //   assert(doc2map(manager.merge(bdoc)) === doc2map(bdoc));
+    // }
   }
 }
