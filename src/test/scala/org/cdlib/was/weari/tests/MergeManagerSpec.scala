@@ -45,6 +45,10 @@ class MergeManagerSpec extends FunSpec with BeforeAndAfter with ShouldMatchers {
   }
 
   describe ("Merge manager") {
+    it("should merge docs successfully") {
+      assert(doc2map(merged) === doc2map(manager.mergeDocs(adoc, bdoc)));
+    }
+
     it("should return an equal document on first merge") {
       assert(doc2map(manager.merge(adoc)) === doc2map(adoc));
     }
@@ -52,6 +56,31 @@ class MergeManagerSpec extends FunSpec with BeforeAndAfter with ShouldMatchers {
     it("should a merged document on second merge") {
       manager.merge(adoc);
       assert(doc2map(manager.merge(bdoc)) === doc2map(merged));
+    }
+
+    it("should get the correct field value when the first or second doc lacks the field") {
+      assert (Some("hello world") === 
+        manager.getSingleFieldValue("field",
+                                    makeDoc("field" -> "hello world"),
+                                    makeDoc()));
+      assert (Some("hello world") === 
+        manager.getSingleFieldValue("field", 
+                                    makeDoc(),
+                                    makeDoc("field" -> "hello world")));
+    }
+
+    it("should merge fields in order") {
+      assert (Seq("foo", "bar") ===
+        manager.mergeFieldValues("field",
+                                 makeDoc("field" -> "foo"),
+                                 makeDoc("field" -> "bar")));
+    }
+
+    it("should unmerge fields successfully") {
+      assert (Seq("bar", "baz") ===
+        manager.unmergeFieldValues("field",
+                                   makeDoc("field" -> "foo"),
+                                   makeDoc("field" -> Seq("foo", "bar", "baz"))));
     }
 
     // it("reset should work") {
