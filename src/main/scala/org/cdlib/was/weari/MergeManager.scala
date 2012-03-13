@@ -142,7 +142,7 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int) {
     return Some(retval);
   }
 
-  def loadDocs (q : String) {
+  def preloadDocs (q : String) {
     val newq = new SolrQuery(q).setRows(1000);
     val docs = new solr.SolrDocumentCollection(server, newq);
     for (doc <- docs) {
