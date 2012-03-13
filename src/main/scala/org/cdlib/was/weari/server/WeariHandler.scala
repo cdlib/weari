@@ -53,25 +53,26 @@ class WeariHandler(config: Config)
                                   extraId = extraId,
                                   extraFields = extraFields.toMap);
     locks.getOrElseUpdate(solr, new Object).synchronized {
-      indexer.commitOrRollback {
-        for ((arcname, path) <- arcs.zip(arcPaths)) {
-          var in : InputStream = null;
-          try {
-            in = fs.open(path);
-    	    if (path.getName.endsWith("gz")) {
-              in = new GZIPInputStream(in);
-            }
-            indexer.index(Json.parse[List[ParsedArchiveRecord]](in));
-          } catch {
-            case ex : ParsingException =>
-              error("Bad JSON: %s".format(arcname));
-            throw new thrift.BadJSONException(ex.toString, arcname);
-            case ex : Exception =>
-              error("Caught exception: %s".format(ex));
-            throw new thrift.IndexException(ex.toString);
-          } finally {
-            if (in != null) in.close;
+      for ((arcname, path) <- arcs.zip(arcPaths)) {
+        var in : InputStream = null;
+        try {
+          in = fs.open(path);
+    	  if (path.getName.endsWith("gz")) {
+            in = new GZIPInputStream(in);
           }
+          manager.reset;
+          indexer.commitOrRollback {
+            indexer.index(Json.parse[List[ParsedArchiveRecord]](in));
+          }
+        } catch {
+          case ex : ParsingException =>
+            error("Bad JSON: %s".format(arcname));
+          throw new thrift.BadJSONException(ex.toString, arcname);
+          case ex : Exception =>
+            error("Caught exception: %s".format(ex));
+          throw new thrift.IndexException(ex.toString);
+        } finally {
+          if (in != null) in.close;
         }
       }
     }
