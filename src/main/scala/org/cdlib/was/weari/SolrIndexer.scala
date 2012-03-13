@@ -25,16 +25,7 @@ class SolrIndexer (server : SolrServer,
    * @param doc Document to index.
    */
   def indexWithMerge(doc : SolrInputDocument) {
-    serverAdd(manager.merge(doc));
-  }
-
-  /**
-   * Add a document to the solr server.
-   */
-  def serverAdd(doc : SolrInputDocument) {
-    retryOrThrow(3) { 
-      server.add(doc);
-    }
+    server.add(manager.merge(doc));
   }
 
   /**
@@ -54,7 +45,7 @@ class SolrIndexer (server : SolrServer,
    */
   def index (recs : Seq[ParsedArchiveRecord]) {
     for (rec <- recs) {
-      serverAdd(manager.merge(record2inputDocument(rec)));
+      server.add(manager.merge(record2inputDocument(rec)));
     }
   }
 
