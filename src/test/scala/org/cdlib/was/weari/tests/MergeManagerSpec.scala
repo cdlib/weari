@@ -11,13 +11,14 @@ import org.apache.solr.common.SolrInputDocument;
 
 import org.cdlib.was.weari._;
 import org.cdlib.was.weari.SolrFields._;
+import org.cdlib.was.weari.SolrDocumentModifier.updateFields;
 
 import scala.collection.JavaConversions.mapAsScalaMap;
 
 class MergeManagerSpec extends FunSpec with BeforeAndAfter with ShouldMatchers {
   def mkDoc (fields : Pair[String,AnyRef]*) : SolrInputDocument = {
     val doc = new SolrInputDocument;
-    for ((k,v) <- fields) doc.addField(k, v);
+    updateFields(doc, fields);
     return doc;
   }
 
