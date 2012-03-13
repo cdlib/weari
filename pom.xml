@@ -341,13 +341,13 @@
           </goals>
           <phase>compile</phase>
         </execution>
-        <execution>
+        <!-- <execution>
           <id>test-compile</id>
           <goals>
             <goal>testCompile</goal>
           </goals>
           <phase>test-compile</phase>
-        </execution>
+        </execution> -->
         <execution>
           <phase>process-resources</phase>
           <goals>
@@ -406,7 +406,8 @@
     </plugins>
   </build>
   
-  <reporting>
+  <!-- Can't get these to work from sbt and mvn, so disabling in mvn -->
+<!--  <reporting>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -418,5 +419,5 @@
         </configuration>
       </plugin>
     </plugins>
-  </reporting>
+  </reporting> -->
 </project>
