@@ -2,6 +2,8 @@
 
 package org.cdlib.was.weari;
 
+import org.apache.solr.common.{SolrDocument,SolrInputDocument};
+
 object SolrFields {
   val ARCNAME_FIELD        = "arcname";
   val BOOST_FIELD          = "boost";
@@ -54,4 +56,17 @@ object SolrFields {
     List(ARCNAME_FIELD,
          DATE_FIELD,
          JOB_FIELD);
+
+  /**
+   * Return the ID field in a solr document.
+   */
+  def getId (doc : SolrInputDocument) : String = 
+    doc.getFieldValue(ID_FIELD).asInstanceOf[String];
+
+  /**
+   * Return the ID field in a solr document.
+   */
+  def getId (doc : SolrDocument) : String = 
+    doc.getFieldValue(ID_FIELD).asInstanceOf[String];
+
 }
