@@ -54,6 +54,12 @@ object SolrDocumentModifier {
     updateFields(doc, fields.toSeq : _*);
   }
 
+  def makeDoc(fields : Pair[String, Any]*) : SolrInputDocument = {
+    var doc = new SolrInputDocument;
+    updateFields(doc, fields : _*);
+    return doc;
+  }
+
   /**
    * Update the url-based fields in a document.
    */
