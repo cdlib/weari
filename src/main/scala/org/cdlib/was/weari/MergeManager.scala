@@ -85,6 +85,21 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int) {
     return retval;
   }
 
+  def getSingleFieldValue (fieldname : String, a : SolrInputDocument, b : SolrInputDocument) : Option[Any] =
+    null2option(a.getFieldValue(fieldname) match {
+      case null | "" => b.getFieldValue(fieldname);
+      case aval => aval;
+    });
+
+  def mergeFieldValues (fieldname : String, a : SolrInputDocument, b : SolrInputDocument) : Seq[Any] =
+    (null2seq(a.getFieldValues(fieldname)) ++
+     null2seq(b.getFieldValues(fieldname))).distinct;
+
+  def unmergeFieldValues (fieldname : String, doc : SolrInputDocument, merged : SolrInputDocument) : Seq[Any] = {
+    val valsToDelete = null2seq(doc.getFieldValues(fieldname)).toSet;
+    return null2seq(merged.getFieldValues(fieldname)).filterNot(valsToDelete(_));
+  }
+
   /**
    * Merge two documents into one, presuming they have the same id.
    * Multi-value fields are appended.
@@ -95,22 +110,13 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int) {
       throw new Exception;
     } else {
       /* identical fields */
-      for (fieldName <- SINGLE_VALUED_FIELDS) {
-        val content = {
-          val aval = a.getFieldValue(fieldName);
-          if (aval != null && aval != "")
-            aval;
-          else b.getFieldValue(fieldName);
-        }
-        null2option(content).map(retval.setField(fieldName, _));
-      }
+      for { fieldname <- SINGLE_VALUED_FIELDS;
+            fieldvalue <- getSingleFieldValue(fieldname, a, b) }
+        retval.setField(fieldname, fieldvalue);
       /* fields to merge */
-      for (fieldName <- MULTI_VALUED_FIELDS) {
-        val values = (null2seq(a.getFieldValues(fieldName)) ++
-                      null2seq(b.getFieldValues(fieldName))).distinct;
-        for (value <- values)
-          retval.addField(fieldName, value);
-      }
+      for { fieldname <- MULTI_VALUED_FIELDS;
+            fieldvalue <- mergeFieldValues(fieldname, a, b) }
+        retval.addField(fieldname, fieldvalue);
     }
     return retval;
   }
@@ -118,7 +124,24 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int) {
   def reset {
     tracked = new HashMap[String,SolrInputDocument] with SynchronizedMap[String,SolrInputDocument];
   }
-    
+
+  def unmergeDocs (doc : SolrInputDocument, merged : SolrInputDocument) : Option[SolrInputDocument] = {
+    val retval = new SolrInputDocument;
+    if (doc.getFieldValue(ID_FIELD) != merged.getFieldValue(ID_FIELD)) {
+      throw new Exception;
+    } else {
+      /* identical fields */
+      for { fieldname <- SINGLE_VALUED_FIELDS;
+            fieldvalue <- getSingleFieldValue(fieldname, doc, merged) }
+        retval.setField(fieldname, fieldvalue);
+      /* fields to UNmerge */
+      for { fieldname <- MULTI_VALUED_FIELDS;
+            fieldvalue <- unmergeFieldValues(fieldname, doc, merged) }
+        retval.setField(fieldname, fieldvalue);
+    }
+    return Some(retval);
+  }
+
   def loadDocs (q : String) {
     val newq = new SolrQuery(q).setRows(1000);
     val docs = new solr.SolrDocumentCollection(server, newq);
