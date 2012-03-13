@@ -104,7 +104,7 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int) {
    * Merge two documents into one, presuming they have the same id.
    * Multi-value fields are appended.
    */
-  private def mergeDocs (a : SolrInputDocument, b : SolrInputDocument) : SolrInputDocument = {
+  def mergeDocs (a : SolrInputDocument, b : SolrInputDocument) : SolrInputDocument = {
     val retval = new SolrInputDocument;
     if (a.getFieldValue(ID_FIELD) != b.getFieldValue(ID_FIELD)) {
       throw new Exception;
