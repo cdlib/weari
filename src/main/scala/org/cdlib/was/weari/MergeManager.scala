@@ -10,7 +10,7 @@ import org.apache.solr.client.solrj.util.ClientUtils.toSolrInputDocument;
 
 import org.archive.util.BloomFilter64bit;
 
-import org.cdlib.was.weari.SolrFields.{ID_FIELD, MULTI_VALUED_FIELDS, SINGLE_VALUED_FIELDS};
+import org.cdlib.was.weari.SolrFields._;
 
 import org.cdlib.was.weari.Utility.{null2option,null2seq};
 
@@ -84,18 +84,6 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int) {
     bf.add(id);
     return retval;
   }
-
-  /**
-   * Return the ID field in a solr document.
-   */
-  private def getId (doc : SolrInputDocument) : String = 
-    doc.getFieldValue(ID_FIELD).asInstanceOf[String];
-
-  /**
-   * Return the ID field in a solr document.
-   */
-  private def getId (doc : SolrDocument) : String = 
-    doc.getFieldValue(ID_FIELD).asInstanceOf[String];
 
   /**
    * Merge two documents into one, presuming they have the same id.
