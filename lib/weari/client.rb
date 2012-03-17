@@ -1,3 +1,4 @@
+require 'rsolr'
 require 'weari/thrift/server'
 
 module Weari
@@ -6,6 +7,23 @@ module Weari
       @t_transport = ::Thrift::BufferedTransport.new(::Thrift::Socket.new(host, port))
       @t_protocol = ::Thrift::BinaryProtocol.new(@t_transport)
       @t_client = Weari::Thrift::Server::Client.new(@t_protocol)
+    end
+
+    # Return the least used solr server from a list
+    def get_best_solr_server(servers)
+      best_server = nil
+      best_server_doccount = 0
+      servers.each do |url|
+        rsolr = RSolr.connect(:url=>url)
+        response = rsolr.get('select', 
+                             :params=>{"q" => '*:*', "wt" => "ruby", "rows"=>0})
+        doccount = response["response"]["numFound"]
+        if (best_server.nil? || (doccount < best_server_doccount)) then
+          best_server = url
+          best_server_doccount = doccount
+        end
+      end
+      return best_server
     end
 
     def with_open_transport
