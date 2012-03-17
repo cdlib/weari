@@ -61,6 +61,7 @@ class WeariHandler(config: Config)
             in = new GZIPInputStream(in);
           }
           manager.reset;
+          manager.preloadDocs("arcname:\"%s\"".format(arcname));
           indexer.commitOrRollback {
             indexer.index(Json.parse[List[ParsedArchiveRecord]](in));
           }
