@@ -1,0 +1,5 @@
+syntax: re
+
+^target/
+^test/
+^purgatory/
