@@ -31,7 +31,7 @@ public class Server {
 
   public interface Iface {
 
-    public void index(String solr, String filter, List<String> arcs, String extraId, Map<String,String> extraFields) throws IndexException, UnparsedException, BadJSONException, org.apache.thrift.TException;
+    public void index(String solr, String filter, List<String> arcs, String extraId, Map<String,List<String>> extraFields) throws IndexException, UnparsedException, BadJSONException, org.apache.thrift.TException;
 
     public void parseArcs(List<String> arcs) throws ParseException, org.apache.thrift.TException;
 
@@ -43,7 +43,7 @@ public class Server {
 
   public interface AsyncIface {
 
-    public void index(String solr, String filter, List<String> arcs, String extraId, Map<String,String> extraFields, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.index_call> resultHandler) throws org.apache.thrift.TException;
+    public void index(String solr, String filter, List<String> arcs, String extraId, Map<String,List<String>> extraFields, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.index_call> resultHandler) throws org.apache.thrift.TException;
 
     public void parseArcs(List<String> arcs, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.parseArcs_call> resultHandler) throws org.apache.thrift.TException;
 
@@ -73,13 +73,13 @@ public class Server {
       super(iprot, oprot);
     }
 
-    public void index(String solr, String filter, List<String> arcs, String extraId, Map<String,String> extraFields) throws IndexException, UnparsedException, BadJSONException, org.apache.thrift.TException
+    public void index(String solr, String filter, List<String> arcs, String extraId, Map<String,List<String>> extraFields) throws IndexException, UnparsedException, BadJSONException, org.apache.thrift.TException
     {
       send_index(solr, filter, arcs, extraId, extraFields);
       recv_index();
     }
 
-    public void send_index(String solr, String filter, List<String> arcs, String extraId, Map<String,String> extraFields) throws org.apache.thrift.TException
+    public void send_index(String solr, String filter, List<String> arcs, String extraId, Map<String,List<String>> extraFields) throws org.apache.thrift.TException
     {
       index_args args = new index_args();
       args.setSolr(solr);
@@ -190,7 +190,7 @@ public class Server {
       super(protocolFactory, clientManager, transport);
     }
 
-    public void index(String solr, String filter, List<String> arcs, String extraId, Map<String,String> extraFields, org.apache.thrift.async.AsyncMethodCallback<index_call> resultHandler) throws org.apache.thrift.TException {
+    public void index(String solr, String filter, List<String> arcs, String extraId, Map<String,List<String>> extraFields, org.apache.thrift.async.AsyncMethodCallback<index_call> resultHandler) throws org.apache.thrift.TException {
       checkReady();
       index_call method_call = new index_call(solr, filter, arcs, extraId, extraFields, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
@@ -202,8 +202,8 @@ public class Server {
       private String filter;
       private List<String> arcs;
       private String extraId;
-      private Map<String,String> extraFields;
-      public index_call(String solr, String filter, List<String> arcs, String extraId, Map<String,String> extraFields, org.apache.thrift.async.AsyncMethodCallback<index_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      private Map<String,List<String>> extraFields;
+      public index_call(String solr, String filter, List<String> arcs, String extraId, Map<String,List<String>> extraFields, org.apache.thrift.async.AsyncMethodCallback<index_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
         this.solr = solr;
         this.filter = filter;
@@ -448,7 +448,7 @@ public class Server {
     public String filter; // required
     public List<String> arcs; // required
     public String extraId; // required
-    public Map<String,String> extraFields; // required
+    public Map<String,List<String>> extraFields; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -536,7 +536,8 @@ public class Server {
       tmpMap.put(_Fields.EXTRA_FIELDS, new org.apache.thrift.meta_data.FieldMetaData("extraFields", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.MapMetaData(org.apache.thrift.protocol.TType.MAP, 
               new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING), 
-              new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING))));
+              new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
+                  new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)))));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(index_args.class, metaDataMap);
     }
@@ -549,7 +550,7 @@ public class Server {
       String filter,
       List<String> arcs,
       String extraId,
-      Map<String,String> extraFields)
+      Map<String,List<String>> extraFields)
     {
       this();
       this.solr = solr;
@@ -580,15 +581,18 @@ public class Server {
         this.extraId = other.extraId;
       }
       if (other.isSetExtraFields()) {
-        Map<String,String> __this__extraFields = new HashMap<String,String>();
-        for (Map.Entry<String, String> other_element : other.extraFields.entrySet()) {
+        Map<String,List<String>> __this__extraFields = new HashMap<String,List<String>>();
+        for (Map.Entry<String, List<String>> other_element : other.extraFields.entrySet()) {
 
           String other_element_key = other_element.getKey();
-          String other_element_value = other_element.getValue();
+          List<String> other_element_value = other_element.getValue();
 
           String __this__extraFields_copy_key = other_element_key;
 
-          String __this__extraFields_copy_value = other_element_value;
+          List<String> __this__extraFields_copy_value = new ArrayList<String>();
+          for (String other_element_value_element : other_element_value) {
+            __this__extraFields_copy_value.add(other_element_value_element);
+          }
 
           __this__extraFields.put(__this__extraFields_copy_key, __this__extraFields_copy_value);
         }
@@ -724,18 +728,18 @@ public class Server {
       return (this.extraFields == null) ? 0 : this.extraFields.size();
     }
 
-    public void putToExtraFields(String key, String val) {
+    public void putToExtraFields(String key, List<String> val) {
       if (this.extraFields == null) {
-        this.extraFields = new HashMap<String,String>();
+        this.extraFields = new HashMap<String,List<String>>();
       }
       this.extraFields.put(key, val);
     }
 
-    public Map<String,String> getExtraFields() {
+    public Map<String,List<String>> getExtraFields() {
       return this.extraFields;
     }
 
-    public index_args setExtraFields(Map<String,String> extraFields) {
+    public index_args setExtraFields(Map<String,List<String>> extraFields) {
       this.extraFields = extraFields;
       return this;
     }
@@ -793,7 +797,7 @@ public class Server {
         if (value == null) {
           unsetExtraFields();
         } else {
-          setExtraFields((Map<String,String>)value);
+          setExtraFields((Map<String,List<String>>)value);
         }
         break;
 
@@ -1113,13 +1117,23 @@ public class Server {
               if (schemeField.type == org.apache.thrift.protocol.TType.MAP) {
                 {
                   org.apache.thrift.protocol.TMap _map3 = iprot.readMapBegin();
-                  struct.extraFields = new HashMap<String,String>(2*_map3.size);
+                  struct.extraFields = new HashMap<String,List<String>>(2*_map3.size);
                   for (int _i4 = 0; _i4 < _map3.size; ++_i4)
                   {
                     String _key5; // required
-                    String _val6; // required
+                    List<String> _val6; // required
                     _key5 = iprot.readString();
-                    _val6 = iprot.readString();
+                    {
+                      org.apache.thrift.protocol.TList _list7 = iprot.readListBegin();
+                      _val6 = new ArrayList<String>(_list7.size);
+                      for (int _i8 = 0; _i8 < _list7.size; ++_i8)
+                      {
+                        String _elem9; // required
+                        _elem9 = iprot.readString();
+                        _val6.add(_elem9);
+                      }
+                      iprot.readListEnd();
+                    }
                     struct.extraFields.put(_key5, _val6);
                   }
                   iprot.readMapEnd();
@@ -1158,9 +1172,9 @@ public class Server {
           oprot.writeFieldBegin(ARCS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.arcs.size()));
-            for (String _iter7 : struct.arcs)
+            for (String _iter10 : struct.arcs)
             {
-              oprot.writeString(_iter7);
+              oprot.writeString(_iter10);
             }
             oprot.writeListEnd();
           }
@@ -1174,11 +1188,18 @@ public class Server {
         if (struct.extraFields != null) {
           oprot.writeFieldBegin(EXTRA_FIELDS_FIELD_DESC);
           {
-            oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, struct.extraFields.size()));
-            for (Map.Entry<String, String> _iter8 : struct.extraFields.entrySet())
+            oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.LIST, struct.extraFields.size()));
+            for (Map.Entry<String, List<String>> _iter11 : struct.extraFields.entrySet())
             {
-              oprot.writeString(_iter8.getKey());
-              oprot.writeString(_iter8.getValue());
+              oprot.writeString(_iter11.getKey());
+              {
+                oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, _iter11.getValue().size()));
+                for (String _iter12 : _iter11.getValue())
+                {
+                  oprot.writeString(_iter12);
+                }
+                oprot.writeListEnd();
+              }
             }
             oprot.writeMapEnd();
           }
@@ -1227,9 +1248,9 @@ public class Server {
         if (struct.isSetArcs()) {
           {
             oprot.writeI32(struct.arcs.size());
-            for (String _iter9 : struct.arcs)
+            for (String _iter13 : struct.arcs)
             {
-              oprot.writeString(_iter9);
+              oprot.writeString(_iter13);
             }
           }
         }
@@ -1239,10 +1260,16 @@ public class Server {
         if (struct.isSetExtraFields()) {
           {
             oprot.writeI32(struct.extraFields.size());
-            for (Map.Entry<String, String> _iter10 : struct.extraFields.entrySet())
+            for (Map.Entry<String, List<String>> _iter14 : struct.extraFields.entrySet())
             {
-              oprot.writeString(_iter10.getKey());
-              oprot.writeString(_iter10.getValue());
+              oprot.writeString(_iter14.getKey());
+              {
+                oprot.writeI32(_iter14.getValue().size());
+                for (String _iter15 : _iter14.getValue())
+                {
+                  oprot.writeString(_iter15);
+                }
+              }
             }
           }
         }
@@ -1262,13 +1289,13 @@ public class Server {
         }
         if (incoming.get(2)) {
           {
-            org.apache.thrift.protocol.TList _list11 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-            struct.arcs = new ArrayList<String>(_list11.size);
-            for (int _i12 = 0; _i12 < _list11.size; ++_i12)
+            org.apache.thrift.protocol.TList _list16 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+            struct.arcs = new ArrayList<String>(_list16.size);
+            for (int _i17 = 0; _i17 < _list16.size; ++_i17)
             {
-              String _elem13; // required
-              _elem13 = iprot.readString();
-              struct.arcs.add(_elem13);
+              String _elem18; // required
+              _elem18 = iprot.readString();
+              struct.arcs.add(_elem18);
             }
           }
           struct.setArcsIsSet(true);
@@ -1279,15 +1306,24 @@ public class Server {
         }
         if (incoming.get(4)) {
           {
-            org.apache.thrift.protocol.TMap _map14 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-            struct.extraFields = new HashMap<String,String>(2*_map14.size);
-            for (int _i15 = 0; _i15 < _map14.size; ++_i15)
+            org.apache.thrift.protocol.TMap _map19 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.LIST, iprot.readI32());
+            struct.extraFields = new HashMap<String,List<String>>(2*_map19.size);
+            for (int _i20 = 0; _i20 < _map19.size; ++_i20)
             {
-              String _key16; // required
-              String _val17; // required
-              _key16 = iprot.readString();
-              _val17 = iprot.readString();
-              struct.extraFields.put(_key16, _val17);
+              String _key21; // required
+              List<String> _val22; // required
+              _key21 = iprot.readString();
+              {
+                org.apache.thrift.protocol.TList _list23 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+                _val22 = new ArrayList<String>(_list23.size);
+                for (int _i24 = 0; _i24 < _list23.size; ++_i24)
+                {
+                  String _elem25; // required
+                  _elem25 = iprot.readString();
+                  _val22.add(_elem25);
+                }
+              }
+              struct.extraFields.put(_key21, _val22);
             }
           }
           struct.setExtraFieldsIsSet(true);
@@ -2164,13 +2200,13 @@ public class Server {
             case 1: // ARCS
               if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
                 {
-                  org.apache.thrift.protocol.TList _list18 = iprot.readListBegin();
-                  struct.arcs = new ArrayList<String>(_list18.size);
-                  for (int _i19 = 0; _i19 < _list18.size; ++_i19)
+                  org.apache.thrift.protocol.TList _list26 = iprot.readListBegin();
+                  struct.arcs = new ArrayList<String>(_list26.size);
+                  for (int _i27 = 0; _i27 < _list26.size; ++_i27)
                   {
-                    String _elem20; // required
-                    _elem20 = iprot.readString();
-                    struct.arcs.add(_elem20);
+                    String _elem28; // required
+                    _elem28 = iprot.readString();
+                    struct.arcs.add(_elem28);
                   }
                   iprot.readListEnd();
                 }
@@ -2198,9 +2234,9 @@ public class Server {
           oprot.writeFieldBegin(ARCS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.arcs.size()));
-            for (String _iter21 : struct.arcs)
+            for (String _iter29 : struct.arcs)
             {
-              oprot.writeString(_iter21);
+              oprot.writeString(_iter29);
             }
             oprot.writeListEnd();
           }
@@ -2231,9 +2267,9 @@ public class Server {
         if (struct.isSetArcs()) {
           {
             oprot.writeI32(struct.arcs.size());
-            for (String _iter22 : struct.arcs)
+            for (String _iter30 : struct.arcs)
             {
-              oprot.writeString(_iter22);
+              oprot.writeString(_iter30);
             }
           }
         }
@@ -2245,13 +2281,13 @@ public class Server {
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
           {
-            org.apache.thrift.protocol.TList _list23 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-            struct.arcs = new ArrayList<String>(_list23.size);
-            for (int _i24 = 0; _i24 < _list23.size; ++_i24)
+            org.apache.thrift.protocol.TList _list31 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+            struct.arcs = new ArrayList<String>(_list31.size);
+            for (int _i32 = 0; _i32 < _list31.size; ++_i32)
             {
-              String _elem25; // required
-              _elem25 = iprot.readString();
-              struct.arcs.add(_elem25);
+              String _elem33; // required
+              _elem33 = iprot.readString();
+              struct.arcs.add(_elem33);
             }
           }
           struct.setArcsIsSet(true);
