@@ -44,7 +44,7 @@ object SolrDocumentModifier {
       field._2 match {
         case null | None    => ();
         case Some(s)        => doc.addField(field._1, s);
-        case seq : Seq[Any] =>
+        case seq : Traversable[Any] =>
           for (v <- seq) doc.addField(field._1, v);
         case s              => doc.addField(field._1, s);
       }
