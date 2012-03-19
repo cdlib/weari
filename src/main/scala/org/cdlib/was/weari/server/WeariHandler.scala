@@ -12,7 +12,7 @@ import org.apache.pig.backend.executionengine.ExecJob.JOB_STATUS;
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{ FileSystem, FSDataInputStream, FSDataOutputStream, Path }
 import org.apache.solr.client.solrj.impl.StreamingUpdateSolrServer
-import scala.collection.JavaConversions.{ collectionAsScalaIterable, mapAsScalaMap, seqAsJavaList }
+import scala.collection.JavaConversions.{ iterableAsScalaIterable, mapAsScalaMap, seqAsJavaList }
 import scala.collection.mutable.{Map,SynchronizedMap,HashMap};
 import scala.collection.immutable.HashSet
 import grizzled.slf4j.Logging;
@@ -42,7 +42,7 @@ class WeariHandler(config: Config)
             filterQuery : String,
             arcs : JList[String],
             extraId : String,
-            extraFields : JMap[String, String]) {
+            extraFields : JMap[String, JList[String]]) {
     val server = new StreamingUpdateSolrServer(solr,
       config.queueSize(),
       config.threadCount());
@@ -51,7 +51,7 @@ class WeariHandler(config: Config)
     val indexer = new SolrIndexer(server = server,
                                   manager = manager,
                                   extraId = extraId,
-                                  extraFields = extraFields.toMap);
+                                  extraFields = extraFields.toMap.mapValues(iterableAsScalaIterable(_)));
     locks.getOrElseUpdate(solr, new Object).synchronized {
       for ((arcname, path) <- arcs.zip(arcPaths)) {
         var in : InputStream = null;
