@@ -47,7 +47,6 @@ object SolrFields {
            PROJECT_FIELD,
            SITE_FIELD,
            SPECIFICATION_FIELD,
-           TAG_FIELD,
            TITLE_FIELD,
            URLFP_FIELD,
            URL_FIELD);
@@ -55,7 +54,8 @@ object SolrFields {
   val MULTI_VALUED_FIELDS =
     List(ARCNAME_FIELD,
          DATE_FIELD,
-         JOB_FIELD);
+         JOB_FIELD,
+         TAG_FIELD);
 
   /**
    * Return the ID field in a solr document.
