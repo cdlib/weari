@@ -136,7 +136,7 @@ require 'weari/thrift/weari_types'
                   FILTER => {:type => ::Thrift::Types::STRING, :name => 'filter'},
                   ARCS => {:type => ::Thrift::Types::LIST, :name => 'arcs', :element => {:type => ::Thrift::Types::STRING}},
                   EXTRAID => {:type => ::Thrift::Types::STRING, :name => 'extraId'},
-                  EXTRAFIELDS => {:type => ::Thrift::Types::MAP, :name => 'extraFields', :key => {:type => ::Thrift::Types::STRING}, :value => {:type => ::Thrift::Types::STRING}}
+                  EXTRAFIELDS => {:type => ::Thrift::Types::MAP, :name => 'extraFields', :key => {:type => ::Thrift::Types::STRING}, :value => {:type => ::Thrift::Types::LIST, :element => {:type => ::Thrift::Types::STRING}}}
                 }
 
                 def struct_fields; FIELDS; end
