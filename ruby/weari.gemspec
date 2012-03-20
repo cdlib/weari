@@ -14,8 +14,8 @@ Gem::Specification.new do |s|
 
   s.rubyforge_project = "weari"
 
-  s.files         = `hg locate`.split("\n")
-  s.test_files    = `hg locate --include '{spec,features}'`.split("\n")
-  s.executables   = `hg locate --include bin`.split("\n").map{ |f| File.basename(f) }
+  s.files         = `hg locate "ruby/**"`.split("\n")
+  s.test_files    = `hg locate "ruby/**" --include '{spec,features}'`.split("\n")
+  s.executables   = `hg locate "ruby/**" --include bin`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
 end
