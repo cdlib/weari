@@ -39,6 +39,7 @@ object MyBuild extends Build {
     Seq("cdl-public" at "http://mvn.cdlib.org/content/repositories/public",
         "cdl-thirdparty" at "http://mvn.cdlib.org/content/repositories/thirdparty",
         "archive.org" at "http://builds.archive.org:8080/maven2/",
+        "repo.codahale.com" at "http://repo.codahale.com",
         "Local Maven Repository" at Path.userHome.asURL + "/.m2/repository");
 
   lazy val root = 
