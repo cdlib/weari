@@ -33,7 +33,7 @@ class SolrIndexer (server : SolrServer,
    * in extraFields and extraId (see SolrIndexer constructor).
    */
   def record2inputDocument (record : ParsedArchiveRecord) : SolrInputDocument = {
-    val doc = record.toDocument;
+    val doc = ParsedArchiveRecordSolrizer.convert(record);
     updateFields(doc, extraFields);
     doc.setField(ID_FIELD, "%s.%s".format(getId(doc), extraId));
     return doc;
