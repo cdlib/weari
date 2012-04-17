@@ -63,6 +63,27 @@ class MyParser extends Logging {
   }
 
   /**
+   * Extract a ContentType from the metadata reported from Tika.
+   */
+  private def getTikaMediaType (md : Metadata) : Option[ContentType] = {
+    val origMediaType = ContentType.parse(md.get(HttpHeaders.CONTENT_TYPE));
+    /* tika returns the charset wrong */
+    return origMediaType.map { t=>
+      ContentType(t.top, t.sub,
+                  null2option(md.get(HttpHeaders.CONTENT_ENCODING)))
+    }
+  }
+
+  /**
+   * Should we handle the outlinks of a given content type?
+   */
+  private def shouldHandleOutlinks (t : Option[ContentType]) : Boolean = t match {
+    case Some(ContentType(_, "html", _)) | Some(ContentType("application", "pdf", _)) => 
+      true;
+    case _ => false;
+  }
+
+  /**
    * Parse a WASArchiveRecord.
    * Throws exceptions from tika.
    */
@@ -80,24 +101,19 @@ class MyParser extends Logging {
       tikaMetadata.set(HttpHeaders.CONTENT_TYPE, contentType.mediaType);
       
       parser.parse(rec, contentHandler, tikaMetadata, parseContext);
-      /* tika returns the charset wrong */
-      val tikaMediaType = 
-        ContentType.parse(tikaMetadata.get(HttpHeaders.CONTENT_TYPE)).map { t=>
-          ContentType(t.top, t.sub,
-                      null2option(tikaMetadata.get(HttpHeaders.CONTENT_ENCODING)))
-      }
+      val tikaMediaType = getTikaMediaType(tikaMetadata);
 
       /* finish webgraph */
       var outlinks : Seq[Long] = List[Long]();
-      if (tikaMediaType.isDefined && 
-          webGraphTypeRE.matcher(tikaMediaType.get.mediaType).matches) {
-            val outlinksRaw = wgContentHandler.outlinks;
-            if (outlinksRaw.size > 0) {
-              outlinks = (for (l <- outlinksRaw) 
-                          yield UriUtils.fingerprint(l.to)).
-              toList.distinct.sortWith((a,b)=>(a < b));
-            }
-          }
+      if (shouldHandleOutlinks(tikaMediaType)) {
+        val outlinksRaw = wgContentHandler.outlinks;
+        if (outlinksRaw.size > 0) {
+          outlinks = (for (l <- outlinksRaw) 
+                      yield UriUtils.fingerprint(l.to)).
+          toList.distinct.sortWith((a,b)=>(a < b));
+        }
+      }
+
       /* we do this now to ensure that we get the digest string */
       rec.close;
       return ParsedArchiveRecord(rec,
