@@ -4,10 +4,6 @@ package org.cdlib.was.weari;
 
 import java.util.Date;
 
-import java.io.{File,InputStreamReader,Writer};
-
-import org.cdlib.was.weari.SolrDocumentModifier.shouldIndexContentType;
-
 /**
  * A class representing a WASArchiveRecord that has been parsed.
  */
@@ -50,12 +46,7 @@ object ParsedArchiveRecord {
                             date = rec.getDate,
                             title = title,
                             length = rec.getLength,
-                            content = if (shouldIndexContentType(suppliedContentType) ||
-                                          shouldIndexContentType(detectedContentType.getOrElse(ContentType.DEFAULT))) {
-                              content;
-                            } else { 
-                              None;
-                            },
+                            content,
                             suppliedContentType = suppliedContentType,
                             detectedContentType = detectedContentType,
                             outlinks = outlinks);

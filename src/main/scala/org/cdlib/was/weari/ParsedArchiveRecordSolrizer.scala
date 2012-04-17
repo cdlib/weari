@@ -7,13 +7,19 @@ import org.apache.solr.common.SolrInputDocument;
 import org.archive.net.UURIFactory;
 
 import org.cdlib.was.weari.SolrFields._;
-import org.cdlib.was.weari.SolrDocumentModifier.{updateDocBoost,updateDocUrls,updateContentType,updateFields};
+import org.cdlib.was.weari.SolrDocumentModifier.{shouldIndexContentType,updateDocBoost,updateDocUrls,updateContentType,updateFields};
 
 object ParsedArchiveRecordSolrizer {
   def convert (rec : ParsedArchiveRecord) : SolrInputDocument = {
     val doc = new SolrInputDocument;
     /* set the fields */
     val uuri = UURIFactory.getInstance(rec.url);
+    val content = if (shouldIndexContentType(rec.suppliedContentType) ||
+                      shouldIndexContentType(rec.detectedContentType.getOrElse(ContentType.DEFAULT))) {
+                        rec.content;
+                      } else { 
+                        None;
+                      }
     updateFields(doc,
                  ARCNAME_FIELD        -> rec.filename,
                  ID_FIELD             -> "%s.%s".format(uuri.toString, 
@@ -22,7 +28,7 @@ object ParsedArchiveRecordSolrizer {
                  DATE_FIELD           -> rec.date,
                  TITLE_FIELD          -> rec.title,
                  CONTENT_LENGTH_FIELD -> rec.length,
-                 CONTENT_FIELD        -> rec.content);
+                 CONTENT_FIELD        -> content);
     updateDocBoost(doc, 1.0f);
     updateDocUrls(doc, rec.url);
     updateContentType(doc, rec.detectedContentType, rec.suppliedContentType);
