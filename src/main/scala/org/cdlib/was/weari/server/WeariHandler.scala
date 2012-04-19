@@ -79,6 +79,21 @@ class WeariHandler(config: Config)
     }
   }
 
+  def unindex(solr : String,
+              arcs : JList[String],
+              extraId : String) {
+    val server = new ConcurrentUpdateSolrServer(solr,
+      config.queueSize(),
+      config.threadCount());
+    val arcPaths = arcs.map(getPath(_));
+    val manager = new MergeManager("*:*", server);
+    val indexer = new SolrIndexer(server = server,
+                                  manager = manager,
+                                  extraId = extraId,
+                                  extraFields = Map[String,Any]());
+
+  }
+
   private def mkUUID : String = UUID.randomUUID().toString();
 
   private def mkArcList(arcs : Seq[String]) : Path = {

@@ -27,6 +27,10 @@ service Server {
              5: map<string,list<string>> extraFields)
     throws (1: IndexException ex1, 2: UnparsedException ex2, 3: BadJSONException ex3);
 
+  void unindex (1: string solr,
+                2: list<string> arcs)
+    throws (1: IndexException ex1, 2: UnparsedException ex2, 3: BadJSONException ex3);
+
   void parseArcs(1: list<string> arcs)
     throws (1: ParseException ex1);
 

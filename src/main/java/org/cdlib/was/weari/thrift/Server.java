@@ -33,6 +33,8 @@ public class Server {
 
     public void index(String solr, String filter, List<String> arcs, String extraId, Map<String,List<String>> extraFields) throws IndexException, UnparsedException, BadJSONException, org.apache.thrift.TException;
 
+    public void unindex(String solr, List<String> arcs) throws IndexException, UnparsedException, BadJSONException, org.apache.thrift.TException;
+
     public void parseArcs(List<String> arcs) throws ParseException, org.apache.thrift.TException;
 
     public boolean isArcParsed(String arc) throws org.apache.thrift.TException;
@@ -44,6 +46,8 @@ public class Server {
   public interface AsyncIface {
 
     public void index(String solr, String filter, List<String> arcs, String extraId, Map<String,List<String>> extraFields, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.index_call> resultHandler) throws org.apache.thrift.TException;
+
+    public void unindex(String solr, List<String> arcs, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.unindex_call> resultHandler) throws org.apache.thrift.TException;
 
     public void parseArcs(List<String> arcs, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.parseArcs_call> resultHandler) throws org.apache.thrift.TException;
 
@@ -94,6 +98,36 @@ public class Server {
     {
       index_result result = new index_result();
       receiveBase(result, "index");
+      if (result.ex1 != null) {
+        throw result.ex1;
+      }
+      if (result.ex2 != null) {
+        throw result.ex2;
+      }
+      if (result.ex3 != null) {
+        throw result.ex3;
+      }
+      return;
+    }
+
+    public void unindex(String solr, List<String> arcs) throws IndexException, UnparsedException, BadJSONException, org.apache.thrift.TException
+    {
+      send_unindex(solr, arcs);
+      recv_unindex();
+    }
+
+    public void send_unindex(String solr, List<String> arcs) throws org.apache.thrift.TException
+    {
+      unindex_args args = new unindex_args();
+      args.setSolr(solr);
+      args.setArcs(arcs);
+      sendBase("unindex", args);
+    }
+
+    public void recv_unindex() throws IndexException, UnparsedException, BadJSONException, org.apache.thrift.TException
+    {
+      unindex_result result = new unindex_result();
+      receiveBase(result, "unindex");
       if (result.ex1 != null) {
         throw result.ex1;
       }
@@ -234,6 +268,41 @@ public class Server {
       }
     }
 
+    public void unindex(String solr, List<String> arcs, org.apache.thrift.async.AsyncMethodCallback<unindex_call> resultHandler) throws org.apache.thrift.TException {
+      checkReady();
+      unindex_call method_call = new unindex_call(solr, arcs, resultHandler, this, ___protocolFactory, ___transport);
+      this.___currentMethod = method_call;
+      ___manager.call(method_call);
+    }
+
+    public static class unindex_call extends org.apache.thrift.async.TAsyncMethodCall {
+      private String solr;
+      private List<String> arcs;
+      public unindex_call(String solr, List<String> arcs, org.apache.thrift.async.AsyncMethodCallback<unindex_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+        super(client, protocolFactory, transport, resultHandler, false);
+        this.solr = solr;
+        this.arcs = arcs;
+      }
+
+      public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("unindex", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        unindex_args args = new unindex_args();
+        args.setSolr(solr);
+        args.setArcs(arcs);
+        args.write(prot);
+        prot.writeMessageEnd();
+      }
+
+      public void getResult() throws IndexException, UnparsedException, BadJSONException, org.apache.thrift.TException {
+        if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
+          throw new IllegalStateException("Method call not finished!");
+        }
+        org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
+        org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        (new Client(prot)).recv_unindex();
+      }
+    }
+
     public void parseArcs(List<String> arcs, org.apache.thrift.async.AsyncMethodCallback<parseArcs_call> resultHandler) throws org.apache.thrift.TException {
       checkReady();
       parseArcs_call method_call = new parseArcs_call(arcs, resultHandler, this, ___protocolFactory, ___transport);
@@ -344,6 +413,7 @@ public class Server {
 
     private static <I extends Iface> Map<String,  org.apache.thrift.ProcessFunction<I, ? extends  org.apache.thrift.TBase>> getProcessMap(Map<String,  org.apache.thrift.ProcessFunction<I, ? extends  org.apache.thrift.TBase>> processMap) {
       processMap.put("index", new index());
+      processMap.put("unindex", new unindex());
       processMap.put("parseArcs", new parseArcs());
       processMap.put("isArcParsed", new isArcParsed());
       processMap.put("deleteParse", new deleteParse());
@@ -363,6 +433,30 @@ public class Server {
         index_result result = new index_result();
         try {
           iface.index(args.solr, args.filter, args.arcs, args.extraId, args.extraFields);
+        } catch (IndexException ex1) {
+          result.ex1 = ex1;
+        } catch (UnparsedException ex2) {
+          result.ex2 = ex2;
+        } catch (BadJSONException ex3) {
+          result.ex3 = ex3;
+        }
+        return result;
+      }
+    }
+
+    private static class unindex<I extends Iface> extends org.apache.thrift.ProcessFunction<I, unindex_args> {
+      public unindex() {
+        super("unindex");
+      }
+
+      protected unindex_args getEmptyArgsInstance() {
+        return new unindex_args();
+      }
+
+      protected unindex_result getResult(I iface, unindex_args args) throws org.apache.thrift.TException {
+        unindex_result result = new unindex_result();
+        try {
+          iface.unindex(args.solr, args.arcs);
         } catch (IndexException ex1) {
           result.ex1 = ex1;
         } catch (UnparsedException ex2) {
@@ -1892,6 +1986,1070 @@ public class Server {
 
   }
 
+  public static class unindex_args implements org.apache.thrift.TBase<unindex_args, unindex_args._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("unindex_args");
+
+    private static final org.apache.thrift.protocol.TField SOLR_FIELD_DESC = new org.apache.thrift.protocol.TField("solr", org.apache.thrift.protocol.TType.STRING, (short)1);
+    private static final org.apache.thrift.protocol.TField ARCS_FIELD_DESC = new org.apache.thrift.protocol.TField("arcs", org.apache.thrift.protocol.TType.LIST, (short)2);
+
+    private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
+    static {
+      schemes.put(StandardScheme.class, new unindex_argsStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new unindex_argsTupleSchemeFactory());
+    }
+
+    public String solr; // required
+    public List<String> arcs; // required
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+      SOLR((short)1, "solr"),
+      ARCS((short)2, "arcs");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 1: // SOLR
+            return SOLR;
+          case 2: // ARCS
+            return ARCS;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+    public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.SOLR, new org.apache.thrift.meta_data.FieldMetaData("solr", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+      tmpMap.put(_Fields.ARCS, new org.apache.thrift.meta_data.FieldMetaData("arcs", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
+              new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING))));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(unindex_args.class, metaDataMap);
+    }
+
+    public unindex_args() {
+    }
+
+    public unindex_args(
+      String solr,
+      List<String> arcs)
+    {
+      this();
+      this.solr = solr;
+      this.arcs = arcs;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public unindex_args(unindex_args other) {
+      if (other.isSetSolr()) {
+        this.solr = other.solr;
+      }
+      if (other.isSetArcs()) {
+        List<String> __this__arcs = new ArrayList<String>();
+        for (String other_element : other.arcs) {
+          __this__arcs.add(other_element);
+        }
+        this.arcs = __this__arcs;
+      }
+    }
+
+    public unindex_args deepCopy() {
+      return new unindex_args(this);
+    }
+
+    @Override
+    public void clear() {
+      this.solr = null;
+      this.arcs = null;
+    }
+
+    public String getSolr() {
+      return this.solr;
+    }
+
+    public unindex_args setSolr(String solr) {
+      this.solr = solr;
+      return this;
+    }
+
+    public void unsetSolr() {
+      this.solr = null;
+    }
+
+    /** Returns true if field solr is set (has been assigned a value) and false otherwise */
+    public boolean isSetSolr() {
+      return this.solr != null;
+    }
+
+    public void setSolrIsSet(boolean value) {
+      if (!value) {
+        this.solr = null;
+      }
+    }
+
+    public int getArcsSize() {
+      return (this.arcs == null) ? 0 : this.arcs.size();
+    }
+
+    public java.util.Iterator<String> getArcsIterator() {
+      return (this.arcs == null) ? null : this.arcs.iterator();
+    }
+
+    public void addToArcs(String elem) {
+      if (this.arcs == null) {
+        this.arcs = new ArrayList<String>();
+      }
+      this.arcs.add(elem);
+    }
+
+    public List<String> getArcs() {
+      return this.arcs;
+    }
+
+    public unindex_args setArcs(List<String> arcs) {
+      this.arcs = arcs;
+      return this;
+    }
+
+    public void unsetArcs() {
+      this.arcs = null;
+    }
+
+    /** Returns true if field arcs is set (has been assigned a value) and false otherwise */
+    public boolean isSetArcs() {
+      return this.arcs != null;
+    }
+
+    public void setArcsIsSet(boolean value) {
+      if (!value) {
+        this.arcs = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case SOLR:
+        if (value == null) {
+          unsetSolr();
+        } else {
+          setSolr((String)value);
+        }
+        break;
+
+      case ARCS:
+        if (value == null) {
+          unsetArcs();
+        } else {
+          setArcs((List<String>)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case SOLR:
+        return getSolr();
+
+      case ARCS:
+        return getArcs();
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case SOLR:
+        return isSetSolr();
+      case ARCS:
+        return isSetArcs();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof unindex_args)
+        return this.equals((unindex_args)that);
+      return false;
+    }
+
+    public boolean equals(unindex_args that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_solr = true && this.isSetSolr();
+      boolean that_present_solr = true && that.isSetSolr();
+      if (this_present_solr || that_present_solr) {
+        if (!(this_present_solr && that_present_solr))
+          return false;
+        if (!this.solr.equals(that.solr))
+          return false;
+      }
+
+      boolean this_present_arcs = true && this.isSetArcs();
+      boolean that_present_arcs = true && that.isSetArcs();
+      if (this_present_arcs || that_present_arcs) {
+        if (!(this_present_arcs && that_present_arcs))
+          return false;
+        if (!this.arcs.equals(that.arcs))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(unindex_args other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      unindex_args typedOther = (unindex_args)other;
+
+      lastComparison = Boolean.valueOf(isSetSolr()).compareTo(typedOther.isSetSolr());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetSolr()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.solr, typedOther.solr);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = Boolean.valueOf(isSetArcs()).compareTo(typedOther.isSetArcs());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetArcs()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.arcs, typedOther.arcs);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      schemes.get(iprot.getScheme()).getScheme().read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("unindex_args(");
+      boolean first = true;
+
+      sb.append("solr:");
+      if (this.solr == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.solr);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("arcs:");
+      if (this.arcs == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.arcs);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class unindex_argsStandardSchemeFactory implements SchemeFactory {
+      public unindex_argsStandardScheme getScheme() {
+        return new unindex_argsStandardScheme();
+      }
+    }
+
+    private static class unindex_argsStandardScheme extends StandardScheme<unindex_args> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, unindex_args struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            case 1: // SOLR
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+                struct.solr = iprot.readString();
+                struct.setSolrIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            case 2: // ARCS
+              if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
+                {
+                  org.apache.thrift.protocol.TList _list26 = iprot.readListBegin();
+                  struct.arcs = new ArrayList<String>(_list26.size);
+                  for (int _i27 = 0; _i27 < _list26.size; ++_i27)
+                  {
+                    String _elem28; // required
+                    _elem28 = iprot.readString();
+                    struct.arcs.add(_elem28);
+                  }
+                  iprot.readListEnd();
+                }
+                struct.setArcsIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, unindex_args struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        if (struct.solr != null) {
+          oprot.writeFieldBegin(SOLR_FIELD_DESC);
+          oprot.writeString(struct.solr);
+          oprot.writeFieldEnd();
+        }
+        if (struct.arcs != null) {
+          oprot.writeFieldBegin(ARCS_FIELD_DESC);
+          {
+            oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.arcs.size()));
+            for (String _iter29 : struct.arcs)
+            {
+              oprot.writeString(_iter29);
+            }
+            oprot.writeListEnd();
+          }
+          oprot.writeFieldEnd();
+        }
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class unindex_argsTupleSchemeFactory implements SchemeFactory {
+      public unindex_argsTupleScheme getScheme() {
+        return new unindex_argsTupleScheme();
+      }
+    }
+
+    private static class unindex_argsTupleScheme extends TupleScheme<unindex_args> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, unindex_args struct) throws org.apache.thrift.TException {
+        TTupleProtocol oprot = (TTupleProtocol) prot;
+        BitSet optionals = new BitSet();
+        if (struct.isSetSolr()) {
+          optionals.set(0);
+        }
+        if (struct.isSetArcs()) {
+          optionals.set(1);
+        }
+        oprot.writeBitSet(optionals, 2);
+        if (struct.isSetSolr()) {
+          oprot.writeString(struct.solr);
+        }
+        if (struct.isSetArcs()) {
+          {
+            oprot.writeI32(struct.arcs.size());
+            for (String _iter30 : struct.arcs)
+            {
+              oprot.writeString(_iter30);
+            }
+          }
+        }
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, unindex_args struct) throws org.apache.thrift.TException {
+        TTupleProtocol iprot = (TTupleProtocol) prot;
+        BitSet incoming = iprot.readBitSet(2);
+        if (incoming.get(0)) {
+          struct.solr = iprot.readString();
+          struct.setSolrIsSet(true);
+        }
+        if (incoming.get(1)) {
+          {
+            org.apache.thrift.protocol.TList _list31 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+            struct.arcs = new ArrayList<String>(_list31.size);
+            for (int _i32 = 0; _i32 < _list31.size; ++_i32)
+            {
+              String _elem33; // required
+              _elem33 = iprot.readString();
+              struct.arcs.add(_elem33);
+            }
+          }
+          struct.setArcsIsSet(true);
+        }
+      }
+    }
+
+  }
+
+  public static class unindex_result implements org.apache.thrift.TBase<unindex_result, unindex_result._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("unindex_result");
+
+    private static final org.apache.thrift.protocol.TField EX1_FIELD_DESC = new org.apache.thrift.protocol.TField("ex1", org.apache.thrift.protocol.TType.STRUCT, (short)1);
+    private static final org.apache.thrift.protocol.TField EX2_FIELD_DESC = new org.apache.thrift.protocol.TField("ex2", org.apache.thrift.protocol.TType.STRUCT, (short)2);
+    private static final org.apache.thrift.protocol.TField EX3_FIELD_DESC = new org.apache.thrift.protocol.TField("ex3", org.apache.thrift.protocol.TType.STRUCT, (short)3);
+
+    private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
+    static {
+      schemes.put(StandardScheme.class, new unindex_resultStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new unindex_resultTupleSchemeFactory());
+    }
+
+    public IndexException ex1; // required
+    public UnparsedException ex2; // required
+    public BadJSONException ex3; // required
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+      EX1((short)1, "ex1"),
+      EX2((short)2, "ex2"),
+      EX3((short)3, "ex3");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 1: // EX1
+            return EX1;
+          case 2: // EX2
+            return EX2;
+          case 3: // EX3
+            return EX3;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+    public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.EX1, new org.apache.thrift.meta_data.FieldMetaData("ex1", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRUCT)));
+      tmpMap.put(_Fields.EX2, new org.apache.thrift.meta_data.FieldMetaData("ex2", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRUCT)));
+      tmpMap.put(_Fields.EX3, new org.apache.thrift.meta_data.FieldMetaData("ex3", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRUCT)));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(unindex_result.class, metaDataMap);
+    }
+
+    public unindex_result() {
+    }
+
+    public unindex_result(
+      IndexException ex1,
+      UnparsedException ex2,
+      BadJSONException ex3)
+    {
+      this();
+      this.ex1 = ex1;
+      this.ex2 = ex2;
+      this.ex3 = ex3;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public unindex_result(unindex_result other) {
+      if (other.isSetEx1()) {
+        this.ex1 = new IndexException(other.ex1);
+      }
+      if (other.isSetEx2()) {
+        this.ex2 = new UnparsedException(other.ex2);
+      }
+      if (other.isSetEx3()) {
+        this.ex3 = new BadJSONException(other.ex3);
+      }
+    }
+
+    public unindex_result deepCopy() {
+      return new unindex_result(this);
+    }
+
+    @Override
+    public void clear() {
+      this.ex1 = null;
+      this.ex2 = null;
+      this.ex3 = null;
+    }
+
+    public IndexException getEx1() {
+      return this.ex1;
+    }
+
+    public unindex_result setEx1(IndexException ex1) {
+      this.ex1 = ex1;
+      return this;
+    }
+
+    public void unsetEx1() {
+      this.ex1 = null;
+    }
+
+    /** Returns true if field ex1 is set (has been assigned a value) and false otherwise */
+    public boolean isSetEx1() {
+      return this.ex1 != null;
+    }
+
+    public void setEx1IsSet(boolean value) {
+      if (!value) {
+        this.ex1 = null;
+      }
+    }
+
+    public UnparsedException getEx2() {
+      return this.ex2;
+    }
+
+    public unindex_result setEx2(UnparsedException ex2) {
+      this.ex2 = ex2;
+      return this;
+    }
+
+    public void unsetEx2() {
+      this.ex2 = null;
+    }
+
+    /** Returns true if field ex2 is set (has been assigned a value) and false otherwise */
+    public boolean isSetEx2() {
+      return this.ex2 != null;
+    }
+
+    public void setEx2IsSet(boolean value) {
+      if (!value) {
+        this.ex2 = null;
+      }
+    }
+
+    public BadJSONException getEx3() {
+      return this.ex3;
+    }
+
+    public unindex_result setEx3(BadJSONException ex3) {
+      this.ex3 = ex3;
+      return this;
+    }
+
+    public void unsetEx3() {
+      this.ex3 = null;
+    }
+
+    /** Returns true if field ex3 is set (has been assigned a value) and false otherwise */
+    public boolean isSetEx3() {
+      return this.ex3 != null;
+    }
+
+    public void setEx3IsSet(boolean value) {
+      if (!value) {
+        this.ex3 = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case EX1:
+        if (value == null) {
+          unsetEx1();
+        } else {
+          setEx1((IndexException)value);
+        }
+        break;
+
+      case EX2:
+        if (value == null) {
+          unsetEx2();
+        } else {
+          setEx2((UnparsedException)value);
+        }
+        break;
+
+      case EX3:
+        if (value == null) {
+          unsetEx3();
+        } else {
+          setEx3((BadJSONException)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case EX1:
+        return getEx1();
+
+      case EX2:
+        return getEx2();
+
+      case EX3:
+        return getEx3();
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case EX1:
+        return isSetEx1();
+      case EX2:
+        return isSetEx2();
+      case EX3:
+        return isSetEx3();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof unindex_result)
+        return this.equals((unindex_result)that);
+      return false;
+    }
+
+    public boolean equals(unindex_result that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_ex1 = true && this.isSetEx1();
+      boolean that_present_ex1 = true && that.isSetEx1();
+      if (this_present_ex1 || that_present_ex1) {
+        if (!(this_present_ex1 && that_present_ex1))
+          return false;
+        if (!this.ex1.equals(that.ex1))
+          return false;
+      }
+
+      boolean this_present_ex2 = true && this.isSetEx2();
+      boolean that_present_ex2 = true && that.isSetEx2();
+      if (this_present_ex2 || that_present_ex2) {
+        if (!(this_present_ex2 && that_present_ex2))
+          return false;
+        if (!this.ex2.equals(that.ex2))
+          return false;
+      }
+
+      boolean this_present_ex3 = true && this.isSetEx3();
+      boolean that_present_ex3 = true && that.isSetEx3();
+      if (this_present_ex3 || that_present_ex3) {
+        if (!(this_present_ex3 && that_present_ex3))
+          return false;
+        if (!this.ex3.equals(that.ex3))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(unindex_result other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      unindex_result typedOther = (unindex_result)other;
+
+      lastComparison = Boolean.valueOf(isSetEx1()).compareTo(typedOther.isSetEx1());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetEx1()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.ex1, typedOther.ex1);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = Boolean.valueOf(isSetEx2()).compareTo(typedOther.isSetEx2());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetEx2()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.ex2, typedOther.ex2);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = Boolean.valueOf(isSetEx3()).compareTo(typedOther.isSetEx3());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetEx3()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.ex3, typedOther.ex3);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      schemes.get(iprot.getScheme()).getScheme().read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
+      }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("unindex_result(");
+      boolean first = true;
+
+      sb.append("ex1:");
+      if (this.ex1 == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.ex1);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("ex2:");
+      if (this.ex2 == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.ex2);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("ex3:");
+      if (this.ex3 == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.ex3);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class unindex_resultStandardSchemeFactory implements SchemeFactory {
+      public unindex_resultStandardScheme getScheme() {
+        return new unindex_resultStandardScheme();
+      }
+    }
+
+    private static class unindex_resultStandardScheme extends StandardScheme<unindex_result> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, unindex_result struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            case 1: // EX1
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+                struct.ex1 = new IndexException();
+                struct.ex1.read(iprot);
+                struct.setEx1IsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            case 2: // EX2
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+                struct.ex2 = new UnparsedException();
+                struct.ex2.read(iprot);
+                struct.setEx2IsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            case 3: // EX3
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+                struct.ex3 = new BadJSONException();
+                struct.ex3.read(iprot);
+                struct.setEx3IsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, unindex_result struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        if (struct.ex1 != null) {
+          oprot.writeFieldBegin(EX1_FIELD_DESC);
+          struct.ex1.write(oprot);
+          oprot.writeFieldEnd();
+        }
+        if (struct.ex2 != null) {
+          oprot.writeFieldBegin(EX2_FIELD_DESC);
+          struct.ex2.write(oprot);
+          oprot.writeFieldEnd();
+        }
+        if (struct.ex3 != null) {
+          oprot.writeFieldBegin(EX3_FIELD_DESC);
+          struct.ex3.write(oprot);
+          oprot.writeFieldEnd();
+        }
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class unindex_resultTupleSchemeFactory implements SchemeFactory {
+      public unindex_resultTupleScheme getScheme() {
+        return new unindex_resultTupleScheme();
+      }
+    }
+
+    private static class unindex_resultTupleScheme extends TupleScheme<unindex_result> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, unindex_result struct) throws org.apache.thrift.TException {
+        TTupleProtocol oprot = (TTupleProtocol) prot;
+        BitSet optionals = new BitSet();
+        if (struct.isSetEx1()) {
+          optionals.set(0);
+        }
+        if (struct.isSetEx2()) {
+          optionals.set(1);
+        }
+        if (struct.isSetEx3()) {
+          optionals.set(2);
+        }
+        oprot.writeBitSet(optionals, 3);
+        if (struct.isSetEx1()) {
+          struct.ex1.write(oprot);
+        }
+        if (struct.isSetEx2()) {
+          struct.ex2.write(oprot);
+        }
+        if (struct.isSetEx3()) {
+          struct.ex3.write(oprot);
+        }
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, unindex_result struct) throws org.apache.thrift.TException {
+        TTupleProtocol iprot = (TTupleProtocol) prot;
+        BitSet incoming = iprot.readBitSet(3);
+        if (incoming.get(0)) {
+          struct.ex1 = new IndexException();
+          struct.ex1.read(iprot);
+          struct.setEx1IsSet(true);
+        }
+        if (incoming.get(1)) {
+          struct.ex2 = new UnparsedException();
+          struct.ex2.read(iprot);
+          struct.setEx2IsSet(true);
+        }
+        if (incoming.get(2)) {
+          struct.ex3 = new BadJSONException();
+          struct.ex3.read(iprot);
+          struct.setEx3IsSet(true);
+        }
+      }
+    }
+
+  }
+
   public static class parseArcs_args implements org.apache.thrift.TBase<parseArcs_args, parseArcs_args._Fields>, java.io.Serializable, Cloneable   {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("parseArcs_args");
 
@@ -2200,13 +3358,13 @@ public class Server {
             case 1: // ARCS
               if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
                 {
-                  org.apache.thrift.protocol.TList _list26 = iprot.readListBegin();
-                  struct.arcs = new ArrayList<String>(_list26.size);
-                  for (int _i27 = 0; _i27 < _list26.size; ++_i27)
+                  org.apache.thrift.protocol.TList _list34 = iprot.readListBegin();
+                  struct.arcs = new ArrayList<String>(_list34.size);
+                  for (int _i35 = 0; _i35 < _list34.size; ++_i35)
                   {
-                    String _elem28; // required
-                    _elem28 = iprot.readString();
-                    struct.arcs.add(_elem28);
+                    String _elem36; // required
+                    _elem36 = iprot.readString();
+                    struct.arcs.add(_elem36);
                   }
                   iprot.readListEnd();
                 }
@@ -2234,9 +3392,9 @@ public class Server {
           oprot.writeFieldBegin(ARCS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.arcs.size()));
-            for (String _iter29 : struct.arcs)
+            for (String _iter37 : struct.arcs)
             {
-              oprot.writeString(_iter29);
+              oprot.writeString(_iter37);
             }
             oprot.writeListEnd();
           }
@@ -2267,9 +3425,9 @@ public class Server {
         if (struct.isSetArcs()) {
           {
             oprot.writeI32(struct.arcs.size());
-            for (String _iter30 : struct.arcs)
+            for (String _iter38 : struct.arcs)
             {
-              oprot.writeString(_iter30);
+              oprot.writeString(_iter38);
             }
           }
         }
@@ -2281,13 +3439,13 @@ public class Server {
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
           {
-            org.apache.thrift.protocol.TList _list31 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-            struct.arcs = new ArrayList<String>(_list31.size);
-            for (int _i32 = 0; _i32 < _list31.size; ++_i32)
+            org.apache.thrift.protocol.TList _list39 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+            struct.arcs = new ArrayList<String>(_list39.size);
+            for (int _i40 = 0; _i40 < _list39.size; ++_i40)
             {
-              String _elem33; // required
-              _elem33 = iprot.readString();
-              struct.arcs.add(_elem33);
+              String _elem41; // required
+              _elem41 = iprot.readString();
+              struct.arcs.add(_elem41);
             }
           }
           struct.setArcsIsSet(true);
