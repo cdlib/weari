@@ -35,9 +35,9 @@ object ParsedArchiveRecord {
     apply(rec, None, None, None, Seq[Long]());
 
   def apply(rec : WASArchiveRecord,
-            content  : Option[String],
+            content : Option[String],
             detectedContentType : Option[ContentType],
-            title    : Option[String],
+            title : Option[String],
             outlinks : Seq[Long]) = {
     val suppliedContentType = rec.getContentType;
     new ParsedArchiveRecord(filename = rec.getFilename,
@@ -46,7 +46,7 @@ object ParsedArchiveRecord {
                             date = rec.getDate,
                             title = title,
                             length = rec.getLength,
-                            content,
+                            content = content,
                             suppliedContentType = suppliedContentType,
                             detectedContentType = detectedContentType,
                             outlinks = outlinks);
