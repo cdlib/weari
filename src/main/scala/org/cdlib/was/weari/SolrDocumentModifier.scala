@@ -6,7 +6,6 @@ import java.lang.{Object=>JObject}
 
 import java.util.{Collection=>JCollection}
 
-import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.common.{SolrDocument, SolrInputDocument};
 

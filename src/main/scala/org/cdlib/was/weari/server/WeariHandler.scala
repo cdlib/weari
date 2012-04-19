@@ -11,10 +11,10 @@ import com.codahale.jerkson.ParsingException;
 import org.apache.pig.backend.executionengine.ExecJob.JOB_STATUS;
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{ FileSystem, FSDataInputStream, FSDataOutputStream, Path }
-import org.apache.solr.client.solrj.impl.StreamingUpdateSolrServer
+import org.apache.solr.client.solrj.impl.ConcurrentUpdateSolrServer;
 import scala.collection.JavaConversions.{ iterableAsScalaIterable, mapAsScalaMap, seqAsJavaList }
-import scala.collection.mutable.{Map,SynchronizedMap,HashMap};
-import scala.collection.immutable.HashSet
+import scala.collection.mutable;
+import scala.collection.immutable.HashSet;
 import grizzled.slf4j.Logging;
 import org.apache.pig.PigServer;
 import org.cdlib.was.weari.Utility.{extractArcname,null2option};
@@ -25,8 +25,8 @@ class WeariHandler(config: Config)
   val conf = new Configuration();
   val fs = FileSystem.get(conf);
   val jsonDir = new Path(config.jsonBaseDir());
-  var locks : Map[String,AnyRef] = new HashMap[String,AnyRef] 
-    with SynchronizedMap[String,AnyRef];
+  var locks : mutable.Map[String,AnyRef] = new mutable.HashMap[String,AnyRef]
+    with mutable.SynchronizedMap[String,AnyRef];
 
   /**
    * Index a set of ARCs on a solr server.
@@ -43,7 +43,7 @@ class WeariHandler(config: Config)
             arcs : JList[String],
             extraId : String,
             extraFields : JMap[String, JList[String]]) {
-    val server = new StreamingUpdateSolrServer(solr,
+    val server = new ConcurrentUpdateSolrServer(solr,
       config.queueSize(),
       config.threadCount());
     val arcPaths = arcs.map(getPath(_));

@@ -2,8 +2,8 @@
 
 package org.cdlib.was.weari.solr;
 
-import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.impl.{CommonsHttpSolrServer,StreamingUpdateSolrServer};
+import org.apache.solr.client.solrj.{SolrServer,SolrQuery};
+import org.apache.solr.client.solrj.impl.ConcurrentUpdateSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrInputDocument;
@@ -24,13 +24,13 @@ class SolrDistributedServer (serverInit : Seq[Tuple3[String,String,Int]],
   val commitLock = new Object;
   var commitCounter = 0;
   
-  val ring = new ConsistentHashRing[CommonsHttpSolrServer];
-  var servers = scala.collection.mutable.Map[String,CommonsHttpSolrServer]();
+  val ring = new ConsistentHashRing[SolrServer];
+  var servers = scala.collection.mutable.Map[String,SolrServer]();
 
   for ((id, url, level) <- serverInit) {
-    val server = new StreamingUpdateSolrServer (url, queueSize, queueRunners);
+    val server = new ConcurrentUpdateSolrServer(url, queueSize, queueRunners);
     ring.addServer(id, server, level);
-    servers += (server.getBaseURL -> server);
+    servers += (url -> server);
   }
   
   def add (doc : SolrInputDocument, key : String) {
@@ -63,7 +63,7 @@ class SolrDistributedServer (serverInit : Seq[Tuple3[String,String,Int]],
   /** Gets the string to use when submitting a shards query param
     */
   def getShardsValue : String = 
-    return servers.values.map(_.getBaseURL).map(_.substring(7)).mkString("",",","");
+    return servers.keys.map(_.substring(7)).mkString("",",","");
 
   def query (q : SolrParams) : QueryResponse = {
     val q2 = new ModifiableSolrParams(q);

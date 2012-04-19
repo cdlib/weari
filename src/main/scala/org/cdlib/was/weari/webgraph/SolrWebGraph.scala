@@ -5,7 +5,7 @@ package org.cdlib.was.weari.webgraph;
 import it.unimi.dsi.webgraph._;
 import java.io._;
 import org.apache.solr.client.solrj._;
-import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
+import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.common._;
 import org.archive.net.UURIFactory;
 import org.cdlib.was.weari._;
@@ -16,7 +16,7 @@ import scala.collection.mutable.ArrayBuffer;
 class SolrWebGraph (url : String) extends WebGraph {
   val logger = LoggerFactory.getLogger(classOf[SolrWebGraph]);
 
-  val server = new CommonsHttpSolrServer(url);
+  val server = new HttpSolrServer(url);
 
   def addLink (link : Outlink) = ();
   def addLinks (links : Seq[Outlink]) = ();
