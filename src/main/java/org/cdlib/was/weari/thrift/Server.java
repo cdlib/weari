@@ -33,7 +33,7 @@ public class Server {
 
     public void index(String solr, String filter, List<String> arcs, String extraId, Map<String,List<String>> extraFields) throws IndexException, UnparsedException, BadJSONException, org.apache.thrift.TException;
 
-    public void unindex(String solr, List<String> arcs) throws IndexException, UnparsedException, BadJSONException, org.apache.thrift.TException;
+    public void unindex(String solr, List<String> arcs, String extraId) throws IndexException, UnparsedException, BadJSONException, org.apache.thrift.TException;
 
     public void parseArcs(List<String> arcs) throws ParseException, org.apache.thrift.TException;
 
@@ -47,7 +47,7 @@ public class Server {
 
     public void index(String solr, String filter, List<String> arcs, String extraId, Map<String,List<String>> extraFields, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.index_call> resultHandler) throws org.apache.thrift.TException;
 
-    public void unindex(String solr, List<String> arcs, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.unindex_call> resultHandler) throws org.apache.thrift.TException;
+    public void unindex(String solr, List<String> arcs, String extraId, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.unindex_call> resultHandler) throws org.apache.thrift.TException;
 
     public void parseArcs(List<String> arcs, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.parseArcs_call> resultHandler) throws org.apache.thrift.TException;
 
@@ -110,17 +110,18 @@ public class Server {
       return;
     }
 
-    public void unindex(String solr, List<String> arcs) throws IndexException, UnparsedException, BadJSONException, org.apache.thrift.TException
+    public void unindex(String solr, List<String> arcs, String extraId) throws IndexException, UnparsedException, BadJSONException, org.apache.thrift.TException
     {
-      send_unindex(solr, arcs);
+      send_unindex(solr, arcs, extraId);
       recv_unindex();
     }
 
-    public void send_unindex(String solr, List<String> arcs) throws org.apache.thrift.TException
+    public void send_unindex(String solr, List<String> arcs, String extraId) throws org.apache.thrift.TException
     {
       unindex_args args = new unindex_args();
       args.setSolr(solr);
       args.setArcs(arcs);
+      args.setExtraId(extraId);
       sendBase("unindex", args);
     }
 
@@ -268,9 +269,9 @@ public class Server {
       }
     }
 
-    public void unindex(String solr, List<String> arcs, org.apache.thrift.async.AsyncMethodCallback<unindex_call> resultHandler) throws org.apache.thrift.TException {
+    public void unindex(String solr, List<String> arcs, String extraId, org.apache.thrift.async.AsyncMethodCallback<unindex_call> resultHandler) throws org.apache.thrift.TException {
       checkReady();
-      unindex_call method_call = new unindex_call(solr, arcs, resultHandler, this, ___protocolFactory, ___transport);
+      unindex_call method_call = new unindex_call(solr, arcs, extraId, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
@@ -278,10 +279,12 @@ public class Server {
     public static class unindex_call extends org.apache.thrift.async.TAsyncMethodCall {
       private String solr;
       private List<String> arcs;
-      public unindex_call(String solr, List<String> arcs, org.apache.thrift.async.AsyncMethodCallback<unindex_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      private String extraId;
+      public unindex_call(String solr, List<String> arcs, String extraId, org.apache.thrift.async.AsyncMethodCallback<unindex_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
         this.solr = solr;
         this.arcs = arcs;
+        this.extraId = extraId;
       }
 
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
@@ -289,6 +292,7 @@ public class Server {
         unindex_args args = new unindex_args();
         args.setSolr(solr);
         args.setArcs(arcs);
+        args.setExtraId(extraId);
         args.write(prot);
         prot.writeMessageEnd();
       }
@@ -456,7 +460,7 @@ public class Server {
       protected unindex_result getResult(I iface, unindex_args args) throws org.apache.thrift.TException {
         unindex_result result = new unindex_result();
         try {
-          iface.unindex(args.solr, args.arcs);
+          iface.unindex(args.solr, args.arcs, args.extraId);
         } catch (IndexException ex1) {
           result.ex1 = ex1;
         } catch (UnparsedException ex2) {
@@ -1991,6 +1995,7 @@ public class Server {
 
     private static final org.apache.thrift.protocol.TField SOLR_FIELD_DESC = new org.apache.thrift.protocol.TField("solr", org.apache.thrift.protocol.TType.STRING, (short)1);
     private static final org.apache.thrift.protocol.TField ARCS_FIELD_DESC = new org.apache.thrift.protocol.TField("arcs", org.apache.thrift.protocol.TType.LIST, (short)2);
+    private static final org.apache.thrift.protocol.TField EXTRA_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("extraId", org.apache.thrift.protocol.TType.STRING, (short)3);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
@@ -2000,11 +2005,13 @@ public class Server {
 
     public String solr; // required
     public List<String> arcs; // required
+    public String extraId; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
       SOLR((short)1, "solr"),
-      ARCS((short)2, "arcs");
+      ARCS((short)2, "arcs"),
+      EXTRA_ID((short)3, "extraId");
 
       private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -2023,6 +2030,8 @@ public class Server {
             return SOLR;
           case 2: // ARCS
             return ARCS;
+          case 3: // EXTRA_ID
+            return EXTRA_ID;
           default:
             return null;
         }
@@ -2071,6 +2080,8 @@ public class Server {
       tmpMap.put(_Fields.ARCS, new org.apache.thrift.meta_data.FieldMetaData("arcs", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
               new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING))));
+      tmpMap.put(_Fields.EXTRA_ID, new org.apache.thrift.meta_data.FieldMetaData("extraId", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(unindex_args.class, metaDataMap);
     }
@@ -2080,11 +2091,13 @@ public class Server {
 
     public unindex_args(
       String solr,
-      List<String> arcs)
+      List<String> arcs,
+      String extraId)
     {
       this();
       this.solr = solr;
       this.arcs = arcs;
+      this.extraId = extraId;
     }
 
     /**
@@ -2101,6 +2114,9 @@ public class Server {
         }
         this.arcs = __this__arcs;
       }
+      if (other.isSetExtraId()) {
+        this.extraId = other.extraId;
+      }
     }
 
     public unindex_args deepCopy() {
@@ -2111,6 +2127,7 @@ public class Server {
     public void clear() {
       this.solr = null;
       this.arcs = null;
+      this.extraId = null;
     }
 
     public String getSolr() {
@@ -2176,6 +2193,30 @@ public class Server {
       }
     }
 
+    public String getExtraId() {
+      return this.extraId;
+    }
+
+    public unindex_args setExtraId(String extraId) {
+      this.extraId = extraId;
+      return this;
+    }
+
+    public void unsetExtraId() {
+      this.extraId = null;
+    }
+
+    /** Returns true if field extraId is set (has been assigned a value) and false otherwise */
+    public boolean isSetExtraId() {
+      return this.extraId != null;
+    }
+
+    public void setExtraIdIsSet(boolean value) {
+      if (!value) {
+        this.extraId = null;
+      }
+    }
+
     public void setFieldValue(_Fields field, Object value) {
       switch (field) {
       case SOLR:
@@ -2194,6 +2235,14 @@ public class Server {
         }
         break;
 
+      case EXTRA_ID:
+        if (value == null) {
+          unsetExtraId();
+        } else {
+          setExtraId((String)value);
+        }
+        break;
+
       }
     }
 
@@ -2204,6 +2253,9 @@ public class Server {
 
       case ARCS:
         return getArcs();
+
+      case EXTRA_ID:
+        return getExtraId();
 
       }
       throw new IllegalStateException();
@@ -2220,6 +2272,8 @@ public class Server {
         return isSetSolr();
       case ARCS:
         return isSetArcs();
+      case EXTRA_ID:
+        return isSetExtraId();
       }
       throw new IllegalStateException();
     }
@@ -2252,6 +2306,15 @@ public class Server {
         if (!(this_present_arcs && that_present_arcs))
           return false;
         if (!this.arcs.equals(that.arcs))
+          return false;
+      }
+
+      boolean this_present_extraId = true && this.isSetExtraId();
+      boolean that_present_extraId = true && that.isSetExtraId();
+      if (this_present_extraId || that_present_extraId) {
+        if (!(this_present_extraId && that_present_extraId))
+          return false;
+        if (!this.extraId.equals(that.extraId))
           return false;
       }
 
@@ -2291,6 +2354,16 @@ public class Server {
           return lastComparison;
         }
       }
+      lastComparison = Boolean.valueOf(isSetExtraId()).compareTo(typedOther.isSetExtraId());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetExtraId()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.extraId, typedOther.extraId);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
       return 0;
     }
 
@@ -2324,6 +2397,14 @@ public class Server {
         sb.append("null");
       } else {
         sb.append(this.arcs);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("extraId:");
+      if (this.extraId == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.extraId);
       }
       first = false;
       sb.append(")");
@@ -2394,6 +2475,14 @@ public class Server {
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
               break;
+            case 3: // EXTRA_ID
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+                struct.extraId = iprot.readString();
+                struct.setExtraIdIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
             default:
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
           }
@@ -2426,6 +2515,11 @@ public class Server {
           }
           oprot.writeFieldEnd();
         }
+        if (struct.extraId != null) {
+          oprot.writeFieldBegin(EXTRA_ID_FIELD_DESC);
+          oprot.writeString(struct.extraId);
+          oprot.writeFieldEnd();
+        }
         oprot.writeFieldStop();
         oprot.writeStructEnd();
       }
@@ -2450,7 +2544,10 @@ public class Server {
         if (struct.isSetArcs()) {
           optionals.set(1);
         }
-        oprot.writeBitSet(optionals, 2);
+        if (struct.isSetExtraId()) {
+          optionals.set(2);
+        }
+        oprot.writeBitSet(optionals, 3);
         if (struct.isSetSolr()) {
           oprot.writeString(struct.solr);
         }
@@ -2463,12 +2560,15 @@ public class Server {
             }
           }
         }
+        if (struct.isSetExtraId()) {
+          oprot.writeString(struct.extraId);
+        }
       }
 
       @Override
       public void read(org.apache.thrift.protocol.TProtocol prot, unindex_args struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
-        BitSet incoming = iprot.readBitSet(2);
+        BitSet incoming = iprot.readBitSet(3);
         if (incoming.get(0)) {
           struct.solr = iprot.readString();
           struct.setSolrIsSet(true);
@@ -2485,6 +2585,10 @@ public class Server {
             }
           }
           struct.setArcsIsSet(true);
+        }
+        if (incoming.get(2)) {
+          struct.extraId = iprot.readString();
+          struct.setExtraIdIsSet(true);
         }
       }
     }

@@ -28,7 +28,8 @@ service Server {
     throws (1: IndexException ex1, 2: UnparsedException ex2, 3: BadJSONException ex3);
 
   void unindex (1: string solr,
-                2: list<string> arcs)
+                2: list<string> arcs,
+                3: string extraId)
     throws (1: IndexException ex1, 2: UnparsedException ex2, 3: BadJSONException ex3);
 
   void parseArcs(1: list<string> arcs)
