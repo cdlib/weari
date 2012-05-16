@@ -11,17 +11,11 @@ import org.apache.solr.common.{SolrDocument, SolrInputDocument};
 
 import org.apache.solr.client.solrj.util.ClientUtils.toSolrInputDocument;
 
-import org.archive.url.{DefaultIAURLCanonicalizer,URLParser};
-
-import org.archive.net.{UURI,UURIFactory};
-
 import org.cdlib.was.weari.SolrFields._;
 
 import scala.collection.JavaConversions.collectionAsScalaIterable;
 
 object SolrDocumentModifier {
-  val canonicalizer = new DefaultIAURLCanonicalizer();
-
   /**
    * Remove a single value from a document's field.
    */
@@ -65,25 +59,18 @@ object SolrDocumentModifier {
     return doc;
   }
 
-  def canonicalize (url : String) : String = {
-    val handyurl = URLParser.parse(url);
-    canonicalizer.canonicalize(handyurl);
-    return handyurl.getURLString;
-  }
-    
   /**
    * Update the url-based fields in a document.
    */
   def updateDocUrls (doc : SolrInputDocument, 
                      url : String) {
-    val uuri = UURIFactory.getInstance(url);
-    val host = uuri.getHost;
+    val host = UriUtils.extractHost(url);
+    val canonical = UriUtils.canonicalize(url);
     updateFields(doc,
-                 HOST_FIELD         -> host,
-                 SITE_FIELD         -> host,
-                 URL_FIELD          -> url,
-                 URLFP_FIELD        -> UriUtils.fingerprint(uuri),
-                 CANONICALURL_FIELD -> uuri.toString);
+                 HOST_FIELD           -> host,
+                 URL_FIELD            -> url,
+                 URLFP_FIELD          -> UriUtils.fingerprint(canonical),
+                 CANONICALURL_FIELD   -> canonical);
   }
 
   /**

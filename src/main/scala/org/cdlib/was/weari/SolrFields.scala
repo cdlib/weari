@@ -18,18 +18,19 @@ object SolrFields {
   val MEDIA_TYPE_SUP_FIELD = "mediatypesup";
   val DIGEST_FIELD         = "digest";
   val HOST_FIELD           = "host";
+  val HOST_TOKENIZED_FIELD = "hostt";
   val ID_FIELD             = "id";
   val INSTITUTION_FIELD    = "institution";
   val JOB_FIELD            = "job";
   val PROJECT_FIELD        = "project";
   val SERVER_FIELD         = "server";
-  val SITE_FIELD           = "site";
   val SPECIFICATION_FIELD  = "specification";
   val TAG_FIELD            = "tag";
   val TITLE_FIELD          = "title";
   val TYPE_FIELD           = "type";
   val URLFP_FIELD          = "urlfp";
   val URL_FIELD            = "url";
+  val URL_TOKENIZED_FIELD  = "urlt";
 
   /* fields which have a single value */
   val SINGLE_VALUED_FIELDS = 
@@ -40,16 +41,17 @@ object SolrFields {
            CONTENT_LENGTH_FIELD,
            DIGEST_FIELD,
            HOST_FIELD,
+           HOST_TOKENIZED_FIELD,
            ID_FIELD, 
            MEDIA_TYPE_DET_FIELD,
            MEDIA_TYPE_GROUP_DET_FIELD,
            MEDIA_TYPE_SUP_FIELD,
            PROJECT_FIELD,
-           SITE_FIELD,
            SPECIFICATION_FIELD,
            TITLE_FIELD,
            URLFP_FIELD,
-           URL_FIELD);
+           URL_FIELD,
+           URL_TOKENIZED_FIELD);
 
   val MULTI_VALUED_FIELDS =
     List(ARCNAME_FIELD,

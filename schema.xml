@@ -68,13 +68,20 @@
         <field name="boost" type="float" stored="true" indexed="false"/>
         
         <!-- various url fields -->
-        <field name="host" type="url" stored="true" indexed="true"/>
-        <field name="site" type="string" stored="true" indexed="true"/>
-        <field name="url" type="url" stored="true" indexed="true"
-            required="true"/>
-        <field name="canonicalurl" type="string" stored="true" indexed="true"/>
+        <!-- raw -->
+        <field name="host" type="string" stored="true" indexed="true"/>
+        <field name="url" type="string" stored="true" indexed="true" required="true"/>
+        <field name="canonicalurl" type="string" stored="true" indexed="true" required="true"/>
 
-        <!-- from parse -->        
+        <!--  tokenized -->
+        <field name="hostt" type="url" stored="true" indexed="true"/>
+        <field name="urlt" type="url" stored="true" indexed="true"/>
+
+        <!-- copy to tokenized -->
+        <copyField source="host" dest="hostt"/>
+        <copyField source="url" dest="urlt"/>
+
+        <!-- from parse -->
         <field name="content" type="text" stored="false" indexed="true" compressed="true"/>
         <field name="title" type="text" stored="true" indexed="true"/>
 
