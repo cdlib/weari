@@ -11,10 +11,10 @@ import org.apache.solr.common.SolrInputDocument;
 
 import org.cdlib.was.weari._;
 import org.cdlib.was.weari.SolrFields._;
-import org.cdlib.was.weari.SolrDocumentModifier._;
+import org.cdlib.was.weari.UriUtils.canonicalize;
 
-class SolrDocumentModifierSpec extends FunSpec with BeforeAndAfter with ShouldMatchers {
-  describe ("Canonicalizer") {
+class UriUtilsSpec extends FunSpec with BeforeAndAfter with ShouldMatchers {
+  describe ("URIUtils canonicalizer") {
     it("should remove www") {
       assert(canonicalize("http://www.example.org") === canonicalize("http://example.org"))
     }

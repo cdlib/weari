@@ -3,13 +3,32 @@
 package org.cdlib.was.weari;
 
 import java.util.Date;
-import org.archive.net.UURI;
-import org.archive.net.UURIFactory;
-import org.cdlib.rabinpoly.RabinPoly;
+
 import org.apache.commons.codec.binary.Base64;
 
+import org.archive.net.{UURI,UURIFactory};
+import org.archive.url.{DefaultIAURLCanonicalizer,HandyURL,URLParser};
+
+import org.cdlib.rabinpoly.RabinPoly;
+
 object UriUtils {
-    
+  val canonicalizer = new DefaultIAURLCanonicalizer();
+  
+  def string2uuri (s : String) : UURI = 
+    UURIFactory.getInstance(s);
+
+  def string2handyUrl (s : String) : HandyURL = 
+    URLParser.parse(s);
+
+  def canonicalize (s : String) : String = {
+    val handyurl = string2handyUrl(s);
+    canonicalizer.canonicalize(handyurl);
+    return handyurl.getURLString;
+  }
+
+  def extractHost(s : String) : String =
+    string2uuri(s).getHost;
+
   def encodeDate (date : Date) : Array[Byte] =
     UriUtils.int2bytearray((date.getTime/1000).asInstanceOf[Int]);
 
@@ -38,6 +57,9 @@ object UriUtils {
   
   def fingerprint (url : UURI) : Long = 
     RabinPoly.fingerprint(url.getEscapedURI);
+
+  def fingerprint (url : String) : Long = 
+    fingerprint(url);
 
   def fp2string (fp : Long) : String =
     new String(Base64.encodeBase64(this.encodeFp(fp)));
