@@ -84,6 +84,12 @@
       <groupId>org.archive</groupId>
       <artifactId>archive-commons</artifactId>
       <version>0.0.1-SNAPSHOT</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-io</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.archive.heritrix</groupId>
