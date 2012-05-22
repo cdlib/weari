@@ -48,6 +48,9 @@ class WarcSpec extends FeatureSpec {
         assert(j1.date == j2.date);
         assert(j1.title == j2.title);
         assert(j1.content == j2.content);
+        assert(j1.canonicalUrl == j2.canonicalUrl);
+        assert(j1.canonicalHost == j2.canonicalHost);
+        assert(j1.urlFingerprint == j2.urlFingerprint);
       }
     }
     
@@ -58,7 +61,7 @@ class WarcSpec extends FeatureSpec {
         }
       }
     }
-    
+
     // scenario ("can serialize an arc to JSON") {
     //   val tmpfile = File.createTempFile("ng-indexer", ".json.gz");
     //   indexer.arc2json(cl.getResourceAsStream(arcName), arcName, tmpfile);
