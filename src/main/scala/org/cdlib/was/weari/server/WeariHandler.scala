@@ -11,7 +11,7 @@ import com.codahale.jerkson.ParsingException;
 import org.apache.pig.backend.executionengine.ExecJob.JOB_STATUS;
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{ FileSystem, FSDataInputStream, FSDataOutputStream, Path }
-import org.apache.solr.client.solrj.impl.ConcurrentUpdateSolrServer;
+import org.apache.solr.client.solrj.impl.{ConcurrentUpdateSolrServer,HttpSolrServer};
 import scala.collection.JavaConversions.{ iterableAsScalaIterable, mapAsScalaMap, seqAsJavaList }
 import scala.collection.mutable;
 import scala.collection.immutable.HashSet;
@@ -46,8 +46,9 @@ class WeariHandler(config: Config)
     val server = new ConcurrentUpdateSolrServer(solr,
       config.queueSize(),
       config.threadCount());
+    val queryServer = new HttpSolrServer(solr);
     val arcPaths = arcs.map(getPath(_));
-    val manager = new MergeManager(filterQuery, server);
+    val manager = new MergeManager(filterQuery, queryServer);
     val indexer = new SolrIndexer(server = server,
                                   manager = manager,
                                   extraId = extraId,
