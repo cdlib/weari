@@ -2,6 +2,8 @@
 
 package org.cdlib.was.weari;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
+
 import java.util.Date;
 
 /**
@@ -28,6 +30,13 @@ case class ParsedArchiveRecord (
   def getStatusCode = 200;
   def isHttpResponse = true;
   def getContentType = suppliedContentType;
+
+  @JsonIgnore
+  lazy val canonicalUrl = UriUtils.canonicalize(url);
+  @JsonIgnore
+  lazy val urlFingerprint = UriUtils.fingerprint(this.canonicalUrl);
+  @JsonIgnore
+  lazy val canonicalHost = UriUtils.string2uuri(canonicalUrl).getHost;
 }
 
 object ParsedArchiveRecord {
