@@ -4,8 +4,6 @@ package org.cdlib.was.weari;
 
 import org.apache.solr.common.SolrInputDocument;
 
-import org.archive.net.UURIFactory;
-
 import org.cdlib.was.weari.SolrFields._;
 import org.cdlib.was.weari.SolrDocumentModifier.{shouldIndexContentType,updateDocBoost,updateContentType,updateFields};
 
@@ -20,10 +18,9 @@ object ParsedArchiveRecordSolrizer {
   def convert (rec : ParsedArchiveRecord) : SolrInputDocument = {
     val doc = new SolrInputDocument;
     /* set the fields */
-    val uuri = UURIFactory.getInstance(rec.url);
     updateFields(doc,
                  ARCNAME_FIELD        -> rec.filename,
-                 ID_FIELD             -> "%s.%s".format(uuri.toString, 
+                 ID_FIELD             -> "%s.%s".format(rec.canonicalUrl,
                                                         rec.digest.getOrElse("-")),
                  HOST_FIELD           -> rec.canonicalHost,
                  CANONICALURL_FIELD   -> rec.canonicalUrl,

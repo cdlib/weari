@@ -8,7 +8,6 @@ import java.util.Date;
 
 import org.apache.commons.codec.binary.Base64;
 
-import org.archive.net.{UURI,UURIFactory};
 import org.archive.url.{DefaultIAURLCanonicalizer,HandyURL,URLParser};
 
 import org.cdlib.rabinpoly.RabinPoly;
@@ -16,9 +15,6 @@ import org.cdlib.rabinpoly.RabinPoly;
 object UriUtils extends Logging {
   val canonicalizer = new DefaultIAURLCanonicalizer();
   
-  def string2uuri (s : String) : UURI = 
-    UURIFactory.getInstance(s);
-
   def string2handyUrl (s : String) : HandyURL = 
     URLParser.parse(s);
 
@@ -34,18 +30,11 @@ object UriUtils extends Logging {
   def decodeDate (bytes : Array[Byte]) : Date = 
     new Date(UriUtils.bytearray2int(bytes)*1000);
   
-  /* simple for now */
-  def encodeUrl (url : UURI) : Array[Byte] = 
-    url.getEscapedURI.getBytes("UTF-8");
-  
-  def decodeUrl (bytes : Array[Byte]) = 
-    UURIFactory.getInstance(new String(bytes));
-
   def encodeFp(fp : Long) = long2bytearray(fp);
 
   def decodeFp(bytes : Array[Byte]) = bytearray2long(bytes);
 
-  def encodeUrlFpDate(url : UURI, date : Date) : Array[Byte] = 
+  def encodeUrlFpDate(url : String, date : Date) : Array[Byte] = 
     encodeFpDate(fingerprint(url), date);
 
   def encodeFpDate(fp : Long, date : Date) : Array[Byte] = 
@@ -54,9 +43,6 @@ object UriUtils extends Logging {
   def decodeUrlFPDate(bytes : Array[Byte]) : Pair[Long, Date] = 
     Pair(decodeFp(bytes.take(8)), decodeDate(bytes.take(4)));
   
-  def fingerprint (url : UURI) : Long = 
-    RabinPoly.fingerprint(url.getEscapedURI);
-
   def fingerprint (url : String) : Long = 
     RabinPoly.fingerprint(url);
 

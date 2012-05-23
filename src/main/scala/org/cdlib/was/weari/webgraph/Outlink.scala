@@ -3,9 +3,8 @@
 package org.cdlib.was.weari.webgraph;
 
 import java.util.Date;
-import org.archive.net.UURI;
 
-class Outlink (val from : UURI,
-               val to : UURI,
+class Outlink (val from : String,
+               val to : String,
                val date : Date,
                val text : String) {}

@@ -36,7 +36,7 @@ case class ParsedArchiveRecord (
   @JsonIgnore
   lazy val urlFingerprint = UriUtils.fingerprint(this.canonicalUrl);
   @JsonIgnore
-  lazy val canonicalHost = UriUtils.string2uuri(canonicalUrl).getHost;
+  lazy val canonicalHost = UriUtils.string2handyUrl(canonicalUrl).getHost;
 }
 
 object ParsedArchiveRecord {

@@ -5,7 +5,6 @@ package org.cdlib.was.weari.webgraph;
 import java.io.StringWriter;
 import java.util.Date;
 
-import org.archive.net.UURIFactory;
 import org.archive.util.ArchiveUtils;
 
 import org.xml.sax.{Attributes,ContentHandler,Locator};
@@ -32,8 +31,8 @@ class WebGraphContentHandler (url : String, date : Date)
   def endAElement {
     if (inAnchorText) {
       try {
-        outlinks += new Outlink(UURIFactory.getInstance(url), 
-                                UURIFactory.getInstance(outlinkTo),
+        outlinks += new Outlink(url, 
+                                outlinkTo,
                                 date,
                                 outlinkText.toString);
         inAnchorText = false;

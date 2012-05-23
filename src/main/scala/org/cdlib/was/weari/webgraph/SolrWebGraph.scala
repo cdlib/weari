@@ -7,7 +7,6 @@ import java.io._;
 import org.apache.solr.client.solrj._;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.common._;
-import org.archive.net.UURIFactory;
 import org.cdlib.was.weari._;
 import org.slf4j.LoggerFactory;
 import scala.collection.JavaConversions.collectionAsScalaIterable;
@@ -30,7 +29,7 @@ class SolrWebGraph (url : String) extends WebGraph {
     newUrls;
   }
 
-  def fingerprints(i : Int) = UriUtils.fingerprint(UURIFactory.getInstance(urls(i)));
+  def fingerprints(i : Int) = UriUtils.fingerprint(urls(i));
 
   def numNodes = urls.length;
 

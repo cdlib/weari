@@ -109,7 +109,7 @@ class MyParser extends Logging {
         val outlinksRaw = wgContentHandler.outlinks;
         if (outlinksRaw.size > 0) {
           outlinks = (for (l <- outlinksRaw) 
-                      yield UriUtils.fingerprint(l.to)).
+                      yield UriUtils.fingerprint(UriUtils.canonicalize(l.to))).
           toList.distinct.sortWith((a,b)=>(a < b));
         }
       }
