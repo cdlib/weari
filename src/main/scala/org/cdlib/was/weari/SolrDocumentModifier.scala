@@ -59,23 +59,6 @@ object SolrDocumentModifier {
     return doc;
   }
 
-  /**
-   * Update the content type fields in a document.
-   *
-   * @parameter detected The content type as parsed.
-   * @parameter supplied The content type as supplied by the server.
-   */
-  def updateContentType (doc      : SolrInputDocument,
-                         detected : Option[ContentType],
-                         supplied : ContentType) {
-    updateFields(doc,
-                 MEDIA_TYPE_GROUP_DET_FIELD -> detected.flatMap(_.mediaTypeGroup),
-                 MEDIA_TYPE_SUP_FIELD       -> supplied.mediaType,
-                 CHARSET_SUP_FIELD          -> supplied.charset,
-                 MEDIA_TYPE_DET_FIELD       -> detected.map(_.mediaType),
-                 CHARSET_DET_FIELD          -> detected.flatMap(_.charset));
-  }
-
   def shouldIndexContentType (contentType : ContentType) : Boolean = {
     /* Right now we index everything except audio, video, image, js, & css */
     contentType.top match {

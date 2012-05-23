@@ -5,7 +5,7 @@ package org.cdlib.was.weari;
 import org.apache.solr.common.SolrInputDocument;
 
 import org.cdlib.was.weari.SolrFields._;
-import org.cdlib.was.weari.SolrDocumentModifier.{shouldIndexContentType,updateDocBoost,updateContentType,updateFields};
+import org.cdlib.was.weari.SolrDocumentModifier.{shouldIndexContentType,updateDocBoost,updateFields};
 
 object ParsedArchiveRecordSolrizer {
   
@@ -18,6 +18,8 @@ object ParsedArchiveRecordSolrizer {
   def convert (rec : ParsedArchiveRecord) : SolrInputDocument = {
     val doc = new SolrInputDocument;
     /* set the fields */
+    val detected = rec.detectedContentType;
+    val supplied = rec.suppliedContentType;
     updateFields(doc,
                  ARCNAME_FIELD        -> rec.filename,
                  ID_FIELD             -> "%s.%s".format(rec.canonicalUrl,
@@ -30,9 +32,14 @@ object ParsedArchiveRecordSolrizer {
                  DATE_FIELD           -> rec.date,
                  TITLE_FIELD          -> rec.title,
                  CONTENT_LENGTH_FIELD -> rec.length,
-                 CONTENT_FIELD        -> getContent(rec));
+                 CONTENT_FIELD        -> getContent(rec),
+                 MEDIA_TYPE_GROUP_DET_FIELD -> detected.flatMap(_.mediaTypeGroup),
+                 MEDIA_TYPE_SUP_FIELD       -> supplied.mediaType,
+                 CHARSET_SUP_FIELD          -> supplied.charset,
+                 MEDIA_TYPE_DET_FIELD       -> detected.map(_.mediaType),
+                 CHARSET_DET_FIELD          -> detected.flatMap(_.charset));
+
     updateDocBoost(doc, 1.0f);
-    updateContentType(doc, rec.detectedContentType, rec.suppliedContentType);
     return doc;
   }
 }
