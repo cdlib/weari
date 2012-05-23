@@ -2,6 +2,8 @@
 
 package org.cdlib.was.weari;
 
+import grizzled.slf4j.Logging;
+
 import java.util.Date;
 
 import org.apache.commons.codec.binary.Base64;
@@ -11,7 +13,7 @@ import org.archive.url.{DefaultIAURLCanonicalizer,HandyURL,URLParser};
 
 import org.cdlib.rabinpoly.RabinPoly;
 
-object UriUtils {
+object UriUtils extends Logging {
   val canonicalizer = new DefaultIAURLCanonicalizer();
   
   def string2uuri (s : String) : UURI = 
@@ -25,9 +27,6 @@ object UriUtils {
     canonicalizer.canonicalize(handyurl);
     return handyurl.getURLString;
   }
-
-  def extractHost(s : String) : String =
-    string2uuri(s).getHost;
 
   def encodeDate (date : Date) : Array[Byte] =
     UriUtils.int2bytearray((date.getTime/1000).asInstanceOf[Int]);
@@ -59,7 +58,7 @@ object UriUtils {
     RabinPoly.fingerprint(url.getEscapedURI);
 
   def fingerprint (url : String) : Long = 
-    fingerprint(url);
+    RabinPoly.fingerprint(url);
 
   def fp2string (fp : Long) : String =
     new String(Base64.encodeBase64(this.encodeFp(fp)));
