@@ -49,19 +49,4 @@ object SolrDocumentModifier {
     updateFields(doc, fields : _*);
     return doc;
   }
-
-  def shouldIndexContentType (contentType : ContentType) : Boolean = {
-    /* Right now we index everything except audio, video, image, js, & css */
-    contentType.top match {
-      case "audio" | "video" | "image" => false;
-      case "text" => contentType.sub match {
-        case "javascript" | "css" => false;
-        case _ => true;
-      }
-      case "application" => contentType.sub match {
-        case "zip" => false;
-        case _     => true;
-      }
-    }
-  }
 }

@@ -5,7 +5,7 @@ package org.cdlib.was.weari;
 import org.apache.solr.common.SolrInputDocument;
 
 import org.cdlib.was.weari.SolrFields._;
-import org.cdlib.was.weari.SolrDocumentModifier.{shouldIndexContentType,updateFields};
+import org.cdlib.was.weari.SolrDocumentModifier.updateFields;
 
 object ParsedArchiveRecordSolrizer {
   
@@ -14,6 +14,21 @@ object ParsedArchiveRecordSolrizer {
         shouldIndexContentType(rec.detectedContentType.getOrElse(ContentType.DEFAULT)))
           rec.content
     else None;
+
+  private def shouldIndexContentType (contentType : ContentType) : Boolean = {
+    /* Right now we index everything except audio, video, image, js, & css */
+    contentType.top match {
+      case "audio" | "video" | "image" => false;
+      case "text" => contentType.sub match {
+        case "javascript" | "css" => false;
+        case _ => true;
+      }
+      case "application" => contentType.sub match {
+        case "zip" => false;
+        case _     => true;
+      }
+    }
+  }
 
   def convert (rec : ParsedArchiveRecord) : SolrInputDocument = {
     val doc = new SolrInputDocument;
