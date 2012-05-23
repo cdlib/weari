@@ -90,38 +90,4 @@ object SolrDocumentModifier {
       }
     }
   }
-
-  /**
-   * Merge two documents into one, presuming they have the same id.
-   * Multi-value fields are appended.
-   */
-  def mergeDocs (a : SolrInputDocument, b : SolrInputDocument) : SolrInputDocument = {
-    val retval = new SolrInputDocument;
-    if (a.getFieldValue(ID_FIELD) != b.getFieldValue(ID_FIELD)) {
-      throw new Exception;
-    } else {
-      /* identical fields */
-      for (fieldName <- SINGLE_VALUED_FIELDS) {
-        val content = {
-          val aval = a.getFieldValue(fieldName);
-          if (aval != null && aval != "")
-            aval;
-          else b.getFieldValue(fieldName);
-        }
-        retval.setField(fieldName, content);
-      }
-      /* fields to merge */
-      for (fieldName <- MULTI_VALUED_FIELDS) {
-        def emptyIfNull(xs : JCollection[JObject]) : List[JObject] = xs match {
-          case null => List();
-          case seq  => seq.toList;
-        }
-        val values = (emptyIfNull(a.getFieldValues(fieldName)) ++
-                      emptyIfNull(b.getFieldValues(fieldName))).distinct;
-        for (value <- values)
-          retval.addField(fieldName, value);
-      }
-    }
-    return retval;
-  }
 }
