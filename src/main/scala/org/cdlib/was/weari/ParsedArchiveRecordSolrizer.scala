@@ -5,7 +5,7 @@ package org.cdlib.was.weari;
 import org.apache.solr.common.SolrInputDocument;
 
 import org.cdlib.was.weari.SolrFields._;
-import org.cdlib.was.weari.SolrDocumentModifier.{shouldIndexContentType,updateDocBoost,updateFields};
+import org.cdlib.was.weari.SolrDocumentModifier.{shouldIndexContentType,updateFields};
 
 object ParsedArchiveRecordSolrizer {
   
@@ -20,7 +20,10 @@ object ParsedArchiveRecordSolrizer {
     /* set the fields */
     val detected = rec.detectedContentType;
     val supplied = rec.suppliedContentType;
+    val boost = 1.0f;
+
     updateFields(doc,
+                 BOOST_FIELD -> boost,
                  ARCNAME_FIELD        -> rec.filename,
                  ID_FIELD             -> "%s.%s".format(rec.canonicalUrl,
                                                         rec.digest.getOrElse("-")),
@@ -38,8 +41,7 @@ object ParsedArchiveRecordSolrizer {
                  CHARSET_SUP_FIELD          -> supplied.charset,
                  MEDIA_TYPE_DET_FIELD       -> detected.map(_.mediaType),
                  CHARSET_DET_FIELD          -> detected.flatMap(_.charset));
-
-    updateDocBoost(doc, 1.0f);
+    doc.setDocumentBoost(boost);
     return doc;
   }
 }

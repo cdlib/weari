@@ -26,15 +26,6 @@ object SolrDocumentModifier {
       doc.addField(key, value);
   }
   
-  /**
-   * Update the boost in a document.
-   */
-  def updateDocBoost (doc : SolrInputDocument,
-                      boost : Float) {
-    doc.setDocumentBoost(boost);
-    doc.addField(BOOST_FIELD, boost);
-  }
-    
   def updateFields(doc : SolrInputDocument,
                    fields : Pair[String, Any]*) {
     for (field <- fields) {
