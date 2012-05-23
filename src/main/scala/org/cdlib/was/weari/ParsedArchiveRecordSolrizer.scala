@@ -7,7 +7,7 @@ import org.apache.solr.common.SolrInputDocument;
 import org.archive.net.UURIFactory;
 
 import org.cdlib.was.weari.SolrFields._;
-import org.cdlib.was.weari.SolrDocumentModifier.{shouldIndexContentType,updateDocBoost,updateDocUrls,updateContentType,updateFields};
+import org.cdlib.was.weari.SolrDocumentModifier.{shouldIndexContentType,updateDocBoost,updateContentType,updateFields};
 
 object ParsedArchiveRecordSolrizer {
   
@@ -25,13 +25,16 @@ object ParsedArchiveRecordSolrizer {
                  ARCNAME_FIELD        -> rec.filename,
                  ID_FIELD             -> "%s.%s".format(uuri.toString, 
                                                         rec.digest.getOrElse("-")),
+                 HOST_FIELD           -> rec.canonicalHost,
+                 CANONICALURL_FIELD   -> rec.canonicalUrl,
+                 URL_FIELD            -> rec.url,
+                 URLFP_FIELD          -> rec.urlFingerprint,
                  DIGEST_FIELD         -> rec.digest,
                  DATE_FIELD           -> rec.date,
                  TITLE_FIELD          -> rec.title,
                  CONTENT_LENGTH_FIELD -> rec.length,
                  CONTENT_FIELD        -> getContent(rec));
     updateDocBoost(doc, 1.0f);
-    updateDocUrls(doc, rec.url);
     updateContentType(doc, rec.detectedContentType, rec.suppliedContentType);
     return doc;
   }

@@ -60,20 +60,6 @@ object SolrDocumentModifier {
   }
 
   /**
-   * Update the url-based fields in a document.
-   */
-  def updateDocUrls (doc : SolrInputDocument, 
-                     url : String) {
-    val host = UriUtils.extractHost(url);
-    val canonical = UriUtils.canonicalize(url);
-    updateFields(doc,
-                 HOST_FIELD           -> host,
-                 URL_FIELD            -> url,
-                 URLFP_FIELD          -> UriUtils.fingerprint(canonical),
-                 CANONICALURL_FIELD   -> canonical);
-  }
-
-  /**
    * Update the content type fields in a document.
    *
    * @parameter detected The content type as parsed.
