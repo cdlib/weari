@@ -141,8 +141,11 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int) {
     tracked = new HashMap[String,SolrInputDocument] with SynchronizedMap[String,SolrInputDocument];
   }
 
-  def unmergeDocs (doc : SolrInputDocument, merged : SolrInputDocument) : Option[SolrInputDocument] =
-    Some(mergeOrUnmergeDocs(doc, merged, unmergeFieldValues));
+  /**
+   * "Unmerge" doc from a merged doc.
+   */
+  def unmergeDocs (doc : SolrInputDocument, merged : SolrInputDocument) : SolrInputDocument = 
+    mergeOrUnmergeDocs(doc, merged, unmergeFieldValues);
 
   def preloadDocs (q : String) {
     val newq = new SolrQuery(q).setRows(1000);
