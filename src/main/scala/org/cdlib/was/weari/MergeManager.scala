@@ -103,6 +103,9 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int) {
     (null2seq(a.getFieldValues(fieldname)) ++
      null2seq(b.getFieldValues(fieldname))).distinct;
 
+  /**
+   * Remove the field values in one doc from a merged doc.
+   */
   def unmergeFieldValues (fieldname : String, doc : SolrInputDocument, merged : SolrInputDocument) : Seq[Any] = {
     val valsToDelete = null2seq(doc.getFieldValues(fieldname)).toSet;
     return null2seq(merged.getFieldValues(fieldname)).filterNot(valsToDelete(_));
