@@ -85,12 +85,20 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int) {
     return retval;
   }
 
-  def getSingleFieldValue (fieldname : String, a : SolrInputDocument, b : SolrInputDocument) : Option[Any] =
-    null2option(a.getFieldValue(fieldname) match {
-      case null | "" => b.getFieldValue(fieldname);
-      case aval => aval;
-    });
+  /**
+   * Returns the field value of either a or b. Assumes that they should
+   * have the same value. Will not return the empty string or null;
+   * will return None if the field is the empty string or null in both
+   * document.
+   */
+  def getSingleFieldValue (fieldname : String, a : SolrInputDocument, b : SolrInputDocument) : Option[Any] = 
+    List(a,b).map(_.getFieldValue(fieldname)).
+      filter(f=>(f != null) && (f != "")).
+      headOption;
 
+  /**
+   * Merge the values of a field in two documents into one long, distinct seq.
+   */
   def mergeFieldValues (fieldname : String, a : SolrInputDocument, b : SolrInputDocument) : Seq[Any] =
     (null2seq(a.getFieldValues(fieldname)) ++
      null2seq(b.getFieldValues(fieldname))).distinct;
