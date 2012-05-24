@@ -108,11 +108,9 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int) {
     return null2seq(merged.getFieldValues(fieldname)).filterNot(valsToDelete(_));
   }
 
-  /**
-   * Merge two documents into one, presuming they have the same id.
-   * Multi-value fields are appended.
-   */
-  def mergeDocs (a : SolrInputDocument, b : SolrInputDocument) : SolrInputDocument = {
+  private def mergeOrUnmergeDocs (a : SolrInputDocument, 
+                                  b : SolrInputDocument,
+                                  f : (String, SolrInputDocument, SolrInputDocument)=>Seq[Any]) : SolrInputDocument = {
     val retval = new SolrInputDocument;
     if (a.getFieldValue(ID_FIELD) != b.getFieldValue(ID_FIELD)) {
       throw new Exception;
@@ -123,32 +121,25 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int) {
         retval.setField(fieldname, fieldvalue);
       /* fields to merge */
       for { fieldname <- MULTI_VALUED_FIELDS;
-            fieldvalue <- mergeFieldValues(fieldname, a, b) }
+            fieldvalue <- f(fieldname, a, b) }
         retval.addField(fieldname, fieldvalue);
     }
     return retval;
   }
 
+  /**
+   * Merge two documents into one, presuming they have the same id.
+   * Multi-value fields are concatenated.
+   */
+  def mergeDocs (a : SolrInputDocument, b : SolrInputDocument) : SolrInputDocument =
+    mergeOrUnmergeDocs(a, b, mergeFieldValues);
+
   def reset {
     tracked = new HashMap[String,SolrInputDocument] with SynchronizedMap[String,SolrInputDocument];
   }
 
-  def unmergeDocs (doc : SolrInputDocument, merged : SolrInputDocument) : Option[SolrInputDocument] = {
-    val retval = new SolrInputDocument;
-    if (doc.getFieldValue(ID_FIELD) != merged.getFieldValue(ID_FIELD)) {
-      throw new Exception;
-    } else {
-      /* identical fields */
-      for { fieldname <- SINGLE_VALUED_FIELDS;
-            fieldvalue <- getSingleFieldValue(fieldname, doc, merged) }
-        retval.setField(fieldname, fieldvalue);
-      /* fields to UNmerge */
-      for { fieldname <- MULTI_VALUED_FIELDS;
-            fieldvalue <- unmergeFieldValues(fieldname, doc, merged) }
-        retval.setField(fieldname, fieldvalue);
-    }
-    return Some(retval);
-  }
+  def unmergeDocs (doc : SolrInputDocument, merged : SolrInputDocument) : Option[SolrInputDocument] =
+    Some(mergeOrUnmergeDocs(doc, merged, unmergeFieldValues));
 
   def preloadDocs (q : String) {
     val newq = new SolrQuery(q).setRows(1000);
