@@ -39,7 +39,13 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int) {
 
   /* keeps track of what has been merged, or checked for merge, so far */
   var tracked : Map[String,SolrInputDocument] = null;
-  /* sets up tracked */
+
+  /**
+   * Reset tracked documents.
+   */
+  def reset {
+    tracked = new HashMap[String,SolrInputDocument] with SynchronizedMap[String,SolrInputDocument];
+  }
   this.reset;
 
   /* initialize */
@@ -66,20 +72,19 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int) {
     }
   }
 
-  /* Returns true if this needs a merge */
-  private def needsMerge (id : String) : Boolean = 
-    (bf.contains(id) && getDocById(id).isDefined);
-
   /**
    * Merge a document with existing docs with the same id.
    */
   def merge(doc : SolrInputDocument) : SolrInputDocument = {
     val id = getId(doc);
     var retval = doc;
-    if (this.needsMerge(id)) {
+    
+    if (bf.contains(id)) {
+      /* if we got a hit in the bloomfilter, try to fetch the doc, then
+         merge our new doc with the previous doc */
       retval = getDocById(id).map(mergeDocs(_, doc)).getOrElse(doc);
     }
-    /* Whether or not we merged this, we save it for possible later merging */
+    /* whether or not we merged this, we save it for possible later merging */
     tracked.put(id, retval);
     bf.add(id);
     return retval;
@@ -136,10 +141,6 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int) {
    */
   def mergeDocs (a : SolrInputDocument, b : SolrInputDocument) : SolrInputDocument =
     mergeOrUnmergeDocs(a, b, mergeFieldValues);
-
-  def reset {
-    tracked = new HashMap[String,SolrInputDocument] with SynchronizedMap[String,SolrInputDocument];
-  }
 
   /**
    * "Unmerge" doc from a merged doc.
