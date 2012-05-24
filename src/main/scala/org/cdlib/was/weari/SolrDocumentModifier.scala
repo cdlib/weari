@@ -2,16 +2,7 @@
 
 package org.cdlib.was.weari;
 
-import java.lang.{Object=>JObject}
-
-import java.util.{Collection=>JCollection}
-
-import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.common.{SolrDocument, SolrInputDocument};
-
-import org.apache.solr.client.solrj.util.ClientUtils.toSolrInputDocument;
-
-import org.cdlib.was.weari.SolrFields._;
+import org.apache.solr.common.SolrInputDocument;
 
 import scala.collection.JavaConversions.collectionAsScalaIterable;
 
@@ -26,7 +17,14 @@ object SolrDocumentModifier {
       doc.addField(key, value);
   }
   
-  def updateFields(doc : SolrInputDocument,
+  /**
+   * Add a set of fields to a SolrInputDocument.
+   * If field value is None or null, do not add.
+   * If field value is Some(x), add x.
+   * If field value is Traversable[Any], add each value.
+   * Otherwise just add it.
+   */
+  def addFields(doc : SolrInputDocument,
                    fields : Pair[String, Any]*) {
     for (field <- fields) {
       field._2 match {
@@ -39,14 +37,13 @@ object SolrDocumentModifier {
     }
   }
 
-  def updateFields(doc : SolrInputDocument,
-                   fields : Map[String,Any]) {
-    updateFields(doc, fields.toSeq : _*);
-  }
-
+  /**
+   * Make a new SolrInputDocument with the fields provided.
+   * See documentation on addFields for field processing
+   */
   def makeDoc(fields : Pair[String, Any]*) : SolrInputDocument = {
     var doc = new SolrInputDocument;
-    updateFields(doc, fields : _*);
+    addFields(doc, fields : _*);
     return doc;
   }
 }

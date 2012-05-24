@@ -5,7 +5,7 @@ package org.cdlib.was.weari;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.common.{SolrDocument,SolrInputDocument};
 import org.cdlib.was.weari.SolrFields._;
-import org.cdlib.was.weari.SolrDocumentModifier.updateFields;
+import org.cdlib.was.weari.SolrDocumentModifier.addFields;
 
 import grizzled.slf4j.Logging;
 
@@ -24,7 +24,7 @@ class SolrIndexer (server : SolrServer,
    */
   def record2inputDocument (record : ParsedArchiveRecord) : SolrInputDocument = {
     val doc = ParsedArchiveRecordSolrizer.convert(record);
-    updateFields(doc, extraFields);
+    addFields(doc, extraFields.toSeq : _*);
     doc.setField(ID_FIELD, "%s.%s".format(getId(doc), extraId));
     return doc;
   }
