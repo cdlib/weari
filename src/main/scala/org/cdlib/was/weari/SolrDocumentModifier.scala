@@ -8,16 +8,6 @@ import scala.collection.JavaConversions.collectionAsScalaIterable;
 
 object SolrDocumentModifier {
   /**
-   * Remove a single value from a document's field.
-   */
-  def removeFieldValue (doc : SolrInputDocument, key : String, value : Any) {
-    val oldValues = doc.getFieldValues(key);
-    doc.removeField(key);
-    for (value <- oldValues.filter(_==value))
-      doc.addField(key, value);
-  }
-  
-  /**
    * Add a set of fields to a SolrInputDocument.
    * If field value is None or null, do not add.
    * If field value is Some(x), add x.
