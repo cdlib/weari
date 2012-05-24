@@ -19,16 +19,6 @@ class SolrIndexer (server : SolrServer,
     extends Retry with Logging {
 
   /**
-   * Index a single Solr document. If a document with the same ID
-   * already exists, the documents will be merged.
-   *
-   * @param doc Document to index.
-   */
-  def indexWithMerge(doc : SolrInputDocument) {
-    server.add(manager.merge(doc));
-  }
-
-  /**
    * Convert a ParsedArchiveRecord into a SolrInputDocument, merging
    * in extraFields and extraId (see SolrIndexer constructor).
    */
