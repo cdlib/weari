@@ -41,7 +41,7 @@ object ParsedArchiveRecordSolrizer {
                  BOOST_FIELD                -> boost,
                  ARCNAME_FIELD              -> rec.filename,
                  ID_FIELD                   -> "%s.%s".format(rec.canonicalUrl,
-                                                        rec.digest.getOrElse("-")),
+                                                              rec.digest.getOrElse("-")),
                  HOST_FIELD                 -> rec.canonicalHost,
                  CANONICALURL_FIELD         -> rec.canonicalUrl,
                  URL_FIELD                  -> rec.url,
