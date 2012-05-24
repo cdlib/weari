@@ -16,7 +16,7 @@ class SolrIndexer (server : SolrServer,
                    manager : MergeManager,
                    extraId : String, 
                    extraFields : Map[String, Any]) 
-    extends Retry with Logging {
+    extends Logging {
 
   /**
    * Convert a ParsedArchiveRecord into a SolrInputDocument, merging
