@@ -7,6 +7,7 @@ import grizzled.slf4j.Logging;
 import java.util.Date;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.httpclient.URIException;
 
 import org.archive.url.{DefaultIAURLCanonicalizer,HandyURL,URLParser};
 
@@ -19,9 +20,13 @@ object UriUtils extends Logging {
     URLParser.parse(s);
 
   def canonicalize (s : String) : String = {
-    val handyurl = string2handyUrl(s);
-    canonicalizer.canonicalize(handyurl);
-    return handyurl.getURLString;
+    return try {
+      val handyurl = string2handyUrl(s);
+      canonicalizer.canonicalize(handyurl);
+      handyurl.getURLString;
+    } catch {
+      case ex : URIException => s;
+    }
   }
 
   def encodeDate (date : Date) : Array[Byte] =
