@@ -11,7 +11,5 @@ trait Config extends SSConfig {
   val threadCount     = new Value(5);
   val queueSize       = new Value(1000);
   val queueRunners    = new Value(3);
-  val jsonCacheDir    = new Value(new File(System.getProperty("java.io.tmpdir")));
-  val arcServerBase   = new Value("http://localhost:54480/arcs/%s");
   val jsonBaseDir     = new Value("/user/was/json");
 }
