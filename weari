@@ -1,0 +1,136 @@
+#!/bin/sh
+#
+# $Rev:: 5142                  $:  Revision of last commit
+# $Date:: 2009-05-07 14:19:05 #$:  Date of last commit
+
+# Get the directory of this script.
+
+BASEDIR=`dirname "$0"`
+if [ `expr "$BASEDIR" : '[^/]'` != '0' ] ; then
+    BASEDIR="`pwd`/$BASEDIR"
+fi
+
+CLASSPATH=$BASEDIR/../hadoop/conf
+for x in `ls -1 $BASEDIR/lib` ; do
+    CLASSPATH=$CLASSPATH:$BASEDIR/lib/$x
+done
+
+COMMAND="/cdlcommon/products/java6/bin/java -Xmx3500m -cp $CLASSPATH org.cdlib.was.weari.server.Server"
+LOG_FILE=$BASEDIR/weari.log
+PID_FILE=$BASEDIR/weari.pid
+
+USAGE="Usage: $0 {\"start\" | \"stop\" | \"status\" | \"restart\" }"
+
+if [ $# -ne 1 ] ; then
+    echo $USAGE
+    exit 1
+fi
+
+echo_stderr () {
+    echo $1 > /dev/null >&2
+}
+
+case $1 in
+    start)
+        # Check if we are already running.
+        /bin/sh $0 status 2> /dev/null
+        status=$?
+        if [ $status -eq 0 ] ; then
+            #echo_stderr "$PID_FILE exists ; exiting"
+            exit 2
+        elif [ $status -eq 1 ] ; then 
+            #echo_stderr "$PID_FILE exists, but process is not running. Removing $PID_FILE."
+            rm "$PID_FILE"
+        elif [ $status -ne 3 ] ; then
+            exit 2
+        fi
+            
+        if [ -z "$LOG_FILE" ] ; then
+            LOG_FILE=/dev/null
+        fi
+            
+        # make parent directory for log file if it does not exist
+        if [ ! -d `dirname $LOG_FILE` ] ; then
+            mkdir -p `dirname $LOG_FILE`
+        fi
+
+        # make parent directory for pid file if it does not exist
+        if [ ! -d `dirname $PID_FILE` ] ; then
+            mkdir -p `dirname $PID_FILE`
+        fi
+            
+        # Change CWD to /; good practice when daemonizing.
+        #cd /
+        
+        # Close extra file descriptors
+        exec 3>&-
+        exec 4>&-
+        exec 5>&-
+        exec 6>&-
+        exec 7>&-
+        exec 8>&-
+        exec 9>&-
+        
+        exec $COMMAND 2>> "$LOG_FILE" 1>> "$LOG_FILE"&
+            
+        if [ "$?" != 0 ]; then
+            echo_stderr "Error daemonizing $@."
+            exit 3
+        fi
+        
+        if [ -n "$PID_FILE" ] ; then
+            echo "$!" > "$PID_FILE"
+        fi
+        
+        #echo_stderr "Daemonized $COMMAND with PID $!."
+        exit 0
+        ;;
+    stop)
+        /bin/sh $0 status 2> /dev/null
+        status=$?
+        if [ $status -eq 0 ] ; then
+            kill -TERM `cat "$PID_FILE"` 2> /dev/null
+            #echo_stderr "Waiting for process to terminate."
+            while /bin/sh $0 status 2> /dev/null && [ "$?" -eq 0 ] ; do
+                sleep 1
+                echo_stderr "Waiting for process to terminate."
+            done
+            #echo_stderr "Removing $PID_FILE."
+            rm "$PID_FILE"
+            exit 0
+        elif [ $status -eq 1 ] ; then 
+            #echo_stderr "$PID_FILE exists, but process is not running."
+            #echo_stderr "Removing $PID_FILE."
+            rm "$PID_FILE"
+            exit 0
+        elif [ $status -ne 3 ] ; then
+            exit 0
+        fi
+        ;;
+    status)
+        # Check if PID file exists, then : if process does not exist, PID file is
+        # stale
+        if [ -f "$PID_FILE" ] ; then
+            #see if process is running
+            kill -0 `cat "$PID_FILE"` 2> /dev/null
+            if [ "$?" -ne 0 ] ; then
+                echo_stderr "$0 is dead but PID file exists."
+                exit 1
+            else 
+                echo_stderr "$0 is running."
+                exit 0
+            fi
+        else 
+            echo_stderr "$0 is not running."
+            exit 3
+        fi
+        ;;
+    restart)
+        /bin/sh $0 stop
+        /bin/sh $0 start
+        ;;
+    *)
+        echo $USAGE
+        exit 1
+        ;;
+esac
