@@ -43,11 +43,11 @@ class WeariHandler(config: Config)
             arcs : JList[String],
             extraId : String,
             extraFields : JMap[String, JList[String]]) {
+    val arcPaths = arcs.map(getPath(_));
     val server = new ConcurrentUpdateSolrServer(solr,
       config.queueSize(),
       config.threadCount());
     val queryServer = new HttpSolrServer(solr);
-    val arcPaths = arcs.map(getPath(_));
     val manager = new MergeManager(filterQuery, queryServer);
     val indexer = new SolrIndexer(server = server,
                                   manager = manager,
