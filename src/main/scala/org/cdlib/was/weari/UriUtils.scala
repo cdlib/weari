@@ -26,6 +26,7 @@ object UriUtils extends Logging {
       handyurl.getURLString;
     } catch {
       case ex : URIException => s;
+      case ex : java.lang.IndexOutOfBoundsException => s;
     }
   }
 
