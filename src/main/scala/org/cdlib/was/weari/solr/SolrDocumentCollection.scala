@@ -13,17 +13,22 @@ class SolrDocumentCollection(server : SolrServer, q : SolrQuery)
   /* you don't want to call this. */
   def apply (idx : Int) = this.iterator.toSeq(idx);
 
-  lazy val length : Int =
-    server.query(q.getCopy.setRows(0)).getResults.getNumFound.asInstanceOf[Int];
-
   override def toString = 
     iterator.peek.map(el=>"(%s, ...)".format(el)).getOrElse("(empty)");
 
   def iterator = new CachingIterator[SolrDocument]() {
     var pos = 0;
 
+    var _length = -1;
+    override def length = {
+      /* if we haven't filled the cache yet, force it to be filled */
+      if (_length == -1) this.peek;
+      _length;
+    }
+
     def fillCache {
       val results = server.query(q.getCopy.setStart(pos)).getResults;
+      this._length = results.getNumFound.asInstanceOf[Int];
       for (i <- new Range(0, results.size, 1)) {
         cache += results.get(i);
       }
