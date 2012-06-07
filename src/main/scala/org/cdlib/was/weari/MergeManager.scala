@@ -60,19 +60,14 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int) {
    * has that id.
    * 
    */
-  def getDocById(id : String) : Option[SolrInputDocument] = {
-    var retval = tracked.get(id);
-    if (retval.isEmpty) {
+  def getDocById(id : String) : Option[SolrInputDocument] =
+    tracked.get(id).orElse {
       /* otherwise try to get it from the solr server */
       val qStr = "id:\"%s\"".format(id.replace("\"", "\\\""));
       val q = (new SolrQuery).setQuery(qStr);
       val docs = new solr.SolrDocumentCollection(server, q);
-      retval = docs.headOption.map(toSolrInputDocument(_));
-      /* cache for later */
-      retval.map(d=>tracked += Pair(id, d))
+      docs.headOption.map(toSolrInputDocument(_));
     }
-    return retval;
-  }
 
   /**
    * Merge a document with existing docs with the same id.
