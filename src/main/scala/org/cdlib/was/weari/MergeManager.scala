@@ -61,15 +61,17 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int) {
    * 
    */
   def getDocById(id : String) : Option[SolrInputDocument] = {
-    tracked.get(id) match {
-      case Some(doc) => Some(doc);
-      case None => {
-        /* otherwise try to get it from the solr server */
-        val q = (new SolrQuery).setQuery("id:\"%s\"".format(id));
-        val docs = new solr.SolrDocumentCollection(server, q);
-        return docs.headOption.map(toSolrInputDocument(_));
-      }
+    var retval = tracked.get(id);
+    if (retval.isEmpty) {
+      /* otherwise try to get it from the solr server */
+      val qStr = "id:\"%s\"".format(id.replace("\"", "\\\""));
+      val q = (new SolrQuery).setQuery(qStr);
+      val docs = new solr.SolrDocumentCollection(server, q);
+      retval = docs.headOption.map(toSolrInputDocument(_));
+      /* cache for later */
+      retval.map(d=>tracked += Pair(id, d))
     }
+    return retval;
   }
 
   /**
