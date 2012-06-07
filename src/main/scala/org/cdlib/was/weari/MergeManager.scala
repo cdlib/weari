@@ -66,7 +66,8 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int) {
       val qStr = "id:\"%s\"".format(id.replace("\"", "\\\""));
       val q = (new SolrQuery).setQuery(qStr);
       val docs = new solr.SolrDocumentCollection(server, q);
-      docs.headOption.map(toSolrInputDocument(_));
+      /* if we don't use toSeq, headOption hits the solr server TWICE */
+      docs.toSeq.headOption.map(toSolrInputDocument(_));
     }
 
   /**
