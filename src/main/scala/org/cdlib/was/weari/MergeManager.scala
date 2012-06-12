@@ -55,6 +55,9 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int) {
     for (doc <- docs) bf.add(getId(doc))
   }
 
+  private def cleanId (id : String) =
+    id.replace("\"", "\\\"").replace("\\", "\\\\");
+
   /**
    * Get a single document by its id. Return None if no document 
    * has that id.
@@ -63,7 +66,7 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int) {
   def getDocById(id : String) : Option[SolrInputDocument] =
     tracked.get(id).orElse {
       /* otherwise try to get it from the solr server */
-      val qStr = "id:\"%s\"".format(id.replace("\"", "\\\""));
+      val qStr = "id:\"%s\"".format(cleanId(id));
       val q = (new SolrQuery).setQuery(qStr);
       val docs = new solr.SolrDocumentCollection(server, q);
       /* if we don't use toSeq, headOption hits the solr server TWICE */
