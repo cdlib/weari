@@ -25,8 +25,8 @@ trait ExceptionLogger { self : Logging =>
       Some(f);
     } catch {
       case ex : Exception => {
-        logger.error(formatStr, ex);
-        logger.debug(getStackTrace(ex));
+        error(formatStr, ex);
+        debug(getStackTrace(ex));
       }
       None;
     }
