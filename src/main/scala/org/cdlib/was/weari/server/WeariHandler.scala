@@ -29,7 +29,7 @@ import scala.collection.immutable.HashSet;
 import scala.collection.mutable;
     
 class WeariHandler(config: Config)
-  extends thrift.Server.Iface with Logging {
+  extends thrift.Server.Iface with Logging with ExceptionLogger {
 
   val conf = new Configuration();
   val fs = FileSystem.get(conf);
@@ -79,9 +79,11 @@ class WeariHandler(config: Config)
           case ex : ParsingException =>
             error("Bad JSON: %s".format(arcname));
           throw new thrift.BadJSONException(ex.toString, arcname);
-          case ex : Exception =>
-            error("Caught exception: %s".format(ex));
-          throw new thrift.IndexException(ex.toString);
+          case ex : Exception => {
+            error("Caught exception: %s".format(ex), ex);
+            debug(getStackTrace(ex));
+            throw new thrift.IndexException(ex.toString);
+          }
         } finally {
           if (in != null) in.close;
         }
