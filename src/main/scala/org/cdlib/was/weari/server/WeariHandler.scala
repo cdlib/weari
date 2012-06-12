@@ -1,23 +1,32 @@
 package org.cdlib.was.weari.server;
 
-import org.cdlib.was.weari._
-import org.cdlib.was.weari.thrift
-import java.io.{InputStream, IOException, OutputStream}; 
-import java.util.{ List => JList, Map => JMap }
-import java.util.UUID;
-import java.util.zip.{GZIPInputStream,GZIPOutputStream};
 import com.codahale.jerkson.Json;
 import com.codahale.jerkson.ParsingException;
-import org.apache.pig.backend.executionengine.ExecJob.JOB_STATUS;
+
+import grizzled.slf4j.Logging;
+
+import java.io.{InputStream, IOException, OutputStream}; 
+import java.util.UUID;
+import java.util.zip.{GZIPInputStream,GZIPOutputStream};
+import java.util.{ List => JList, Map => JMap }
+
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{ FileSystem, FSDataInputStream, FSDataOutputStream, Path }
+
+import org.apache.pig.{ExecType,PigServer};
+import org.apache.pig.backend.executionengine.ExecJob.JOB_STATUS;
+import org.apache.pig.impl.PigContext;
+import org.apache.pig.impl.util.PropertiesUtil;
+
 import org.apache.solr.client.solrj.impl.{ConcurrentUpdateSolrServer,HttpSolrServer};
-import scala.collection.JavaConversions.{ iterableAsScalaIterable, mapAsScalaMap, seqAsJavaList }
-import scala.collection.mutable;
-import scala.collection.immutable.HashSet;
-import grizzled.slf4j.Logging;
-import org.apache.pig.PigServer;
+
 import org.cdlib.was.weari.Utility.{extractArcname,null2option};
+import org.cdlib.was.weari._;
+import org.cdlib.was.weari.thrift;
+
+import scala.collection.JavaConversions.{ iterableAsScalaIterable, mapAsScalaMap, seqAsJavaList }
+import scala.collection.immutable.HashSet;
+import scala.collection.mutable;
     
 class WeariHandler(config: Config)
   extends thrift.Server.Iface with Logging {
@@ -139,7 +148,10 @@ class WeariHandler(config: Config)
     parseArcs(arcs.toSeq);
     
   def parseArcs (arcs : Seq[String]) {
-    val pigServer = new PigServer(org.apache.pig.ExecType.MAPREDUCE);
+    val properties = PropertiesUtil.loadDefaultProperties();
+    properties.setProperty("pig.splitCombination", "false");
+    val pigContext = new PigContext(ExecType.MAPREDUCE, properties);
+    val pigServer = new PigServer(pigContext);
     val arcListPath = mkArcList(arcs.toSeq);
 
     /* add jars in classpath to registered jars in pig */
