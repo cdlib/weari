@@ -3,3 +3,5 @@ syntax: re
 ^target/
 ^test/
 ^purgatory/
+^project/target/
+^project/project/target/
