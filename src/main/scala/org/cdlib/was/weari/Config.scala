@@ -10,6 +10,5 @@ import org.cdlib.ssconf.Value;
 trait Config extends SSConfig {
   val threadCount     = new Value(5);
   val queueSize       = new Value(1000);
-  val queueRunners    = new Value(3);
   val jsonBaseDir     = new Value("/user/was/json");
 }

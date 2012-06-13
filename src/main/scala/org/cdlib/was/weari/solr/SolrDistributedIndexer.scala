@@ -19,7 +19,7 @@ import grizzled.slf4j.Logging;
   */
 class SolrDistributedServer (serverInit : Seq[Tuple3[String,String,Int]],
                              queueSize : Int = 1000,
-                             queueRunners : Int = 3,
+                             threadCount : Int = 3,
                              commitThreshold : Int = 10000) extends Logging {
   val commitLock = new Object;
   var commitCounter = 0;
@@ -28,7 +28,7 @@ class SolrDistributedServer (serverInit : Seq[Tuple3[String,String,Int]],
   var servers = scala.collection.mutable.Map[String,SolrServer]();
 
   for ((id, url, level) <- serverInit) {
-    val server = new ConcurrentUpdateSolrServer(url, queueSize, queueRunners);
+    val server = new ConcurrentUpdateSolrServer(url, queueSize, threadCount);
     ring.addServer(id, server, level);
     servers += (url -> server);
   }
