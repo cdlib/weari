@@ -56,7 +56,7 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int) {
   }
 
   private def cleanId (id : String) =
-    id.replace("\"", "\\\"").replace("\\", "\\\\");
+    id.replace("\\", "\\\\").replace("\"", "\\\"");
 
   /**
    * Get a single document by its id. Return None if no document 
