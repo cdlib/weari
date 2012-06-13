@@ -76,9 +76,14 @@ class WeariHandler(config: Config)
             indexer.index(Json.parse[List[ParsedArchiveRecord]](in));
           }
         } catch {
-          case ex : ParsingException =>
+          case ex : ParsingException => {
             error("Bad JSON: %s".format(arcname));
-          throw new thrift.BadJSONException(ex.toString, arcname);
+            throw new thrift.BadJSONException(ex.toString, arcname);
+          }
+          case ex : java.io.EOFException => {
+            error("Bad JSON: %s".format(arcname));
+            throw new thrift.BadJSONException(ex.toString, arcname);
+          }
           case ex : Exception => {
             error("Caught exception: %s".format(ex), ex);
             debug(getStackTrace(ex));
