@@ -18,7 +18,8 @@ import org.apache.pig.backend.executionengine.ExecJob.JOB_STATUS;
 import org.apache.pig.impl.PigContext;
 import org.apache.pig.impl.util.PropertiesUtil;
 
-import org.apache.solr.client.solrj.impl.{ConcurrentUpdateSolrServer,HttpSolrServer};
+import org.apache.solr.client.solrj.impl.{ConcurrentUpdateSolrServer,HttpClientUtil,HttpSolrServer};
+import org.apache.solr.common.params.ModifiableSolrParams;
 
 import org.cdlib.was.weari.Utility.{extractArcname,null2option};
 import org.cdlib.was.weari._;
@@ -37,6 +38,14 @@ class WeariHandler(config: Config)
   var locks : mutable.Map[String,AnyRef] = new mutable.HashMap[String,AnyRef]
     with mutable.SynchronizedMap[String,AnyRef];
 
+  val httpClient = {
+    val params = new ModifiableSolrParams();
+    params.set(HttpClientUtil.PROP_MAX_CONNECTIONS, 256);
+    params.set(HttpClientUtil.PROP_MAX_CONNECTIONS_PER_HOST, 32);
+    params.set(HttpClientUtil.PROP_FOLLOW_REDIRECTS, false);
+    HttpClientUtil.createClient(params);
+  }
+
   /**
    * Index a set of ARCs on a solr server.
    *
@@ -53,16 +62,17 @@ class WeariHandler(config: Config)
             extraId : String,
             extraFields : JMap[String, JList[String]]) {
     val arcPaths = arcs.map(getPath(_));
-    val server = new ConcurrentUpdateSolrServer(solr,
-      config.queueSize(),
-      config.threadCount());
-    val queryServer = new HttpSolrServer(solr);
-    val manager = new MergeManager(filterQuery, queryServer);
-    val indexer = new SolrIndexer(server = server,
-                                  manager = manager,
-                                  extraId = extraId,
-                                  extraFields = extraFields.toMap.mapValues(iterableAsScalaIterable(_)));
     locks.getOrElseUpdate(solr, new Object).synchronized {
+      val server = new ConcurrentUpdateSolrServer(solr,
+                                                  httpClient,
+                                                  config.queueSize(),
+                                                  config.threadCount());
+      val queryServer = new HttpSolrServer(solr);
+      val manager = new MergeManager(filterQuery, queryServer);
+      val indexer = new SolrIndexer(server = server,
+                                    manager = manager,
+                                    extraId = extraId,
+                                    extraFields = extraFields.toMap.mapValues(iterableAsScalaIterable(_)));
       for ((arcname, path) <- arcs.zip(arcPaths)) {
         var in : InputStream = null;
         try {
@@ -100,8 +110,9 @@ class WeariHandler(config: Config)
               arcs : JList[String],
               extraId : String) {
     val server = new ConcurrentUpdateSolrServer(solr,
-      config.queueSize(),
-      config.threadCount());
+                                                httpClient,
+                                                config.queueSize(),
+                                                config.threadCount());
     val arcPaths = arcs.map(getPath(_));
     val manager = new MergeManager("*:*", server);
     val indexer = new SolrIndexer(server = server,
