@@ -50,7 +50,7 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int) {
 
   /* initialize */
   if (server != null) {
-    val newq = new SolrQuery(candidatesQuery).setParam("fl", ID_FIELD).setRows(1000);
+    val newq = new SolrQuery(candidatesQuery).setParam("fl", ID_FIELD).setRows(1000000);
     val docs = new solr.SolrDocumentCollection(server, newq);
     for (doc <- docs) bf.add(getId(doc))
   }
@@ -150,7 +150,7 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int) {
     mergeOrUnmergeDocs(doc, merged, unmergeFieldValues);
 
   def preloadDocs (q : String) {
-    val newq = new SolrQuery(q).setRows(1000);
+    val newq = new SolrQuery(q).setRows(10000);
     val docs = new solr.SolrDocumentCollection(server, newq);
     for (doc <- docs) {
       val id = getId(doc);
