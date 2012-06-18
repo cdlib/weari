@@ -125,8 +125,9 @@ class WeariHandler(config: Config)
 
   }
 
-  def clearMergeManager(managerId : String) =
+  def clearMergeManager(managerId : String) {
     mergeManagerCache.remove(managerId);
+  }
 
   private def mkUUID : String = UUID.randomUUID().toString();
 
