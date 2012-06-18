@@ -2,6 +2,8 @@
 
 package org.cdlib.was.weari;
 
+import grizzled.slf4j.Logging;
+
 import java.util.{Collection=>JCollection}
 
 import org.apache.solr.client.solrj.{SolrQuery,SolrServer};
@@ -27,7 +29,8 @@ import scala.collection.mutable.{Map,SynchronizedMap,HashMap};
  *
  * @author Erik Hetzner <erik.hetzner@ucop.edu>
  */
-class MergeManager (candidatesQuery : String, server : SolrServer, n : Int) {
+class MergeManager (candidatesQuery : String, server : SolrServer, n : Int) 
+    extends Logging {
   def this (candidatesQuery : String, server : SolrServer) = 
     this(candidatesQuery, server, 100000);
 
@@ -50,6 +53,7 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int) {
 
   /* initialize */
   if (server != null) {
+    debug("Loading document ids into MergeManager.");
     val newq = new SolrQuery(candidatesQuery).setParam("fl", ID_FIELD).setRows(1000000);
     val docs = new solr.SolrDocumentCollection(server, newq);
     for (doc <- docs) bf.add(getId(doc))
