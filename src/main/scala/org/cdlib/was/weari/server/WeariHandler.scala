@@ -32,6 +32,9 @@ import scala.collection.mutable;
 class WeariHandler(config: Config)
   extends thrift.Server.Iface with Logging with ExceptionLogger {
 
+  var mergeManagerCache = new mutable.HashMap[String,MergeManager]
+    with mutable.SynchronizedMap[String,MergeManager];
+
   val conf = new Configuration();
   val fs = FileSystem.get(conf);
   val jsonDir = new Path(config.jsonBaseDir());
@@ -67,8 +70,8 @@ class WeariHandler(config: Config)
                                                   httpClient,
                                                   config.queueSize(),
                                                   config.threadCount());
-      val queryServer = new HttpSolrServer(solr);
-      val manager = new MergeManager(filterQuery, queryServer);
+      val manager = mergeManagerCache.getOrElseUpdate(extraId,
+        new MergeManager(filterQuery, new HttpSolrServer(solr)));
       val indexer = new SolrIndexer(server = server,
                                     manager = manager,
                                     extraId = extraId,
