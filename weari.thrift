@@ -27,6 +27,8 @@ service Server {
              5: map<string,list<string>> extraFields)
     throws (1: IndexException ex1, 2: UnparsedException ex2, 3: BadJSONException ex3);
 
+  void clearMergeManager(1: string managerId);
+
   void unindex (1: string solr,
                 2: list<string> arcs,
                 3: string extraId)
@@ -36,6 +38,6 @@ service Server {
     throws (1: ParseException ex1);
 
   bool isArcParsed(1: string arc);
-
+  
   void deleteParse(1: string arc);
 }

@@ -33,6 +33,8 @@ public class Server {
 
     public void index(String solr, String filter, List<String> arcs, String extraId, Map<String,List<String>> extraFields) throws IndexException, UnparsedException, BadJSONException, org.apache.thrift.TException;
 
+    public void clearMergeManager(String managerId) throws org.apache.thrift.TException;
+
     public void unindex(String solr, List<String> arcs, String extraId) throws IndexException, UnparsedException, BadJSONException, org.apache.thrift.TException;
 
     public void parseArcs(List<String> arcs) throws ParseException, org.apache.thrift.TException;
@@ -46,6 +48,8 @@ public class Server {
   public interface AsyncIface {
 
     public void index(String solr, String filter, List<String> arcs, String extraId, Map<String,List<String>> extraFields, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.index_call> resultHandler) throws org.apache.thrift.TException;
+
+    public void clearMergeManager(String managerId, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.clearMergeManager_call> resultHandler) throws org.apache.thrift.TException;
 
     public void unindex(String solr, List<String> arcs, String extraId, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.unindex_call> resultHandler) throws org.apache.thrift.TException;
 
@@ -107,6 +111,26 @@ public class Server {
       if (result.ex3 != null) {
         throw result.ex3;
       }
+      return;
+    }
+
+    public void clearMergeManager(String managerId) throws org.apache.thrift.TException
+    {
+      send_clearMergeManager(managerId);
+      recv_clearMergeManager();
+    }
+
+    public void send_clearMergeManager(String managerId) throws org.apache.thrift.TException
+    {
+      clearMergeManager_args args = new clearMergeManager_args();
+      args.setManagerId(managerId);
+      sendBase("clearMergeManager", args);
+    }
+
+    public void recv_clearMergeManager() throws org.apache.thrift.TException
+    {
+      clearMergeManager_result result = new clearMergeManager_result();
+      receiveBase(result, "clearMergeManager");
       return;
     }
 
@@ -269,6 +293,38 @@ public class Server {
       }
     }
 
+    public void clearMergeManager(String managerId, org.apache.thrift.async.AsyncMethodCallback<clearMergeManager_call> resultHandler) throws org.apache.thrift.TException {
+      checkReady();
+      clearMergeManager_call method_call = new clearMergeManager_call(managerId, resultHandler, this, ___protocolFactory, ___transport);
+      this.___currentMethod = method_call;
+      ___manager.call(method_call);
+    }
+
+    public static class clearMergeManager_call extends org.apache.thrift.async.TAsyncMethodCall {
+      private String managerId;
+      public clearMergeManager_call(String managerId, org.apache.thrift.async.AsyncMethodCallback<clearMergeManager_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+        super(client, protocolFactory, transport, resultHandler, false);
+        this.managerId = managerId;
+      }
+
+      public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("clearMergeManager", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        clearMergeManager_args args = new clearMergeManager_args();
+        args.setManagerId(managerId);
+        args.write(prot);
+        prot.writeMessageEnd();
+      }
+
+      public void getResult() throws org.apache.thrift.TException {
+        if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
+          throw new IllegalStateException("Method call not finished!");
+        }
+        org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
+        org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        (new Client(prot)).recv_clearMergeManager();
+      }
+    }
+
     public void unindex(String solr, List<String> arcs, String extraId, org.apache.thrift.async.AsyncMethodCallback<unindex_call> resultHandler) throws org.apache.thrift.TException {
       checkReady();
       unindex_call method_call = new unindex_call(solr, arcs, extraId, resultHandler, this, ___protocolFactory, ___transport);
@@ -417,6 +473,7 @@ public class Server {
 
     private static <I extends Iface> Map<String,  org.apache.thrift.ProcessFunction<I, ? extends  org.apache.thrift.TBase>> getProcessMap(Map<String,  org.apache.thrift.ProcessFunction<I, ? extends  org.apache.thrift.TBase>> processMap) {
       processMap.put("index", new index());
+      processMap.put("clearMergeManager", new clearMergeManager());
       processMap.put("unindex", new unindex());
       processMap.put("parseArcs", new parseArcs());
       processMap.put("isArcParsed", new isArcParsed());
@@ -444,6 +501,22 @@ public class Server {
         } catch (BadJSONException ex3) {
           result.ex3 = ex3;
         }
+        return result;
+      }
+    }
+
+    private static class clearMergeManager<I extends Iface> extends org.apache.thrift.ProcessFunction<I, clearMergeManager_args> {
+      public clearMergeManager() {
+        super("clearMergeManager");
+      }
+
+      protected clearMergeManager_args getEmptyArgsInstance() {
+        return new clearMergeManager_args();
+      }
+
+      protected clearMergeManager_result getResult(I iface, clearMergeManager_args args) throws org.apache.thrift.TException {
+        clearMergeManager_result result = new clearMergeManager_result();
+        iface.clearMergeManager(args.managerId);
         return result;
       }
     }
@@ -1985,6 +2058,604 @@ public class Server {
           struct.ex3.read(iprot);
           struct.setEx3IsSet(true);
         }
+      }
+    }
+
+  }
+
+  public static class clearMergeManager_args implements org.apache.thrift.TBase<clearMergeManager_args, clearMergeManager_args._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("clearMergeManager_args");
+
+    private static final org.apache.thrift.protocol.TField MANAGER_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("managerId", org.apache.thrift.protocol.TType.STRING, (short)1);
+
+    private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
+    static {
+      schemes.put(StandardScheme.class, new clearMergeManager_argsStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new clearMergeManager_argsTupleSchemeFactory());
+    }
+
+    public String managerId; // required
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+      MANAGER_ID((short)1, "managerId");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 1: // MANAGER_ID
+            return MANAGER_ID;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+    public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.MANAGER_ID, new org.apache.thrift.meta_data.FieldMetaData("managerId", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(clearMergeManager_args.class, metaDataMap);
+    }
+
+    public clearMergeManager_args() {
+    }
+
+    public clearMergeManager_args(
+      String managerId)
+    {
+      this();
+      this.managerId = managerId;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public clearMergeManager_args(clearMergeManager_args other) {
+      if (other.isSetManagerId()) {
+        this.managerId = other.managerId;
+      }
+    }
+
+    public clearMergeManager_args deepCopy() {
+      return new clearMergeManager_args(this);
+    }
+
+    @Override
+    public void clear() {
+      this.managerId = null;
+    }
+
+    public String getManagerId() {
+      return this.managerId;
+    }
+
+    public clearMergeManager_args setManagerId(String managerId) {
+      this.managerId = managerId;
+      return this;
+    }
+
+    public void unsetManagerId() {
+      this.managerId = null;
+    }
+
+    /** Returns true if field managerId is set (has been assigned a value) and false otherwise */
+    public boolean isSetManagerId() {
+      return this.managerId != null;
+    }
+
+    public void setManagerIdIsSet(boolean value) {
+      if (!value) {
+        this.managerId = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case MANAGER_ID:
+        if (value == null) {
+          unsetManagerId();
+        } else {
+          setManagerId((String)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case MANAGER_ID:
+        return getManagerId();
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case MANAGER_ID:
+        return isSetManagerId();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof clearMergeManager_args)
+        return this.equals((clearMergeManager_args)that);
+      return false;
+    }
+
+    public boolean equals(clearMergeManager_args that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_managerId = true && this.isSetManagerId();
+      boolean that_present_managerId = true && that.isSetManagerId();
+      if (this_present_managerId || that_present_managerId) {
+        if (!(this_present_managerId && that_present_managerId))
+          return false;
+        if (!this.managerId.equals(that.managerId))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(clearMergeManager_args other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      clearMergeManager_args typedOther = (clearMergeManager_args)other;
+
+      lastComparison = Boolean.valueOf(isSetManagerId()).compareTo(typedOther.isSetManagerId());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetManagerId()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.managerId, typedOther.managerId);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      schemes.get(iprot.getScheme()).getScheme().read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("clearMergeManager_args(");
+      boolean first = true;
+
+      sb.append("managerId:");
+      if (this.managerId == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.managerId);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class clearMergeManager_argsStandardSchemeFactory implements SchemeFactory {
+      public clearMergeManager_argsStandardScheme getScheme() {
+        return new clearMergeManager_argsStandardScheme();
+      }
+    }
+
+    private static class clearMergeManager_argsStandardScheme extends StandardScheme<clearMergeManager_args> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, clearMergeManager_args struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            case 1: // MANAGER_ID
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+                struct.managerId = iprot.readString();
+                struct.setManagerIdIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, clearMergeManager_args struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        if (struct.managerId != null) {
+          oprot.writeFieldBegin(MANAGER_ID_FIELD_DESC);
+          oprot.writeString(struct.managerId);
+          oprot.writeFieldEnd();
+        }
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class clearMergeManager_argsTupleSchemeFactory implements SchemeFactory {
+      public clearMergeManager_argsTupleScheme getScheme() {
+        return new clearMergeManager_argsTupleScheme();
+      }
+    }
+
+    private static class clearMergeManager_argsTupleScheme extends TupleScheme<clearMergeManager_args> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, clearMergeManager_args struct) throws org.apache.thrift.TException {
+        TTupleProtocol oprot = (TTupleProtocol) prot;
+        BitSet optionals = new BitSet();
+        if (struct.isSetManagerId()) {
+          optionals.set(0);
+        }
+        oprot.writeBitSet(optionals, 1);
+        if (struct.isSetManagerId()) {
+          oprot.writeString(struct.managerId);
+        }
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, clearMergeManager_args struct) throws org.apache.thrift.TException {
+        TTupleProtocol iprot = (TTupleProtocol) prot;
+        BitSet incoming = iprot.readBitSet(1);
+        if (incoming.get(0)) {
+          struct.managerId = iprot.readString();
+          struct.setManagerIdIsSet(true);
+        }
+      }
+    }
+
+  }
+
+  public static class clearMergeManager_result implements org.apache.thrift.TBase<clearMergeManager_result, clearMergeManager_result._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("clearMergeManager_result");
+
+
+    private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
+    static {
+      schemes.put(StandardScheme.class, new clearMergeManager_resultStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new clearMergeManager_resultTupleSchemeFactory());
+    }
+
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+;
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+    public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(clearMergeManager_result.class, metaDataMap);
+    }
+
+    public clearMergeManager_result() {
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public clearMergeManager_result(clearMergeManager_result other) {
+    }
+
+    public clearMergeManager_result deepCopy() {
+      return new clearMergeManager_result(this);
+    }
+
+    @Override
+    public void clear() {
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof clearMergeManager_result)
+        return this.equals((clearMergeManager_result)that);
+      return false;
+    }
+
+    public boolean equals(clearMergeManager_result that) {
+      if (that == null)
+        return false;
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(clearMergeManager_result other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      clearMergeManager_result typedOther = (clearMergeManager_result)other;
+
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      schemes.get(iprot.getScheme()).getScheme().read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
+      }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("clearMergeManager_result(");
+      boolean first = true;
+
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class clearMergeManager_resultStandardSchemeFactory implements SchemeFactory {
+      public clearMergeManager_resultStandardScheme getScheme() {
+        return new clearMergeManager_resultStandardScheme();
+      }
+    }
+
+    private static class clearMergeManager_resultStandardScheme extends StandardScheme<clearMergeManager_result> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, clearMergeManager_result struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, clearMergeManager_result struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class clearMergeManager_resultTupleSchemeFactory implements SchemeFactory {
+      public clearMergeManager_resultTupleScheme getScheme() {
+        return new clearMergeManager_resultTupleScheme();
+      }
+    }
+
+    private static class clearMergeManager_resultTupleScheme extends TupleScheme<clearMergeManager_result> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, clearMergeManager_result struct) throws org.apache.thrift.TException {
+        TTupleProtocol oprot = (TTupleProtocol) prot;
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, clearMergeManager_result struct) throws org.apache.thrift.TException {
+        TTupleProtocol iprot = (TTupleProtocol) prot;
       }
     }
 

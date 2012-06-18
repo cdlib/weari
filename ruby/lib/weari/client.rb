@@ -82,5 +82,11 @@ module Weari
         @t_client.deleteParse(arc)
       end
     end
+
+    def clear_merge_manager(manager_id)
+      return with_open_transport do
+        @t_client.clearMergeManager(manager_id)
+      end
+    end
   end
 end

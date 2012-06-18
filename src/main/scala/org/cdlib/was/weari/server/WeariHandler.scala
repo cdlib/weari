@@ -125,6 +125,9 @@ class WeariHandler(config: Config)
 
   }
 
+  def clearMergeManager(managerId : String) =
+    mergeManagerCache.remove(managerId);
+
   private def mkUUID : String = UUID.randomUUID().toString();
 
   private def mkArcList(arcs : Seq[String]) : Path = {
