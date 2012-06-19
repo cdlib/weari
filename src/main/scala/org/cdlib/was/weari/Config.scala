@@ -4,11 +4,14 @@ package org.cdlib.was.weari;
 
 import java.io.File;
 
-import org.cdlib.ssconf.SSConfig;
-import org.cdlib.ssconf.Value;
+import com.typesafe.config.ConfigFactory;
 
-trait Config extends SSConfig {
-  val threadCount     = new Value(5);
-  val queueSize       = new Value(1000);
-  val jsonBaseDir     = new Value("/user/was/json");
+class Config {
+  val confRoot = ConfigFactory.load();
+  confRoot.checkValid(ConfigFactory.defaultReference(), "weari")
+
+  val conf = confRoot.getConfig("weari");
+  val threadCount = conf.getInt("threadCount")
+  val queueSize = conf.getInt("queueSize")
+  val jsonBaseDir = conf.getString("jsonBaseDir")
 }

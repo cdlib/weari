@@ -245,11 +245,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.cdlib</groupId>
-      <artifactId>ssconf</artifactId>
-      <version>0.1-SNAPSHOT_${scala.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
       <version>${scala.version}</version>
@@ -269,11 +264,15 @@
       <artifactId>libthrift</artifactId>
       <version>0.8.0</version>
     </dependency>
-
     <dependency>
       <groupId>org.clapper</groupId>
       <artifactId>grizzled-slf4j_${scala.version}</artifactId>
       <version>0.6.6</version>
+    </dependency>
+    <dependency>
+      <groupId>com.typesafe</groupId>
+      <artifactId>config</artifactId>
+      <version>0.4.1</version>
     </dependency>
   </dependencies>
 
@@ -302,7 +301,6 @@
       <url>http://repo.codahale.com</url>
     </repository>
   </repositories>
-
 
   <pluginRepositories>
     <pluginRepository>
