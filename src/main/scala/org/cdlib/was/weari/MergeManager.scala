@@ -40,16 +40,9 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int)
 
   val bf = new BloomFilter64bit(n, 12);
 
-  /* keeps track of what has been merged, or checked for merge, so far */
-  var tracked : Map[String,SolrInputDocument] = null;
-
-  /**
-   * Reset tracked documents.
-   */
-  def reset {
-    tracked = new HashMap[String,SolrInputDocument] with SynchronizedMap[String,SolrInputDocument];
-  }
-  this.reset;
+  /* keeps track of what has been merged so far */
+  var tracked : Map[String,SolrInputDocument] = 
+    new HashMap[String,SolrInputDocument] with SynchronizedMap[String,SolrInputDocument];
 
   /* initialize */
   if (server != null) {
