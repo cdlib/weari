@@ -173,14 +173,14 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int)
   @inline
   def loadDoc (doc : SolrInputDocument) {
     val id = getId(doc);
-    if (tracked.get(id).isEmpty) {
-      /* doc does not exist in merge manager yet */
-      bf.add(id);
-      tracked.put(id, doc);
-    } else {
+    if (bf.contains(id) && tracked.get(id).isDefined) {
       /* doc DOES exist in merge manager, merge with existing doc in */
       /* manager */
       merge(doc);
+    } else {
+      /* doc does not exist in merge manager yet */
+      bf.add(id);
+      tracked.put(id, doc);
     }
   }
 }
