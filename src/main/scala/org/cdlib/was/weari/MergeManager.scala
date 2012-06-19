@@ -39,10 +39,10 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int)
    * efficient */
 
   /* A bloom filter used to check for POSSIBLE merge candidates */
-  val bf = new BloomFilter64bit(n, 12);
+  private val bf = new BloomFilter64bit(n, 12);
 
   /* keeps track of what has been merged so far */
-  var tracked : Map[String,SolrInputDocument] = null;
+  private var tracked : Map[String,SolrInputDocument] = null;
   this.reset;
 
   /* initialize */
@@ -62,6 +62,8 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int)
   def reset {
     tracked = new HashMap[String,SolrInputDocument] with SynchronizedMap[String,SolrInputDocument];
   }
+
+  def trackedCount : Int = tracked.size;
 
   def isPotentialMerge (id : String) : Boolean =
     bf.contains(id);
