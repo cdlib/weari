@@ -47,7 +47,7 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int)
   /* initialize */
   if (server != null) {
     debug("Loading document ids into MergeManager.");
-    val newq = new SolrQuery(candidatesQuery).setParam("fl", ID_FIELD).setRows(1000000);
+    val newq = new SolrQuery(candidatesQuery).setParam("fl", ID_FIELD).setRows(100000);
     val docs = new solr.SolrDocumentCollection(server, newq);
     for (doc <- docs) bf.add(getId(doc))
   }
