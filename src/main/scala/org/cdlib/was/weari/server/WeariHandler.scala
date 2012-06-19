@@ -77,7 +77,7 @@ class WeariHandler(config: Config)
                                     manager = manager,
                                     extraId = extraId,
                                     extraFields = extraFields.toMap.mapValues(iterableAsScalaIterable(_)));
-      try {
+      indexer.commitOrRollback {
         for ((arcname, path) <- arcs.zip(arcPaths)) {
           var in : InputStream = null;
           try {
@@ -109,12 +109,6 @@ class WeariHandler(config: Config)
           } finally {
             if (in != null) in.close;
           }
-        }
-        /* finally commit what is left */
-        server.commit;
-      } catch {
-        case ex : Exception => {
-          server.rollback;
         }
       }
     }
