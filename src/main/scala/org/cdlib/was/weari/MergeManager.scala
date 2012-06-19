@@ -57,7 +57,7 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int)
 
   /**
    * Get a single document by its id. Return None if no document 
-   * has that id.
+   * has that id. Will load first from tracked and then try from the server.
    * 
    */
   def getDocById(id : String) : Option[SolrInputDocument] =
