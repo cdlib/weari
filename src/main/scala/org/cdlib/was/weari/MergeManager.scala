@@ -162,6 +162,7 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int)
     }
   }
       
+  @inline
   def loadDoc (doc : SolrDocument) {
     loadDoc(toSolrInputDocument(doc));
   }
@@ -169,6 +170,7 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int)
   /**
    * Load a single document into the merge manager for possible future merging.
    */
+  @inline
   def loadDoc (doc : SolrInputDocument) {
     val id = getId(doc);
     if (tracked.get(id).isEmpty) {
