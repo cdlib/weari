@@ -42,8 +42,8 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int)
   val bf = new BloomFilter64bit(n, 12);
 
   /* keeps track of what has been merged so far */
-  var tracked : Map[String,SolrInputDocument] = 
-    new HashMap[String,SolrInputDocument] with SynchronizedMap[String,SolrInputDocument];
+  var tracked : Map[String,SolrInputDocument] = null;
+  this.reset;
 
   /* initialize */
   if (server != null) {
@@ -55,6 +55,13 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int)
 
   private def cleanId (id : String) =
     id.replace("\\", "\\\\").replace("\"", "\\\"");
+
+  /**
+   * Reset all tracked documents, but *not* the bloomfilter.
+   */
+  def reset {
+    tracked = new HashMap[String,SolrInputDocument] with SynchronizedMap[String,SolrInputDocument];
+  }
 
   def isPotentialMerge (id : String) : Boolean =
     bf.contains(id);
