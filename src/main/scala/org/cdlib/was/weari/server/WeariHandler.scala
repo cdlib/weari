@@ -88,6 +88,7 @@ class WeariHandler(config: Config)
             manager.loadDocs("arcname:\"%s\"".format(arcname));
             indexer.index(Json.parse[List[ParsedArchiveRecord]](in));
             if (manager.trackedCount > config.trackCommitThreshold) {
+              info("Merge manager threshold reached: committing.");
               server.commit;
               manager.reset;
             }
