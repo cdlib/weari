@@ -8,10 +8,11 @@ import com.typesafe.config.ConfigFactory;
 
 class Config {
   val confRoot = ConfigFactory.load();
-  confRoot.checkValid(ConfigFactory.defaultReference(), "weari")
+  confRoot.checkValid(ConfigFactory.defaultReference(), "weari");
 
   val conf = confRoot.getConfig("weari");
-  val threadCount = conf.getInt("threadCount")
-  val queueSize = conf.getInt("queueSize")
-  val jsonBaseDir = conf.getString("jsonBaseDir")
+  val threadCount = conf.getInt("threadCount");
+  val queueSize = conf.getInt("queueSize");
+  val jsonBaseDir = conf.getString("jsonBaseDir");
+  val trackCommitThreshold = conf.getInt("trackCommitThreshold");
 }
