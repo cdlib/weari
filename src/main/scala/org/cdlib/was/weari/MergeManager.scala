@@ -155,7 +155,7 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int)
    * a lot of merges to perform.
    */
   def loadDocs (q : String) {
-    val newq = new SolrQuery(q).setRows(1000);
+    val newq = new SolrQuery(q).setRows(10000);
     val docs = new solr.SolrDocumentCollection(server, newq);
     for (doc <- docs) {
       loadDoc(toSolrInputDocument(doc));
