@@ -41,11 +41,13 @@ class WeariHandler(config: Config)
   var locks : mutable.Map[String,AnyRef] = new mutable.HashMap[String,AnyRef]
     with mutable.SynchronizedMap[String,AnyRef];
 
-  val httpClient = {
+  def mkHttpClient = {
     val params = new ModifiableSolrParams();
-    params.set(HttpClientUtil.PROP_MAX_CONNECTIONS, 256);
-    params.set(HttpClientUtil.PROP_MAX_CONNECTIONS_PER_HOST, 32);
+    params.set(HttpClientUtil.PROP_MAX_CONNECTIONS, 16);
+    params.set(HttpClientUtil.PROP_MAX_CONNECTIONS_PER_HOST, 16);
     params.set(HttpClientUtil.PROP_FOLLOW_REDIRECTS, false);
+    params.set(HttpClientUtil.PROP_SO_TIMEOUT, 0);
+
     HttpClientUtil.createClient(params);
   }
 
@@ -67,7 +69,7 @@ class WeariHandler(config: Config)
     val arcPaths = arcs.map(getPath(_));
     locks.getOrElseUpdate(solr, new Object).synchronized {
       val server = new ConcurrentUpdateSolrServer(solr,
-                                                  httpClient,
+                                                  mkHttpClient,
                                                   config.queueSize(),
                                                   config.threadCount());
       val manager = mergeManagerCache.getOrElseUpdate(extraId,
@@ -113,7 +115,7 @@ class WeariHandler(config: Config)
               arcs : JList[String],
               extraId : String) {
     val server = new ConcurrentUpdateSolrServer(solr,
-                                                httpClient,
+                                                mkHttpClient,
                                                 config.queueSize(),
                                                 config.threadCount());
     val arcPaths = arcs.map(getPath(_));
