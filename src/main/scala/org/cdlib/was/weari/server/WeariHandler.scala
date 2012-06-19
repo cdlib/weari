@@ -78,34 +78,33 @@ class WeariHandler(config: Config)
                                     manager = manager,
                                     extraId = extraId,
                                     extraFields = extraFields.toMap.mapValues(iterableAsScalaIterable(_)));
-      for ((arcname, path) <- arcs.zip(arcPaths)) {
-        var in : InputStream = null;
-        try {
-          in = fs.open(path);
-    	  if (path.getName.endsWith("gz")) {
-            in = new GZIPInputStream(in);
-          }
-          manager.reset;
-          manager.preloadDocs("arcname:\"%s\"".format(arcname));
-          indexer.commitOrRollback {
+      indexer.commitOrRollback {
+        for ((arcname, path) <- arcs.zip(arcPaths)) {
+          var in : InputStream = null;
+          try {
+            in = fs.open(path);
+    	    if (path.getName.endsWith("gz")) {
+              in = new GZIPInputStream(in);
+            }
+            manager.loadDocs("arcname:\"%s\"".format(arcname));
             indexer.index(Json.parse[List[ParsedArchiveRecord]](in));
+          } catch {
+            case ex : ParsingException => {
+              error("Bad JSON: %s".format(arcname));
+              throw new thrift.BadJSONException(ex.toString, arcname);
+            }
+            case ex : java.io.EOFException => {
+              error("Bad JSON: %s".format(arcname));
+              throw new thrift.BadJSONException(ex.toString, arcname);
+            }
+            case ex : Exception => {
+              error("Caught exception: %s".format(ex), ex);
+              debug(getStackTrace(ex));
+              throw new thrift.IndexException(ex.toString);
+            }
+          } finally {
+            if (in != null) in.close;
           }
-        } catch {
-          case ex : ParsingException => {
-            error("Bad JSON: %s".format(arcname));
-            throw new thrift.BadJSONException(ex.toString, arcname);
-          }
-          case ex : java.io.EOFException => {
-            error("Bad JSON: %s".format(arcname));
-            throw new thrift.BadJSONException(ex.toString, arcname);
-          }
-          case ex : Exception => {
-            error("Caught exception: %s".format(ex), ex);
-            debug(getStackTrace(ex));
-            throw new thrift.IndexException(ex.toString);
-          }
-        } finally {
-          if (in != null) in.close;
         }
       }
     }

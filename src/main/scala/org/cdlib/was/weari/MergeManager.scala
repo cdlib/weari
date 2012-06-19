@@ -38,6 +38,7 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int)
    * candidates. It can return everything, though this would not be
    * efficient */
 
+  /* A bloom filter used to check for POSSIBLE merge candidates */
   val bf = new BloomFilter64bit(n, 12);
 
   /* keeps track of what has been merged so far */
@@ -54,6 +55,9 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int)
 
   private def cleanId (id : String) =
     id.replace("\\", "\\\\").replace("\"", "\\\"");
+
+  def isPotentialMerge (id : String) : Boolean =
+    bf.contains(id);
 
   /**
    * Get a single document by its id. Return None if no document 
@@ -146,13 +150,35 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int)
   def unmergeDocs (doc : SolrInputDocument, merged : SolrInputDocument) : SolrInputDocument = 
     mergeOrUnmergeDocs(doc, merged, unmergeFieldValues);
 
-  def preloadDocs (q : String) {
-    val newq = new SolrQuery(q).setRows(10000);
+  /**
+   * Load docs from the server for merging. Used for pre-loading docs when we know we will have
+   * a lot of merges to perform.
+   */
+  def loadDocs (q : String) {
+    val newq = new SolrQuery(q).setRows(1000);
     val docs = new solr.SolrDocumentCollection(server, newq);
     for (doc <- docs) {
-      val id = getId(doc);
-      tracked.put(id, toSolrInputDocument(doc));
+      loadDoc(toSolrInputDocument(doc));
+    }
+  }
+      
+  def loadDoc (doc : SolrDocument) {
+    loadDoc(toSolrInputDocument(doc));
+  }
+
+  /**
+   * Load a single document into the merge manager for possible future merging.
+   */
+  def loadDoc (doc : SolrInputDocument) {
+    val id = getId(doc);
+    if (tracked.get(id).isEmpty) {
+      /* doc does not exist in merge manager yet */
       bf.add(id);
+      tracked.put(id, doc);
+    } else {
+      /* doc DOES exist in merge manager, merge with existing doc in */
+      /* manager */
+      merge(doc);
     }
   }
 }
