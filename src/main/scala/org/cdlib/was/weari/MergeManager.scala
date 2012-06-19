@@ -152,14 +152,17 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int)
 
   /**
    * Load docs from the server for merging. Used for pre-loading docs when we know we will have
-   * a lot of merges to perform.
+   * a lot of merges to perform. Returns the number of docs loaded.
    */
-  def loadDocs (q : String) {
+  def loadDocs (q : String) : Int = {
     val newq = new SolrQuery(q).setRows(10000);
     val docs = new solr.SolrDocumentCollection(server, newq);
+    var n = 0;
     for (doc <- docs) {
+      n += 1;
       loadDoc(toSolrInputDocument(doc));
     }
+    return n;
   }
       
   @inline
