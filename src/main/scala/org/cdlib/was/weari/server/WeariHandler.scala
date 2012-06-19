@@ -37,7 +37,7 @@ class WeariHandler(config: Config)
 
   val conf = new Configuration();
   val fs = FileSystem.get(conf);
-  val jsonDir = new Path(config.jsonBaseDir());
+  val jsonDir = new Path(config.jsonBaseDir);
   var locks : mutable.Map[String,AnyRef] = new mutable.HashMap[String,AnyRef]
     with mutable.SynchronizedMap[String,AnyRef];
 
@@ -68,8 +68,8 @@ class WeariHandler(config: Config)
     locks.getOrElseUpdate(solr, new Object).synchronized {
       val server = new ConcurrentUpdateSolrServer(solr,
                                                   httpClient,
-                                                  config.queueSize(),
-                                                  config.threadCount());
+                                                  config.queueSize,
+                                                  config.threadCount);
       val manager = mergeManagerCache.getOrElseUpdate(extraId,
         new MergeManager(filterQuery, new HttpSolrServer(solr)));
       val indexer = new SolrIndexer(server = server,
@@ -114,8 +114,8 @@ class WeariHandler(config: Config)
               extraId : String) {
     val server = new ConcurrentUpdateSolrServer(solr,
                                                 httpClient,
-                                                config.queueSize(),
-                                                config.threadCount());
+                                                config.queueSize,
+                                                config.threadCount);
     val arcPaths = arcs.map(getPath(_));
     val manager = new MergeManager("*:*", server);
     val indexer = new SolrIndexer(server = server,
