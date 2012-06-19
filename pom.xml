@@ -245,16 +245,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-library</artifactId>
-      <version>${scala.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-compiler</artifactId>
-      <version>${scala.version}</version>
-    </dependency>
-    <dependency>
       <groupId>com.codahale</groupId>
       <artifactId>jerkson_${scala.version}</artifactId>
       <version>0.5.0</version>
