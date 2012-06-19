@@ -9,7 +9,7 @@
     <fileSet>
       <includes>
         <include>${project.basedir}/weari</include>
-        <include>${project.basedir}/indexer.conf.example</include>
+        <include>${project.basedir}/application.conf.example</include>
         <include>${project.basedir}/schema.xml</include>
       </includes>
     </fileSet>

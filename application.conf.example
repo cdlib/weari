@@ -1,0 +1,3 @@
+weari.queueSize=1000
+weari.threadCount=5
+weari.jsonBaseDir=/user/was/json
