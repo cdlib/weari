@@ -31,12 +31,14 @@ class MergeManagerSpec extends FunSpec with BeforeAndAfter with ShouldMatchers {
   }
 
   val adoc = makeDoc(ID_FIELD -> "abc",
-                     ARCNAME_FIELD -> "ARC-A.arc.gz");
+                     ARCNAME_FIELD -> "ARC-A.arc.gz",
+                     CONTENT_FIELD -> "hello world");
   val bdoc = makeDoc(ID_FIELD -> "abc",
                      ARCNAME_FIELD -> "ARC-B.arc.gz");
   val merged = makeDoc(ID_FIELD -> "abc",
                        ARCNAME_FIELD -> "ARC-A.arc.gz",
-                       ARCNAME_FIELD -> "ARC-B.arc.gz");
+                       ARCNAME_FIELD -> "ARC-B.arc.gz",
+                       CONTENT_FIELD -> "hello world");
 
   describe ("Sample documents") {
     it("should not be equal") {
@@ -83,10 +85,28 @@ class MergeManagerSpec extends FunSpec with BeforeAndAfter with ShouldMatchers {
                                    makeDoc("field" -> Seq("foo", "bar", "baz"))));
     }
 
-    // it("reset should work") {
-    //   manager.merge(adoc);
-    //   manager.reset;
-    //   assert(doc2map(manager.merge(bdoc)) === doc2map(bdoc));
-    // }
+    it("should load a document successfully") {
+      manager.loadDoc(adoc);
+      assert(doc2map(manager.merge(bdoc)) === doc2map(merged));
+    }                 
+
+    it("should load a document successfully AFTER it has been merged") {
+      manager.merge(adoc);
+      manager.loadDoc(bdoc);
+      assert(manager.getDocById("abc").map(doc2map(_)) === Some(doc2map(merged)));
+    }
+
+    it("should mark a merged doc as a potential merge") {
+      manager.merge(adoc);
+      assert(manager.isPotentialMerge("abc") === true);
+    }
+
+    it("should merge empty string content correctly") {
+      val doc = makeDoc(ID_FIELD -> "abc",
+                        ARCNAME_FIELD -> "ARC-B.arc.gz",
+                        CONTENT_FIELD -> "");
+      manager.merge(adoc);
+      assert(doc2map(manager.merge(doc)) === doc2map(merged));
+    }
   }
 }
