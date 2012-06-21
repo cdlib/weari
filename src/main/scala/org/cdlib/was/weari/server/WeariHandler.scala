@@ -20,6 +20,7 @@ import org.apache.pig.backend.executionengine.ExecJob.JOB_STATUS;
 import org.apache.pig.impl.PigContext;
 import org.apache.pig.impl.util.PropertiesUtil;
 
+import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.impl.{ConcurrentUpdateSolrServer,HttpClientUtil,HttpSolrServer};
 import org.apache.solr.common.params.ModifiableSolrParams;
 
@@ -87,7 +88,7 @@ class WeariHandler(config: Config)
     	    if (path.getName.endsWith("gz")) {
               in = new GZIPInputStream(in);
             }
-            manager.loadDocs("arcname:\"%s\"".format(arcname));
+            manager.loadDocs(new SolrQuery("arcname:\"%s\"".format(arcname)));
             indexer.index(Json.parse[List[ParsedArchiveRecord]](in));
             if (manager.trackedCount > config.trackCommitThreshold) {
               info("Merge manager threshold reached: committing.");

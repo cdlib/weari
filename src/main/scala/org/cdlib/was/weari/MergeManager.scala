@@ -76,8 +76,7 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int)
   def getDocById(id : String) : Option[SolrInputDocument] =
     tracked.get(id).orElse {
       /* otherwise try to get it from the solr server */
-      val qStr = "id:\"%s\"".format(cleanId(id));
-      val q = (new SolrQuery).setQuery(qStr);
+      val q = buildIdQuery(List(id));
       val docs = new solr.SolrDocumentCollection(server, q);
       /* if we don't use toSeq, headOption hits the solr server TWICE */
       docs.toSeq.headOption.map(toSolrInputDocument(_));
@@ -99,6 +98,11 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int)
     tracked.put(id, retval);
     bf.add(id);
     return retval;
+  }
+
+  private def buildIdQuery (ids : Seq[String]) : SolrQuery = {
+    val q1 = for (id <- ids) yield "id:\"%s\"".format(cleanId(id));
+    return new SolrQuery().setQuery(q1.mkString("", " OR ", ""));
   }
 
   /**
@@ -163,9 +167,8 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int)
    * Load docs from the server for merging. Used for pre-loading docs when we know we will have
    * a lot of merges to perform. Returns the number of docs loaded.
    */
-  def loadDocs (q : String) : Int = {
-    val newq = new SolrQuery(q).setRows(10000);
-    val docs = new solr.SolrDocumentCollection(server, newq);
+  def loadDocs (q : SolrQuery) : Int = {
+    val docs = new solr.SolrDocumentCollection(server, q.getCopy.setRows(10000));
     var n = 0;
     for (doc <- docs) {
       n += 1;
