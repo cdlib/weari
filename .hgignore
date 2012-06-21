@@ -5,3 +5,4 @@ syntax: re
 ^purgatory/
 ^project/target/
 ^project/project/target/
+^.ensime_lucene/
