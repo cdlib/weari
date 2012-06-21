@@ -105,6 +105,11 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int)
     return new SolrQuery().setQuery(q1.mkString("", " OR ", ""));
   }
 
+  def batchMerge (docs : Seq[SolrInputDocument]) : Seq[SolrInputDocument] = {
+    loadDocs(buildIdQuery(docs.map(getId(_))));
+    return for (doc <- docs) yield merge(doc);
+  }
+
   /**
    * Returns the field value of either a or b. Assumes that they should
    * have the same value. Will not return the empty string or null;
