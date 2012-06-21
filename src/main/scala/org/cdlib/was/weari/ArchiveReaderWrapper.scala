@@ -1,3 +1,5 @@
+/* Copyright (c) 2009-2012 The Regents of the University of California */
+
 package org.cdlib.was.weari;
 
 import java.io.{File,InputStream};
