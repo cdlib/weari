@@ -24,10 +24,11 @@ class MergeManagerSpec extends FunSpec with BeforeAndAfter with ShouldMatchers {
     mapAsScalaMap(doc).mapValues(_.getValue)
 
   var manager : MergeManager = null;
+  val config = new Config();
 
   /* reset for every run */
   before {
-    manager = new MergeManager("*:*", null);
+    manager = new MergeManager(config, "*:*", null);
   }
 
   val adoc = makeDoc(ID_FIELD -> "abc",

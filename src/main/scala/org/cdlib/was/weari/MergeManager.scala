@@ -29,10 +29,10 @@ import scala.collection.mutable.{Map,SynchronizedMap,HashMap};
  *
  * @author Erik Hetzner <erik.hetzner@ucop.edu>
  */
-class MergeManager (candidatesQuery : String, server : SolrServer, n : Int) 
+class MergeManager (config : Config, candidatesQuery : String, server : SolrServer, n : Int) 
     extends Logging {
-  def this (candidatesQuery : String, server : SolrServer) = 
-    this(candidatesQuery, server, 100000);
+  def this (config : Config, candidatesQuery : String, server : SolrServer) = 
+    this(config, candidatesQuery, server, 100000);
 
   /* candiatesQuery is a query that should return all <em>possible</em> merge
    * candidates. It can return everything, though this would not be
@@ -106,7 +106,9 @@ class MergeManager (candidatesQuery : String, server : SolrServer, n : Int)
   }
 
   def batchMerge (docs : Seq[SolrInputDocument]) : Seq[SolrInputDocument] = {
-    loadDocs(buildIdQuery(docs.map(getId(_))));
+    for (group <- docs.grouped(config.maxIdQuerySize)) {
+      loadDocs(buildIdQuery(group.map(getId(_))));
+    }
     return for (doc <- docs) yield merge(doc);
   }
 

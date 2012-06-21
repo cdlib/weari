@@ -34,9 +34,8 @@ class SolrIndexer (server : SolrServer,
    * Existing documents will be merged with new documents.
    */
   def index (recs : Seq[ParsedArchiveRecord]) {
-    for (rec <- recs) {
-      server.add(manager.merge(record2inputDocument(rec)));
-    }
+    val docs = for (rec <- recs) yield record2inputDocument(rec);
+    for (merged <- manager.batchMerge(docs)) server.add(merged);
   }
 
   /**

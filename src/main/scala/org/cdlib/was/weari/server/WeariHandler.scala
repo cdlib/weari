@@ -75,7 +75,7 @@ class WeariHandler(config: Config)
                                                   config.queueSize,
                                                   config.threadCount);
       val manager = mergeManagerCache.getOrElseUpdate(extraId,
-        new MergeManager(filterQuery, new HttpSolrServer(solr)));
+        new MergeManager(config, filterQuery, new HttpSolrServer(solr)));
       val indexer = new SolrIndexer(server = server,
                                     manager = manager,
                                     extraId = extraId,
@@ -125,7 +125,7 @@ class WeariHandler(config: Config)
                                                 config.queueSize,
                                                 config.threadCount);
     val arcPaths = arcs.map(getPath(_));
-    val manager = new MergeManager("*:*", server);
+    val manager = new MergeManager(config, "*:*", server);
     val indexer = new SolrIndexer(server = server,
                                   manager = manager,
                                   extraId = extraId,

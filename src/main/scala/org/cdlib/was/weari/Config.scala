@@ -15,4 +15,5 @@ class Config {
   val queueSize = conf.getInt("queueSize");
   val jsonBaseDir = conf.getString("jsonBaseDir");
   val trackCommitThreshold = conf.getInt("trackCommitThreshold");
+  val maxIdQuerySize = conf.getInt("maxIdQuerySize");
 }
