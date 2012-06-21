@@ -106,7 +106,8 @@ class MergeManager (config : Config, candidatesQuery : String, server : SolrServ
   }
 
   def batchMerge (docs : Seq[SolrInputDocument]) : Seq[SolrInputDocument] = {
-    for (group <- docs.grouped(config.maxIdQuerySize)) {
+    val docsToLoad = docs.filter(d=>bf.contains(getId(d)));
+    for (group <- docsToLoad.grouped(config.maxIdQuerySize)) {
       loadDocs(buildIdQuery(group.map(getId(_))));
     }
     return for (doc <- docs) yield merge(doc);
