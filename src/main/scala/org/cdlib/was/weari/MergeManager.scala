@@ -39,12 +39,12 @@ class MergeManager (config : Config, candidatesQuery : String, server : SolrServ
 
   /* A bloom filter used to check for POSSIBLE merge candidates */
   private val bf = {
-    val default = 10000;
+    val default = 100000;
     val size = {
       if (server == null) default;
       else {
         val countQuery = new SolrQuery(candidatesQuery).setRows(0);
-        (server.query(countQuery).getResults.getNumFound * 1.2).toInt match {
+        (server.query(countQuery).getResults.getNumFound * 2).toInt match {
           case 0 => default;
           case x => x;
         }
