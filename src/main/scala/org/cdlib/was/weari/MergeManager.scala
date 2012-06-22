@@ -42,7 +42,7 @@ class MergeManager (config : Config, candidatesQuery : String, server : SolrServ
       if (server == null) 10000;
       else {
         val countQuery = new SolrQuery(candidatesQuery).setRows(0);
-        Math.round(server.query(countQuery).getResults.getNumFound * 1.2);
+        (server.query(countQuery).getResults.getNumFound * 1.2).toInt;
       }
     }
     new BloomFilter64bit(size, 12);
