@@ -17,6 +17,7 @@ import org.cdlib.was.weari.SolrFields._;
 import org.cdlib.was.weari.Utility.{null2option,null2seq};
 
 import scala.collection.mutable.{Map,SynchronizedMap,HashMap};
+import scala.math.max;
 
 /**
  * Class used to keep track of merging.
@@ -38,11 +39,15 @@ class MergeManager (config : Config, candidatesQuery : String, server : SolrServ
 
   /* A bloom filter used to check for POSSIBLE merge candidates */
   private val bf = {
+    val default = 10000;
     val size = {
-      if (server == null) 10000;
+      if (server == null) default;
       else {
         val countQuery = new SolrQuery(candidatesQuery).setRows(0);
-        (server.query(countQuery).getResults.getNumFound * 1.2).toInt;
+        (server.query(countQuery).getResults.getNumFound * 1.2).toInt match {
+          case 0 => default;
+          case x => x;
+        }
       }
     }
     new BloomFilter64bit(size, 12);
