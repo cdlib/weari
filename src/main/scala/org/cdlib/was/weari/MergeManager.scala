@@ -29,17 +29,24 @@ import scala.collection.mutable.{Map,SynchronizedMap,HashMap};
  *
  * @author Erik Hetzner <erik.hetzner@ucop.edu>
  */
-class MergeManager (config : Config, candidatesQuery : String, server : SolrServer, n : Int) 
+class MergeManager (config : Config, candidatesQuery : String, server : SolrServer)
     extends Logging {
-  def this (config : Config, candidatesQuery : String, server : SolrServer) = 
-    this(config, candidatesQuery, server, 100000);
 
   /* candiatesQuery is a query that should return all <em>possible</em> merge
    * candidates. It can return everything, though this would not be
    * efficient */
 
   /* A bloom filter used to check for POSSIBLE merge candidates */
-  private val bf = new BloomFilter64bit(n, 12);
+  private val bf = {
+    val size = {
+      if (server == null) 10000;
+      else {
+        val countQuery = new SolrQuery(candidatesQuery).setRows(0);
+        Math.round(server.query(countQuery).getResults.getNumFound * 1.2);
+      }
+    }
+    new BloomFilter64bit(size, 12);
+  }
 
   /* keeps track of what has been merged so far */
   private var tracked : Map[String,SolrInputDocument] = null;
