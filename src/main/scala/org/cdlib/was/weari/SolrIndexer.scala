@@ -12,7 +12,8 @@ import grizzled.slf4j.Logging;
 /**
  * Class used to index ARC files.
  */
-class SolrIndexer (server : SolrServer, 
+class SolrIndexer (config : Config,
+                   server : SolrServer, 
                    manager : MergeManager,
                    extraId : String, 
                    extraFields : Map[String, Any]) 
@@ -34,8 +35,16 @@ class SolrIndexer (server : SolrServer,
    * Existing documents will be merged with new documents.
    */
   def index (recs : Seq[ParsedArchiveRecord]) {
-    val docs = for (rec <- recs) yield record2inputDocument(rec);
-    for (merged <- manager.batchMerge(docs)) server.add(merged);
+    val docs = for (rec <- recs) 
+               yield record2inputDocument(rec);
+    /* group documents for batch merge by the max id query size */
+    /* that will be sent to the server at once */
+    /* this will ensure that we don't build up a lot of merges before hitting the */
+    /* trackCommitThreshold */
+    for { group <- docs.grouped(config.maxIdQuerySize); 
+          merged <- manager.batchMerge(group) } {
+      server.add(merged); 
+    }
   }
 
   /**

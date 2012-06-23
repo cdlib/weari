@@ -20,7 +20,7 @@ with MockitoSugar {
   /* reset for every run */
   before {
     val manager = mock[MergeManager];
-    indexer = new SolrIndexer(null, manager, "extraId", Map("fielda"->"vala"));
+    indexer = new SolrIndexer(new Config(), null, manager, "extraId", Map("fielda"->"vala"));
   }
 
   val bdoc = makeDoc(ID_FIELD -> "abc",
