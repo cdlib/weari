@@ -1,8 +1,18 @@
-weari.queueSize=1000
+# number of threads to use for ConcurrentUpdateSolrServer
 weari.threadCount=5
+
+# size of queue for ConcurrentUpdateSolrServer
+weari.queueSize=1000
+
 weari.jsonBaseDir=/user/was/json
+
 # threshold of tracked merged documents at which we should commit.
 # Lower if running out of memory.
 weari.trackCommitThreshold=10000
+
 # max number of id queries to send to the server at once when batch merging
 weari.maxIdQuerySize=100
+
+# size of groups to send to the batch merge at once */
+# should probably be > maxIdQuerySize and some fraction of the size of trackCommitThreshold 
+weari.batchMergeGroupSize=1000
