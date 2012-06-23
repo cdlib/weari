@@ -8,7 +8,7 @@ weari.jsonBaseDir=/user/was/json
 
 # threshold of tracked merged documents at which we should commit.
 # Lower if running out of memory.
-weari.trackCommitThreshold=10000
+weari.trackCommitThreshold=5000
 
 # max number of id queries to send to the server at once when batch merging
 weari.maxIdQuerySize=100
