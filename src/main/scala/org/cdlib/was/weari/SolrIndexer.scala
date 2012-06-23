@@ -37,11 +37,10 @@ class SolrIndexer (config : Config,
   def index (recs : Seq[ParsedArchiveRecord]) {
     val docs = for (rec <- recs) 
                yield record2inputDocument(rec);
-    /* group documents for batch merge by the max id query size */
-    /* that will be sent to the server at once */
+    /* group documents for batch merge */
     /* this will ensure that we don't build up a lot of merges before hitting the */
     /* trackCommitThreshold */
-    for { group <- docs.grouped(config.maxIdQuerySize); 
+    for { group <- docs.grouped(config.batchMergeGroupSize);
           merged <- manager.batchMerge(group) } {
       server.add(merged); 
     }
