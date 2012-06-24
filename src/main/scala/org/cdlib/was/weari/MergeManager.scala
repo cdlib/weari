@@ -38,41 +38,49 @@ class MergeManager (config : Config, candidatesQuery : String, server : SolrServ
    * efficient */
 
   /* A bloom filter used to check for POSSIBLE merge candidates */
-  private val bf = {
-    val default = 100000;
-    val size = {
-      if (server == null) default;
-      else {
-        val countQuery = new SolrQuery(candidatesQuery).setRows(0);
-        (server.query(countQuery).getResults.getNumFound * 2).toInt match {
-          case 0 => default;
-          case x => x;
-        }
+  private var bf : BloomFilter64bit = null;
+  this.resetBloomFilter;
+  
+  /* set the bloomfilter up. Should have size > number of current results */
+  /* loads candidate docs into bloomfilter */
+  private def resetBloomFilter {
+    var expectedSize = 100000;
+    if (server != null) {
+      val countQuery = new SolrQuery(candidatesQuery).setRows(0);
+      val resultCount = server.query(countQuery).getResults.getNumFound;
+      if (resultCount > 0) {
+        expectedSize = (resultCount * 1.5).toInt;
       }
     }
-    new BloomFilter64bit(size, 12);
+    bf = new BloomFilter64bit(expectedSize, 12);
+    /* initialize */
+    if (server != null) {
+      debug("Loading document ids into MergeManager.");
+      val newq = new SolrQuery(candidatesQuery).setParam("fl", ID_FIELD).setRows(100000);
+      val docs = new solr.SolrDocumentCollection(server, newq);
+      for (doc <- docs) {
+        bf.add(getId(doc))
+      }
+    }
   }
 
   /* keeps track of what has been merged so far */
   private var tracked : Map[String,SolrInputDocument] = null;
-  this.reset;
-
-  /* initialize */
-  if (server != null) {
-    debug("Loading document ids into MergeManager.");
-    val newq = new SolrQuery(candidatesQuery).setParam("fl", ID_FIELD).setRows(100000);
-    val docs = new solr.SolrDocumentCollection(server, newq);
-    for (doc <- docs) bf.add(getId(doc))
-  }
+  this.resetTracked;
 
   private def cleanId (id : String) =
     id.replace("\\", "\\\\").replace("\"", "\\\"");
 
+  private def resetTracked {
+    tracked = new HashMap[String,SolrInputDocument] with SynchronizedMap[String,SolrInputDocument];
+  }
+
   /**
-   * Reset all tracked documents, but *not* the bloomfilter.
+   * Reset all tracked documents, and bloomfilter if the size > .75 maxSize
    */
   def reset {
-    tracked = new HashMap[String,SolrInputDocument] with SynchronizedMap[String,SolrInputDocument];
+    resetTracked;
+    if (bf.size > (0.75 * bf.getExpectedInserts)) resetBloomFilter;
   }
 
   def trackedCount : Int = tracked.size;
