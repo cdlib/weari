@@ -1,9 +1,0 @@
-#!/bin/sh
-
-BASEDIR=`dirname $0`
-
-for x in `ls -1 $BASEDIR/lib` ; do
-    CLASSPATH=$CLASSPATH:$BASEDIR/lib/$x
-done
-
-java -Xmx2048m -cp $CLASSPATH org.cdlib.was.ngIndexer.QueueClient $*
