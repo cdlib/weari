@@ -52,6 +52,7 @@ class MergeManager (config : Config, candidatesQuery : String, server : SolrServ
         expectedSize = (resultCount * 1.5).toInt;
       }
     }
+    logger.info("Building bloomfilter of size %d.".format(expectedSize));
     bf = new BloomFilter64bit(expectedSize, 12);
     /* initialize */
     if (server != null) {
