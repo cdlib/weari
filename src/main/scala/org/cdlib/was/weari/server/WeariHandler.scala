@@ -38,9 +38,9 @@ import com.codahale.jerkson.ParsingException;
 
 import grizzled.slf4j.Logging;
 
-import java.io.{InputStream, IOException, OutputStream}; 
+import java.io.{ InputStream, IOException, OutputStream };
 import java.util.UUID;
-import java.util.zip.{GZIPInputStream,GZIPOutputStream};
+import java.util.zip.{ GZIPInputStream, GZIPOutputStream };
 import java.util.{ List => JList, Map => JMap }
 
 import org.apache.hadoop.conf.Configuration
@@ -51,13 +51,15 @@ import org.apache.pig.backend.executionengine.ExecJob.JOB_STATUS;
 import org.apache.pig.impl.PigContext;
 import org.apache.pig.impl.util.PropertiesUtil;
 
+import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.client.solrj.{SolrQuery,SolrServer};
-import org.apache.solr.client.solrj.impl.{ConcurrentUpdateSolrServer,HttpClientUtil,HttpSolrServer};
+import org.apache.solr.client.solrj.impl.{ ConcurrentUpdateSolrServer, HttpClientUtil, HttpSolrServer };
 import org.apache.solr.common.params.ModifiableSolrParams;
 
 import org.cdlib.was.weari.Utility.{extractArcname,null2option};
 import org.cdlib.was.weari._;
 import org.cdlib.was.weari.thrift;
+import org.cdlib.was.weari.SolrDocumentModifier.{ addFields, record2inputDocument };
 
 import scala.collection.JavaConversions.{ iterableAsScalaIterable, mapAsScalaMap, seqAsJavaList }
 import scala.collection.immutable.HashSet;
@@ -124,11 +126,7 @@ class WeariHandler(config: Config)
                                                   config.threadCount);
       val manager = mergeManagerCache.getOrElseUpdate(extraId,
         new MergeManager(config, filterQuery, new HttpSolrServer(solr)));
-      val indexer = new SolrIndexer(config = config,
-                                    server = server,
-                                    manager = manager,
-                                    extraId = extraId,
-                                    extraFields = extraFields.toMap.mapValues(iterableAsScalaIterable(_)));
+      val extraFieldsMap = extraFields.toMap.mapValues(iterableAsScalaIterable(_));
       commitOrRollback(server) {
         for ((arcname, path) <- arcs.zip(arcPaths)) {
           var in : InputStream = null;
@@ -138,7 +136,15 @@ class WeariHandler(config: Config)
               in = new GZIPInputStream(in);
             }
             manager.loadDocs(new SolrQuery("arcname:\"%s\"".format(arcname)));
-            indexer.index(Json.parse[List[ParsedArchiveRecord]](in));
+            val docs = for (rec <- Json.parse[List[ParsedArchiveRecord]](in))
+                       yield record2inputDocument(rec, extraFieldsMap, extraId);
+            /* group documents for batch merge */
+            /* this will ensure that we don't build up a lot of merges before hitting the */
+            /* trackCommitThreshold */
+            for { group <- docs.grouped(config.batchMergeGroupSize);
+                  merged <- manager.batchMerge(group) } {
+                    server.add(merged); 
+                  }
             if (manager.trackedCount > config.trackCommitThreshold) {
               info("Merge manager threshold reached: committing.");
               server.commit;
@@ -175,11 +181,6 @@ class WeariHandler(config: Config)
                                                 config.threadCount);
     val arcPaths = arcs.map(getPath(_));
     val manager = new MergeManager(config, "*:*", server);
-    val indexer = new SolrIndexer(config = config,
-                                  server = server,
-                                  manager = manager,
-                                  extraId = extraId,
-                                  extraFields = Map[String,Any]());
   }
 
   def clearMergeManager(managerId : String) {
