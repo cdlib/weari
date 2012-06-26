@@ -43,6 +43,8 @@ class Config {
 
   val conf = confRoot.getConfig("weari");
 
+  val port = conf.getInt("port");
+
   /* number of threads to use for ConcurrentUpdateSolrServer */
   val threadCount = conf.getInt("threadCount");
 

@@ -1,3 +1,6 @@
+# port to listen on
+weari.port=59816
+
 # number of threads to use for ConcurrentUpdateSolrServer
 weari.threadCount=5
 

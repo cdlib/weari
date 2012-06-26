@@ -56,7 +56,7 @@ object Server {
     
     val simpleRunnable = new Runnable() {
       def run {
-        simple(processor);
+        simple(config, processor);
       }
     };      
     
@@ -65,8 +65,8 @@ object Server {
     t.join();
   }
 
-  def simple(processor : thrift.Server.Processor[WeariHandler]) {
-    val serverTransport = new TServerSocket(9090);
+  def simple(config : Config, processor : thrift.Server.Processor[WeariHandler]) {
+    val serverTransport = new TServerSocket(config.port);
     val server = new TThreadPoolServer(new TThreadPoolServer.Args(serverTransport).processor(processor));
     server.serve();
   }
