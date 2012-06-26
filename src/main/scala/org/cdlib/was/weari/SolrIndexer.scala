@@ -76,21 +76,4 @@ class SolrIndexer (config : Config,
       server.add(merged); 
     }
   }
-
-  /**
-   * Perform f, and either commit at the end if there were no exceptions,
-   * or rollback if there were.
-   */
-  def commitOrRollback[A] (f: => A) : A = {
-    try {
-      val retval = f;
-      server.commit;
-      return retval;
-    } catch {
-      case ex : Exception => {
-        server.rollback;
-        throw ex;
-      }
-    }
-  }
 }

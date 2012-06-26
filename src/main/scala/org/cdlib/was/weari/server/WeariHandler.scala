@@ -51,7 +51,7 @@ import org.apache.pig.backend.executionengine.ExecJob.JOB_STATUS;
 import org.apache.pig.impl.PigContext;
 import org.apache.pig.impl.util.PropertiesUtil;
 
-import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.{SolrQuery,SolrServer};
 import org.apache.solr.client.solrj.impl.{ConcurrentUpdateSolrServer,HttpClientUtil,HttpSolrServer};
 import org.apache.solr.common.params.ModifiableSolrParams;
 
@@ -85,6 +85,23 @@ class WeariHandler(config: Config)
   }
 
   /**
+   * Perform f, and either commit at the end if there were no exceptions,
+   * or rollback if there were.
+   */
+  def commitOrRollback[A](server : SolrServer) (f: => A) : A = {
+    try {
+      val retval = f;
+      server.commit;
+      return retval;
+    } catch {
+      case ex : Exception => {
+        server.rollback;
+        throw ex;
+      }
+    }
+  }
+
+  /**
    * Index a set of ARCs on a solr server.
    *
    * @param solr The URI of the solr server to index on.
@@ -112,7 +129,7 @@ class WeariHandler(config: Config)
                                     manager = manager,
                                     extraId = extraId,
                                     extraFields = extraFields.toMap.mapValues(iterableAsScalaIterable(_)));
-      indexer.commitOrRollback {
+      commitOrRollback(server) {
         for ((arcname, path) <- arcs.zip(arcPaths)) {
           var in : InputStream = null;
           try {
@@ -163,7 +180,6 @@ class WeariHandler(config: Config)
                                   manager = manager,
                                   extraId = extraId,
                                   extraFields = Map[String,Any]());
-
   }
 
   def clearMergeManager(managerId : String) {
