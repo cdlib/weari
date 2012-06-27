@@ -64,6 +64,7 @@ import org.cdlib.was.weari.SolrDocumentModifier.{ addFields, record2inputDocumen
 import scala.collection.JavaConversions.{ iterableAsScalaIterable, mapAsScalaMap, seqAsJavaList }
 import scala.collection.immutable.HashSet;
 import scala.collection.mutable;
+import scala.util.matching.Regex;
     
 class WeariHandler(config: Config)
   extends thrift.Server.Iface with Logging with ExceptionLogger {
@@ -102,6 +103,47 @@ class WeariHandler(config: Config)
       }
     }
   }
+    
+  def withArcParse[T](path : Path) (f: (Seq[ParsedArchiveRecord])=>T) : T = {
+    val arcname = getArcname(path);
+    var in : InputStream = null;
+    try {
+      in = fs.open(path);
+      if (path.getName.endsWith("gz")) {
+        in = new GZIPInputStream(in);
+      }
+      val records = Json.parse[List[ParsedArchiveRecord]](in);
+      f(records);
+    } catch {
+      case ex : ParsingException => {
+        error("Bad JSON: %s".format(arcname));
+        throw new thrift.BadJSONException(ex.toString, arcname);
+      }
+      case ex : java.io.EOFException => {
+        error("Bad JSON: %s".format(arcname));
+        throw new thrift.BadJSONException(ex.toString, arcname);
+      }
+    } finally {
+      if (in != null) in.close;
+    }
+  }
+
+  def mkSolrServer (url : String) = 
+    new ConcurrentUpdateSolrServer(url,
+                                   mkHttpClient,
+                                   config.queueSize,
+                                   config.threadCount);
+
+  def getMergeManager (solr : String, extraId : String, filterQuery : String) = 
+    mergeManagerCache.getOrElseUpdate(extraId, 
+                                      new MergeManager(config, filterQuery, 
+                                                       new HttpSolrServer(solr)));
+
+  def solrLock[T] (url : String) (f: => T) : T = {
+    locks.getOrElseUpdate(url, new Object).synchronized {
+      f;
+    }
+  }
 
   /**
    * Index a set of ARCs on a solr server.
@@ -119,53 +161,37 @@ class WeariHandler(config: Config)
             extraId : String,
             extraFields : JMap[String, JList[String]]) {
     val arcPaths = arcs.map(getPath(_));
-    locks.getOrElseUpdate(solr, new Object).synchronized {
-      val server = new ConcurrentUpdateSolrServer(solr,
-                                                  mkHttpClient,
-                                                  config.queueSize,
-                                                  config.threadCount);
-      val manager = mergeManagerCache.getOrElseUpdate(extraId,
-        new MergeManager(config, filterQuery, new HttpSolrServer(solr)));
+    solrLock (solr) {
+      val server = mkSolrServer(solr)
+      val manager = getMergeManager(solr, extraId, filterQuery);
       val extraFieldsMap = extraFields.toMap.mapValues(iterableAsScalaIterable(_));
       commitOrRollback(server) {
         for ((arcname, path) <- arcs.zip(arcPaths)) {
-          var in : InputStream = null;
           try {
-            in = fs.open(path);
-    	    if (path.getName.endsWith("gz")) {
-              in = new GZIPInputStream(in);
-            }
-            manager.loadDocs(new SolrQuery("arcname:\"%s\"".format(arcname)));
-            val docs = for (rec <- Json.parse[List[ParsedArchiveRecord]](in))
-                       yield record2inputDocument(rec, extraFieldsMap, extraId);
-            /* group documents for batch merge */
-            /* this will ensure that we don't build up a lot of merges before hitting the */
-            /* trackCommitThreshold */
-            for { group <- docs.grouped(config.batchMergeGroupSize);
-                  merged <- manager.batchMerge(group) } {
-                    server.add(merged); 
-                  }
-            if (manager.trackedCount > config.trackCommitThreshold) {
-              info("Merge manager threshold reached: committing.");
-              server.commit;
-              manager.reset;
+            withArcParse(path) { records =>
+              manager.loadDocs(new SolrQuery("arcname:\"%s\"".format(arcname)));
+              val docs = for (rec <- records)
+                         yield record2inputDocument(rec, extraFieldsMap, extraId);
+              /* group documents for batch merge */
+              /* this will ensure that we don't build up a lot of merges before hitting the */
+              /* trackCommitThreshold */
+              for { group <- docs.grouped(config.batchMergeGroupSize);
+                    merged <- manager.batchMerge(group) } {
+                      server.add(merged); 
+                    }
+              if (manager.trackedCount > config.trackCommitThreshold) {
+                info("Merge manager threshold reached: committing.");
+                server.commit;
+                manager.reset;
+              }
             }
           } catch {
-            case ex : ParsingException => {
-              error("Bad JSON: %s".format(arcname));
-              throw new thrift.BadJSONException(ex.toString, arcname);
-            }
-            case ex : java.io.EOFException => {
-              error("Bad JSON: %s".format(arcname));
-              throw new thrift.BadJSONException(ex.toString, arcname);
-            }
+            case ex : thrift.BadJSONException => throw ex;
             case ex : Exception => {
               error("Caught exception: %s".format(ex), ex);
               debug(getStackTrace(ex));
               throw new thrift.IndexException(ex.toString);
             }
-          } finally {
-            if (in != null) in.close;
           }
         }
       }
@@ -175,12 +201,7 @@ class WeariHandler(config: Config)
   def unindex(solr : String,
               arcs : JList[String],
               extraId : String) {
-    val server = new ConcurrentUpdateSolrServer(solr,
-                                                mkHttpClient,
-                                                config.queueSize,
-                                                config.threadCount);
     val arcPaths = arcs.map(getPath(_));
-    val manager = new MergeManager(config, "*:*", server);
   }
 
   def clearMergeManager(managerId : String) {
@@ -293,6 +314,14 @@ class WeariHandler(config: Config)
     extractArcname(arcName).flatMap { extracted =>
       val jsonPath = new Path(jsonDir, "%s.json.gz".format(extracted));
       if (fs.exists(jsonPath)) Some(jsonPath) else None;
+    }
+  }
+  val ARCNAME_RE = new Regex("""^(.*)\.json(.gz)?$""");
+
+  private def getArcname(path : Path) : String = {
+    path.getName match {
+      case ARCNAME_RE(arcname) => arcname;
+      case o : String => o;
     }
   }
 
