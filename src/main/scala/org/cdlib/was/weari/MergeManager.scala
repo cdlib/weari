@@ -219,8 +219,7 @@ class MergeManager (config : Config, candidatesQuery : String, server : SolrServ
   def unmergeFieldValues (fieldname : String, merged : SolrInputDocument, doc : SolrInputDocument) : Seq[Any] = {
     val valuesToDelete = safeFieldValues(fieldname, doc).toSet;
     val values = safeFieldValues(fieldname, merged);
-    /* we get a stream here anyhow: convert toStream and force evaluation */
-    return values.filterNot(valuesToDelete.contains(_)).toStream.force;
+    return values.filterNot(valuesToDelete.contains(_));
   }
 
   /**
