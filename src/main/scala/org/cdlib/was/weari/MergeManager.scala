@@ -102,9 +102,6 @@ class MergeManager (config : Config, candidatesQuery : String, server : SolrServ
   private var tracked : Map[String,SolrInputDocument] = null;
   this.resetTracked;
 
-  private def cleanId (id : String) =
-    id.replace("\\", "\\\\").replace("\"", "\\\"");
-
   private def resetTracked {
     tracked = new HashMap[String,SolrInputDocument] with SynchronizedMap[String,SolrInputDocument];
   }
@@ -146,7 +143,8 @@ class MergeManager (config : Config, candidatesQuery : String, server : SolrServ
     if (bf.contains(id)) {
       /* if we got a hit in the bloomfilter, try to fetch the doc, then
          merge our new doc with the previous doc */
-      retval = getDocById(id).map(mergeDocs(_, doc)).getOrElse(doc);
+      val mergedDoc = getDocById(id).map(MergeManager.mergeDocs(_, doc));
+      retval = mergedDoc.getOrElse(doc);
     }
     /* whether or not we merged this, we save it for possible later merging */
     tracked.put(id, retval);
@@ -162,7 +160,7 @@ class MergeManager (config : Config, candidatesQuery : String, server : SolrServ
       if (merged.isEmpty) {
         throw new Exception();
       } else {
-        retval = unmergeDocs(merged.get, doc);
+        retval = MergeManager.unmergeDocs(merged.get, doc);
       }
     } else {
       throw new Exception();
@@ -176,19 +174,67 @@ class MergeManager (config : Config, candidatesQuery : String, server : SolrServ
     return retval;
   }
 
+  private def cleanId (id : String) =
+    id.replace("\\", "\\\\").replace("\"", "\\\"");
+
   private def buildIdQuery (ids : Seq[String]) : SolrQuery = {
     val q1 = for (id <- ids) yield "id:\"%s\"".format(cleanId(id));
     return new SolrQuery().setQuery(q1.mkString("", " OR ", ""));
   }
 
-  def batchMerge (docs : Seq[SolrInputDocument]) : Seq[SolrInputDocument] = {
-    val docsToLoad = docs.filter(d=>bf.contains(getId(d)));
-    for (group <- docsToLoad.grouped(config.maxIdQuerySize)) {
+  private def batchLoad(docs : Seq[SolrInputDocument]) {
+    for (group <- docs.grouped(config.maxIdQuerySize)) {
       loadDocs(buildIdQuery(group.map(getId(_))));
     }
-    return for (doc <- docs) yield merge(doc);
   }
 
+  /**
+   * Merge a bunch of docs at once. Hits the solr server more slowly.
+   */
+  def batchMerge (docs : Seq[SolrInputDocument]) : Seq[SolrInputDocument] = {
+    batchLoad(docs.filter(d=>bf.contains(getId(d))));
+    return for (doc <- docs) 
+           yield merge(doc);
+  }
+
+  /**
+   * Load docs from the server for merging. Used for pre-loading docs when we know we will have
+   * a lot of merges to perform. Returns the number of docs loaded.
+   */
+  def loadDocs (q : SolrQuery) : Int = {
+    val docs = new solr.SolrDocumentCollection(server, q.getCopy.setRows(10000));
+    var n = 0;
+    for (doc <- docs) {
+      n += 1;
+      loadDoc(toSolrInputDocument(doc));
+    }
+    return n;
+  }
+      
+  @inline
+  def loadDoc (doc : SolrDocument) {
+    loadDoc(toSolrInputDocument(doc));
+  }
+
+  /**
+   * Load a single document into the merge manager for possible future merging.
+   */
+  @inline
+  def loadDoc (doc : SolrInputDocument) {
+    val id = getId(doc);
+    if (bf.contains(id) && tracked.get(id).isDefined) {
+      /* doc DOES exist in merge manager, merge with existing doc in */
+      /* manager */
+      merge(doc);
+    } else {
+      /* doc does not exist in merge manager yet */
+      bf.add(id);
+      tracked.put(id, doc);
+    }
+  }
+}
+
+object MergeManager {
   /**
    * Returns the field value of either a or b. Assumes that they should
    * have the same value. Will not return the empty string or null;
@@ -305,42 +351,6 @@ class MergeManager (config : Config, candidatesQuery : String, server : SolrServ
        return None;
     } else {
       return Some(retval);
-    }
-  }
-
-  /**
-   * Load docs from the server for merging. Used for pre-loading docs when we know we will have
-   * a lot of merges to perform. Returns the number of docs loaded.
-   */
-  def loadDocs (q : SolrQuery) : Int = {
-    val docs = new solr.SolrDocumentCollection(server, q.getCopy.setRows(10000));
-    var n = 0;
-    for (doc <- docs) {
-      n += 1;
-      loadDoc(toSolrInputDocument(doc));
-    }
-    return n;
-  }
-      
-  @inline
-  def loadDoc (doc : SolrDocument) {
-    loadDoc(toSolrInputDocument(doc));
-  }
-
-  /**
-   * Load a single document into the merge manager for possible future merging.
-   */
-  @inline
-  def loadDoc (doc : SolrInputDocument) {
-    val id = getId(doc);
-    if (bf.contains(id) && tracked.get(id).isDefined) {
-      /* doc DOES exist in merge manager, merge with existing doc in */
-      /* manager */
-      merge(doc);
-    } else {
-      /* doc does not exist in merge manager yet */
-      bf.add(id);
-      tracked.put(id, doc);
     }
   }
 }

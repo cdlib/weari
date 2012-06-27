@@ -54,7 +54,7 @@ class MergeManagerSpec extends FunSpec with BeforeAndAfter with ShouldMatchers {
 
   describe ("Merge manager") {
     it("should merge docs successfully") {
-      assertDocsEqual(merged, manager.mergeDocs(adoc, bdoc));
+      assertDocsEqual(merged, MergeManager.mergeDocs(adoc, bdoc));
     }
 
     it("should return an equal document on first merge") {
@@ -75,27 +75,27 @@ class MergeManagerSpec extends FunSpec with BeforeAndAfter with ShouldMatchers {
 
     it("should get the correct field value when the first or second doc lacks the field") {
       assert (Some("hello world") === 
-        manager.getSingleFieldValue("field",
-                                    makeDoc("field" -> "hello world"),
-                                    makeDoc()));
+        MergeManager.getSingleFieldValue("field",
+                                         makeDoc("field" -> "hello world"),
+                                         makeDoc()));
       assert (Some("hello world") === 
-        manager.getSingleFieldValue("field", 
-                                    makeDoc(),
-                                    makeDoc("field" -> "hello world")));
+        MergeManager.getSingleFieldValue("field", 
+                                         makeDoc(),
+                                         makeDoc("field" -> "hello world")));
     }
 
     it("should merge fields in order") {
       assert (Seq("foo", "bar") ===
-        manager.mergeFieldValues("field",
-                                 makeDoc("field" -> "foo"),
-                                 makeDoc("field" -> "bar")));
+        MergeManager.mergeFieldValues("field",
+                                      makeDoc("field" -> "foo"),
+                                      makeDoc("field" -> "bar")));
     }
 
     it("should unmerge fields successfully") {
       assert (Seq("bar", "baz") ===
-        manager.unmergeFieldValues("field",
-                                   makeDoc("field" -> Seq("foo", "bar", "baz")),
-                                   makeDoc("field" -> "foo")));
+        MergeManager.unmergeFieldValues("field",
+                                        makeDoc("field" -> Seq("foo", "bar", "baz")),
+                                        makeDoc("field" -> "foo")));
     }
 
     it("should load a document successfully") {
@@ -125,7 +125,7 @@ class MergeManagerSpec extends FunSpec with BeforeAndAfter with ShouldMatchers {
 
   describe("unmergeDocs") {
     it("should work") {
-      val unmerged = manager.unmergeDocs(merged, bdoc);
+      val unmerged = MergeManager.unmergeDocs(merged, bdoc);
       assert(doc2map(unmerged.get) === doc2map(makeDoc(ID_FIELD -> "abc",
                                                        ARCNAME_FIELD -> "ARC-A.arc.gz",
                                                        CONTENT_FIELD -> "hello world")));
