@@ -35,11 +35,16 @@ class MergeManagerSpec extends FunSpec with BeforeAndAfter with ShouldMatchers {
                      ARCNAME_FIELD -> "ARC-A.arc.gz",
                      CONTENT_FIELD -> "hello world");
   val bdoc = makeDoc(ID_FIELD -> "abc",
-                     ARCNAME_FIELD -> "ARC-B.arc.gz");
+                     ARCNAME_FIELD -> "ARC-B.arc.gz",
+                     CONTENT_FIELD -> "hello world");
   val merged = makeDoc(ID_FIELD -> "abc",
                        ARCNAME_FIELD -> "ARC-A.arc.gz",
                        ARCNAME_FIELD -> "ARC-B.arc.gz",
                        CONTENT_FIELD -> "hello world");
+
+  def assertDocsEqual(a : SolrInputDocument, b : SolrInputDocument) {
+    assert(doc2map(a) === doc2map(b));
+  }
 
   describe ("Sample documents") {
     it("should not be equal") {
@@ -49,16 +54,23 @@ class MergeManagerSpec extends FunSpec with BeforeAndAfter with ShouldMatchers {
 
   describe ("Merge manager") {
     it("should merge docs successfully") {
-      assert(doc2map(merged) === doc2map(manager.mergeDocs(adoc, bdoc)));
+      assertDocsEqual(merged, manager.mergeDocs(adoc, bdoc));
     }
 
     it("should return an equal document on first merge") {
-      assert(doc2map(manager.merge(adoc)) === doc2map(adoc));
+      assertDocsEqual(manager.merge(adoc), adoc);
     }
 
-    it("should a merged document on second merge") {
+    it("should merge with an empty content field") {
+      val doc = makeDoc(ID_FIELD -> "abc",
+                        ARCNAME_FIELD -> "ARC-B.arc.gz");
       manager.merge(adoc);
-      assert(doc2map(manager.merge(bdoc)) === doc2map(merged));
+      assertDocsEqual(manager.merge(doc), merged);
+    }
+
+    it("should yield a merged document on second merge") {
+      manager.merge(adoc);
+      assertDocsEqual(manager.merge(bdoc), merged);
     }
 
     it("should get the correct field value when the first or second doc lacks the field") {
@@ -82,8 +94,8 @@ class MergeManagerSpec extends FunSpec with BeforeAndAfter with ShouldMatchers {
     it("should unmerge fields successfully") {
       assert (Seq("bar", "baz") ===
         manager.unmergeFieldValues("field",
-                                   makeDoc("field" -> "foo"),
-                                   makeDoc("field" -> Seq("foo", "bar", "baz"))));
+                                   makeDoc("field" -> Seq("foo", "bar", "baz")),
+                                   makeDoc("field" -> "foo")));
     }
 
     it("should load a document successfully") {
@@ -108,6 +120,38 @@ class MergeManagerSpec extends FunSpec with BeforeAndAfter with ShouldMatchers {
                         CONTENT_FIELD -> "");
       manager.merge(adoc);
       assert(doc2map(manager.merge(doc)) === doc2map(merged));
+    }
+  }
+
+  describe("unmergeDocs") {
+    it("should work") {
+      val unmerged = manager.unmergeDocs(merged, bdoc);
+      assert(doc2map(unmerged.get) === doc2map(makeDoc(ID_FIELD -> "abc",
+                                                       ARCNAME_FIELD -> "ARC-A.arc.gz",
+                                                       CONTENT_FIELD -> "hello world")));
+    }
+  }
+
+  describe("Unmerging") {
+    it("should happen successfully") {
+      manager.merge(adoc);
+      manager.merge(bdoc);
+      manager.unmerge(bdoc);
+      assert(manager.getDocById("abc").map(doc2map(_)) === Some(doc2map(adoc)));
+    }
+
+    it("should happen successfully in any order") {
+      manager.merge(adoc);
+      manager.merge(bdoc);
+      manager.unmerge(adoc);
+      assertDocsEqual(manager.getDocById("abc").get, bdoc);
+    }
+
+    it("should return None when unmerging the final doc") {
+      manager.merge(adoc);
+      manager.merge(bdoc);
+      manager.unmerge(adoc);
+      assert(manager.unmerge(bdoc) === None);
     }
   }
 }

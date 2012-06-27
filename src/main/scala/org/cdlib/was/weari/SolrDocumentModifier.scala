@@ -35,9 +35,24 @@ package org.cdlib.was.weari;
 
 import org.apache.solr.common.SolrInputDocument;
 
+import org.cdlib.was.weari.SolrFields.{ getId, ID_FIELD };
+
 import scala.collection.JavaConversions.collectionAsScalaIterable;
 
 object SolrDocumentModifier {
+  /**
+   * Convert a ParsedArchiveRecord into a SolrInputDocument, merging
+   * in extraFields and extraId.
+   */
+  def record2inputDocument (record : ParsedArchiveRecord, 
+                            extraFields : Map[String, Any], 
+                            extraId : String) : SolrInputDocument = {
+    val doc = ParsedArchiveRecordSolrizer.convert(record);
+    addFields(doc, extraFields.toSeq : _*);
+    doc.setField(ID_FIELD, "%s.%s".format(getId(doc), extraId));
+    return doc;
+  }
+
   /**
    * Add a set of fields to a SolrInputDocument.
    * If field value is None or null, do not add.

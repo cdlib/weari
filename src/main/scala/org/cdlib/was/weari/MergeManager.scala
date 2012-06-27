@@ -59,6 +59,8 @@ import scala.math.max;
  * crawl have the same id.
  * So we also need to keep track of documents that we have previously merged, in memory.
  *
+ * NOT thread safe.
+ * 
  * @author Erik Hetzner <erik.hetzner@ucop.edu>
  */
 class MergeManager (config : Config, candidatesQuery : String, server : SolrServer)
@@ -152,6 +154,28 @@ class MergeManager (config : Config, candidatesQuery : String, server : SolrServ
     return retval;
   }
 
+  def unmerge(doc : SolrInputDocument) : Option[SolrInputDocument] = {
+    val id = getId(doc);
+    var retval : Option[SolrInputDocument] = None;
+    if (bf.contains(id)) {
+      val merged = getDocById(id);
+      if (merged.isEmpty) {
+        throw new Exception();
+      } else {
+        retval = unmergeDocs(merged.get, doc);
+      }
+    } else {
+      throw new Exception();
+    }
+    if (retval.isDefined) {
+      tracked.put(id, retval.get);
+      bf.add(id);
+    } else {
+      tracked.remove(id);
+    }
+    return retval;
+  }
+
   private def buildIdQuery (ids : Seq[String]) : SolrQuery = {
     val q1 = for (id <- ids) yield "id:\"%s\"".format(cleanId(id));
     return new SolrQuery().setQuery(q1.mkString("", " OR ", ""));
@@ -183,45 +207,107 @@ class MergeManager (config : Config, candidatesQuery : String, server : SolrServ
     (null2seq(a.getFieldValues(fieldname)) ++
      null2seq(b.getFieldValues(fieldname))).distinct;
 
+  private def safeFieldValues(fieldname : String, doc : SolrInputDocument) : Seq[Any] = 
+    null2option(doc.getField(fieldname)) match {
+      case None => List[Any]();
+      case Some(field) => null2seq(field.getValues);
+    }
+
   /**
    * Remove the field values in one doc from a merged doc.
    */
-  def unmergeFieldValues (fieldname : String, doc : SolrInputDocument, merged : SolrInputDocument) : Seq[Any] = {
-    val valsToDelete = null2seq(doc.getFieldValues(fieldname)).toSet;
-    return null2seq(merged.getFieldValues(fieldname)).filterNot(valsToDelete(_));
+  def unmergeFieldValues (fieldname : String, merged : SolrInputDocument, doc : SolrInputDocument) : Seq[Any] = {
+    val valuesToDelete = safeFieldValues(fieldname, doc).toSet;
+    val values = safeFieldValues(fieldname, merged);
+    /* we get a stream here anyhow: convert toStream and force evaluation */
+    return values.filterNot(valuesToDelete.contains(_)).toStream.force;
   }
 
-  private def mergeOrUnmergeDocs (a : SolrInputDocument, 
-                                  b : SolrInputDocument,
-                                  f : (String, SolrInputDocument, SolrInputDocument)=>Seq[Any]) : SolrInputDocument = {
+  /**
+   * Sets the field values of SINGLE_VALUED_FIELDS to either the
+   * content in A or B, whichever is set.
+   */
+  private def setSingleValuedFields (a : SolrInputDocument, b : SolrInputDocument, merged : SolrInputDocument) {
+    for { fieldname <- SINGLE_VALUED_FIELDS;
+          fieldvalue <- getSingleFieldValue(fieldname, a, b) } {
+            merged.setField(fieldname, fieldvalue);
+          }
+  }
+    
+  /**
+   * Merge fields from MULTI_VALUED_MERGE_FIELDS
+   */
+  private def mergeMultiValuedMergeFields (a : SolrInputDocument, 
+                                           b : SolrInputDocument, 
+                                           merged : SolrInputDocument) {
+    for { fieldname <- MULTI_VALUED_MERGE_FIELDS;
+          fieldvalue <- mergeFieldValues(fieldname, a, b) } {
+            merged.addField(fieldname, fieldvalue);
+          }
+  }
+
+  /**
+   * "Unmmerge" MULTI_VALUED_MERGE_FIELDS in doc from the values in merged.
+   */
+  private def unmergeMultiValuedMergeFields (merged : SolrInputDocument, 
+                                             doc : SolrInputDocument, 
+                                             unmerge : SolrInputDocument) {
+    for { fieldname <- MULTI_VALUED_MERGE_FIELDS;
+          fieldvalue <- unmergeFieldValues(fieldname, merged, doc) } {
+            unmerge.addField(fieldname, fieldvalue);
+          }
+  }
+  
+  /**
+   * Sets values from MULTI_VALUED_SET_FIELDS in the merged document to the value in
+   * orig.
+   */
+  private def setMultiValuedSetFields (orig : SolrInputDocument, 
+                                       merged : SolrInputDocument) {
+    for { fieldname  <- MULTI_VALUED_SET_FIELDS;
+          rawfield   <- null2option(orig.getField(fieldname));
+          fieldvalue <- null2seq(rawfield.getValues) } {
+            merged.addField(fieldname, fieldvalue);
+          }
+  }
+    
+  /**
+   * Merge two documents into one, presuming they have the same id.
+   * Multi-value fields are concatenated.
+   * Document b is used for MULTI_VALUED_SET_FIELDS, e.g. tags.
+   */
+  def mergeDocs (a : SolrInputDocument, b : SolrInputDocument) : SolrInputDocument = {
     val retval = new SolrInputDocument;
     if (a.getFieldValue(ID_FIELD) != b.getFieldValue(ID_FIELD)) {
       throw new Exception;
     } else {
-      /* identical fields */
-      for { fieldname <- SINGLE_VALUED_FIELDS;
-            fieldvalue <- getSingleFieldValue(fieldname, a, b) }
-        retval.setField(fieldname, fieldvalue);
-      /* fields to merge */
-      for { fieldname <- MULTI_VALUED_FIELDS;
-            fieldvalue <- f(fieldname, a, b) }
-        retval.addField(fieldname, fieldvalue);
+      setSingleValuedFields(a, b, retval);
+      mergeMultiValuedMergeFields(a, b, retval);
+      setMultiValuedSetFields(b, retval);
     }
     return retval;
   }
 
   /**
-   * Merge two documents into one, presuming they have the same id.
-   * Multi-value fields are concatenated.
-   */
-  def mergeDocs (a : SolrInputDocument, b : SolrInputDocument) : SolrInputDocument =
-    mergeOrUnmergeDocs(a, b, mergeFieldValues);
-
-  /**
    * "Unmerge" doc from a merged doc.
    */
-  def unmergeDocs (doc : SolrInputDocument, merged : SolrInputDocument) : SolrInputDocument = 
-    mergeOrUnmergeDocs(doc, merged, unmergeFieldValues);
+  def unmergeDocs (merged : SolrInputDocument, doc : SolrInputDocument) : Option[SolrInputDocument] = {
+    val retval = new SolrInputDocument;
+    if (merged.getFieldValue(ID_FIELD) != doc.getFieldValue(ID_FIELD)) {
+      throw new Exception;
+    } else {
+      setSingleValuedFields(doc, merged, retval);
+      unmergeMultiValuedMergeFields(merged, doc, retval);
+      setMultiValuedSetFields(merged, retval);
+    }
+    /* check ARCNAME field. If this document no longer exists in some */
+    /* arc, then we should delete it from the index */
+    if (retval.getFieldValue(ARCNAME_FIELD) == null) {
+       return None;
+    } else {
+      return Some(retval);
+    }
+  }
 
   /**
    * Load docs from the server for merging. Used for pre-loading docs when we know we will have

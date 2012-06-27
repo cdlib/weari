@@ -84,11 +84,13 @@ object SolrFields {
            URL_FIELD,
            URL_TOKENIZED_FIELD);
 
-  val MULTI_VALUED_FIELDS =
+  val MULTI_VALUED_MERGE_FIELDS =
     List(ARCNAME_FIELD,
          DATE_FIELD,
-         JOB_FIELD,
-         TAG_FIELD);
+         JOB_FIELD);
+  
+  val MULTI_VALUED_SET_FIELDS = 
+    List(TAG_FIELD);
 
   /**
    * Return the ID field in a solr document.
