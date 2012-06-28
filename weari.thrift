@@ -1,3 +1,4 @@
+
 namespace rb weari.thrift
 namespace java org.cdlib.was.weari.thrift
 
@@ -40,4 +41,8 @@ service Server {
   bool isArcParsed(1: string arc);
   
   void deleteParse(1: string arc);
+
+  void setFields(1: string solr,
+                 2: string query,
+                 3: map<string,list<string>> fields);
 }

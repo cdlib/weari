@@ -51,13 +51,15 @@ import org.apache.pig.backend.executionengine.ExecJob.JOB_STATUS;
 import org.apache.pig.impl.PigContext;
 import org.apache.pig.impl.util.PropertiesUtil;
 
-import org.apache.solr.common.SolrInputDocument;
+import org.apache.solr.common.{SolrInputDocument,SolrInputField};
 import org.apache.solr.client.solrj.{SolrQuery,SolrServer};
 import org.apache.solr.client.solrj.impl.{ ConcurrentUpdateSolrServer, HttpClientUtil, HttpSolrServer };
 import org.apache.solr.common.params.ModifiableSolrParams;
+import org.apache.solr.client.solrj.util.ClientUtils.toSolrInputDocument;
 
 import org.cdlib.was.weari.Utility.{extractArcname,null2option};
 import org.cdlib.was.weari._;
+import org.cdlib.was.weari.solr._;
 import org.cdlib.was.weari.thrift;
 import org.cdlib.was.weari.SolrDocumentModifier.{ addFields, record2inputDocument };
 
@@ -198,6 +200,34 @@ class WeariHandler(config: Config)
     }
   }
 
+  def setFields(solr : String,
+               queryString : String,
+               fields : JMap[String, JList[String]]) {
+    solrLock(solr) {
+      val writeServer = mkSolrServer(solr);
+      val readServer = new HttpSolrServer(solr);
+      val q = new SolrQuery(queryString).setRows(10000);
+      /* create SolrInputField list to use */
+      val inputFields = fields.keySet.map {(fieldname)=>
+        val values = fields.get(fieldname);
+        val tmp = new SolrInputField(fieldname);
+        for (value <- iterableAsScalaIterable(values))
+          tmp.addValue(value, 1.0f);
+        tmp;
+      }
+
+      commitOrRollback(writeServer) {
+        val docs = new SolrDocumentCollection(readServer, q);
+        for (doc <- docs) {
+          val inputDoc = toSolrInputDocument(doc);
+          for (field <- inputFields) 
+            inputDoc.put(field.getName, field);
+          writeServer.add(inputDoc);
+        }
+      }
+    }
+  }
+               
   def unindex(solr : String,
               arcs : JList[String],
               extraId : String) {

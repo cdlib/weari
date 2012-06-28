@@ -105,6 +105,20 @@ require 'weari/thrift/weari_types'
                   return
                 end
 
+                def setFields(solr, query, fields)
+                  send_setFields(solr, query, fields)
+                  recv_setFields()
+                end
+
+                def send_setFields(solr, query, fields)
+                  send_message('setFields', SetFields_args, :solr => solr, :query => query, :fields => fields)
+                end
+
+                def recv_setFields()
+                  result = receive_message(SetFields_result)
+                  return
+                end
+
               end
 
               class Processor
@@ -170,6 +184,13 @@ require 'weari/thrift/weari_types'
                   result = DeleteParse_result.new()
                   @handler.deleteParse(args.arc)
                   write_result(result, oprot, 'deleteParse', seqid)
+                end
+
+                def process_setFields(seqid, iprot, oprot)
+                  args = read_args(iprot, SetFields_args)
+                  result = SetFields_result.new()
+                  @handler.setFields(args.solr, args.query, args.fields)
+                  write_result(result, oprot, 'setFields', seqid)
                 end
 
               end
@@ -372,6 +393,41 @@ require 'weari/thrift/weari_types'
               end
 
               class DeleteParse_result
+                include ::Thrift::Struct, ::Thrift::Struct_Union
+
+                FIELDS = {
+
+                }
+
+                def struct_fields; FIELDS; end
+
+                def validate
+                end
+
+                ::Thrift::Struct.generate_accessors self
+              end
+
+              class SetFields_args
+                include ::Thrift::Struct, ::Thrift::Struct_Union
+                SOLR = 1
+                QUERY = 2
+                FIELDS = 3
+
+                FIELDS = {
+                  SOLR => {:type => ::Thrift::Types::STRING, :name => 'solr'},
+                  QUERY => {:type => ::Thrift::Types::STRING, :name => 'query'},
+                  FIELDS => {:type => ::Thrift::Types::MAP, :name => 'fields', :key => {:type => ::Thrift::Types::STRING}, :value => {:type => ::Thrift::Types::LIST, :element => {:type => ::Thrift::Types::STRING}}}
+                }
+
+                def struct_fields; FIELDS; end
+
+                def validate
+                end
+
+                ::Thrift::Struct.generate_accessors self
+              end
+
+              class SetFields_result
                 include ::Thrift::Struct, ::Thrift::Struct_Union
 
                 FIELDS = {

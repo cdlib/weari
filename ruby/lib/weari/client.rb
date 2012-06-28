@@ -65,6 +65,12 @@ module Weari
       end
     end
 
+    def set_fields(solr_uri, query, fields)
+      with_open_transport do
+        @t_client.set_fields(solr_uri, query, fields)
+      end
+    end
+
     def is_arc_parsed(arc)
       return with_open_transport do
         @t_client.isArcParsed(arc)

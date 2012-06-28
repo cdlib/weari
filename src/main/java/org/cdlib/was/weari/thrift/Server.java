@@ -43,6 +43,8 @@ public class Server {
 
     public void deleteParse(String arc) throws org.apache.thrift.TException;
 
+    public void setFields(String solr, String query, Map<String,List<String>> fields) throws org.apache.thrift.TException;
+
   }
 
   public interface AsyncIface {
@@ -58,6 +60,8 @@ public class Server {
     public void isArcParsed(String arc, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.isArcParsed_call> resultHandler) throws org.apache.thrift.TException;
 
     public void deleteParse(String arc, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.deleteParse_call> resultHandler) throws org.apache.thrift.TException;
+
+    public void setFields(String solr, String query, Map<String,List<String>> fields, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.setFields_call> resultHandler) throws org.apache.thrift.TException;
 
   }
 
@@ -228,6 +232,28 @@ public class Server {
     {
       deleteParse_result result = new deleteParse_result();
       receiveBase(result, "deleteParse");
+      return;
+    }
+
+    public void setFields(String solr, String query, Map<String,List<String>> fields) throws org.apache.thrift.TException
+    {
+      send_setFields(solr, query, fields);
+      recv_setFields();
+    }
+
+    public void send_setFields(String solr, String query, Map<String,List<String>> fields) throws org.apache.thrift.TException
+    {
+      setFields_args args = new setFields_args();
+      args.setSolr(solr);
+      args.setQuery(query);
+      args.setFields(fields);
+      sendBase("setFields", args);
+    }
+
+    public void recv_setFields() throws org.apache.thrift.TException
+    {
+      setFields_result result = new setFields_result();
+      receiveBase(result, "setFields");
       return;
     }
 
@@ -459,6 +485,44 @@ public class Server {
       }
     }
 
+    public void setFields(String solr, String query, Map<String,List<String>> fields, org.apache.thrift.async.AsyncMethodCallback<setFields_call> resultHandler) throws org.apache.thrift.TException {
+      checkReady();
+      setFields_call method_call = new setFields_call(solr, query, fields, resultHandler, this, ___protocolFactory, ___transport);
+      this.___currentMethod = method_call;
+      ___manager.call(method_call);
+    }
+
+    public static class setFields_call extends org.apache.thrift.async.TAsyncMethodCall {
+      private String solr;
+      private String query;
+      private Map<String,List<String>> fields;
+      public setFields_call(String solr, String query, Map<String,List<String>> fields, org.apache.thrift.async.AsyncMethodCallback<setFields_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+        super(client, protocolFactory, transport, resultHandler, false);
+        this.solr = solr;
+        this.query = query;
+        this.fields = fields;
+      }
+
+      public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("setFields", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        setFields_args args = new setFields_args();
+        args.setSolr(solr);
+        args.setQuery(query);
+        args.setFields(fields);
+        args.write(prot);
+        prot.writeMessageEnd();
+      }
+
+      public void getResult() throws org.apache.thrift.TException {
+        if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
+          throw new IllegalStateException("Method call not finished!");
+        }
+        org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
+        org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        (new Client(prot)).recv_setFields();
+      }
+    }
+
   }
 
   public static class Processor<I extends Iface> extends org.apache.thrift.TBaseProcessor<I> implements org.apache.thrift.TProcessor {
@@ -478,6 +542,7 @@ public class Server {
       processMap.put("parseArcs", new parseArcs());
       processMap.put("isArcParsed", new isArcParsed());
       processMap.put("deleteParse", new deleteParse());
+      processMap.put("setFields", new setFields());
       return processMap;
     }
 
@@ -594,6 +659,22 @@ public class Server {
       protected deleteParse_result getResult(I iface, deleteParse_args args) throws org.apache.thrift.TException {
         deleteParse_result result = new deleteParse_result();
         iface.deleteParse(args.arc);
+        return result;
+      }
+    }
+
+    private static class setFields<I extends Iface> extends org.apache.thrift.ProcessFunction<I, setFields_args> {
+      public setFields() {
+        super("setFields");
+      }
+
+      protected setFields_args getEmptyArgsInstance() {
+        return new setFields_args();
+      }
+
+      protected setFields_result getResult(I iface, setFields_args args) throws org.apache.thrift.TException {
+        setFields_result result = new setFields_result();
+        iface.setFields(args.solr, args.query, args.fields);
         return result;
       }
     }
@@ -5880,6 +5961,903 @@ public class Server {
 
       @Override
       public void read(org.apache.thrift.protocol.TProtocol prot, deleteParse_result struct) throws org.apache.thrift.TException {
+        TTupleProtocol iprot = (TTupleProtocol) prot;
+      }
+    }
+
+  }
+
+  public static class setFields_args implements org.apache.thrift.TBase<setFields_args, setFields_args._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("setFields_args");
+
+    private static final org.apache.thrift.protocol.TField SOLR_FIELD_DESC = new org.apache.thrift.protocol.TField("solr", org.apache.thrift.protocol.TType.STRING, (short)1);
+    private static final org.apache.thrift.protocol.TField QUERY_FIELD_DESC = new org.apache.thrift.protocol.TField("query", org.apache.thrift.protocol.TType.STRING, (short)2);
+    private static final org.apache.thrift.protocol.TField FIELDS_FIELD_DESC = new org.apache.thrift.protocol.TField("fields", org.apache.thrift.protocol.TType.MAP, (short)3);
+
+    private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
+    static {
+      schemes.put(StandardScheme.class, new setFields_argsStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new setFields_argsTupleSchemeFactory());
+    }
+
+    public String solr; // required
+    public String query; // required
+    public Map<String,List<String>> fields; // required
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+      SOLR((short)1, "solr"),
+      QUERY((short)2, "query"),
+      FIELDS((short)3, "fields");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 1: // SOLR
+            return SOLR;
+          case 2: // QUERY
+            return QUERY;
+          case 3: // FIELDS
+            return FIELDS;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+    public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.SOLR, new org.apache.thrift.meta_data.FieldMetaData("solr", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+      tmpMap.put(_Fields.QUERY, new org.apache.thrift.meta_data.FieldMetaData("query", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+      tmpMap.put(_Fields.FIELDS, new org.apache.thrift.meta_data.FieldMetaData("fields", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.MapMetaData(org.apache.thrift.protocol.TType.MAP, 
+              new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING), 
+              new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
+                  new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)))));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(setFields_args.class, metaDataMap);
+    }
+
+    public setFields_args() {
+    }
+
+    public setFields_args(
+      String solr,
+      String query,
+      Map<String,List<String>> fields)
+    {
+      this();
+      this.solr = solr;
+      this.query = query;
+      this.fields = fields;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public setFields_args(setFields_args other) {
+      if (other.isSetSolr()) {
+        this.solr = other.solr;
+      }
+      if (other.isSetQuery()) {
+        this.query = other.query;
+      }
+      if (other.isSetFields()) {
+        Map<String,List<String>> __this__fields = new HashMap<String,List<String>>();
+        for (Map.Entry<String, List<String>> other_element : other.fields.entrySet()) {
+
+          String other_element_key = other_element.getKey();
+          List<String> other_element_value = other_element.getValue();
+
+          String __this__fields_copy_key = other_element_key;
+
+          List<String> __this__fields_copy_value = new ArrayList<String>();
+          for (String other_element_value_element : other_element_value) {
+            __this__fields_copy_value.add(other_element_value_element);
+          }
+
+          __this__fields.put(__this__fields_copy_key, __this__fields_copy_value);
+        }
+        this.fields = __this__fields;
+      }
+    }
+
+    public setFields_args deepCopy() {
+      return new setFields_args(this);
+    }
+
+    @Override
+    public void clear() {
+      this.solr = null;
+      this.query = null;
+      this.fields = null;
+    }
+
+    public String getSolr() {
+      return this.solr;
+    }
+
+    public setFields_args setSolr(String solr) {
+      this.solr = solr;
+      return this;
+    }
+
+    public void unsetSolr() {
+      this.solr = null;
+    }
+
+    /** Returns true if field solr is set (has been assigned a value) and false otherwise */
+    public boolean isSetSolr() {
+      return this.solr != null;
+    }
+
+    public void setSolrIsSet(boolean value) {
+      if (!value) {
+        this.solr = null;
+      }
+    }
+
+    public String getQuery() {
+      return this.query;
+    }
+
+    public setFields_args setQuery(String query) {
+      this.query = query;
+      return this;
+    }
+
+    public void unsetQuery() {
+      this.query = null;
+    }
+
+    /** Returns true if field query is set (has been assigned a value) and false otherwise */
+    public boolean isSetQuery() {
+      return this.query != null;
+    }
+
+    public void setQueryIsSet(boolean value) {
+      if (!value) {
+        this.query = null;
+      }
+    }
+
+    public int getFieldsSize() {
+      return (this.fields == null) ? 0 : this.fields.size();
+    }
+
+    public void putToFields(String key, List<String> val) {
+      if (this.fields == null) {
+        this.fields = new HashMap<String,List<String>>();
+      }
+      this.fields.put(key, val);
+    }
+
+    public Map<String,List<String>> getFields() {
+      return this.fields;
+    }
+
+    public setFields_args setFields(Map<String,List<String>> fields) {
+      this.fields = fields;
+      return this;
+    }
+
+    public void unsetFields() {
+      this.fields = null;
+    }
+
+    /** Returns true if field fields is set (has been assigned a value) and false otherwise */
+    public boolean isSetFields() {
+      return this.fields != null;
+    }
+
+    public void setFieldsIsSet(boolean value) {
+      if (!value) {
+        this.fields = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case SOLR:
+        if (value == null) {
+          unsetSolr();
+        } else {
+          setSolr((String)value);
+        }
+        break;
+
+      case QUERY:
+        if (value == null) {
+          unsetQuery();
+        } else {
+          setQuery((String)value);
+        }
+        break;
+
+      case FIELDS:
+        if (value == null) {
+          unsetFields();
+        } else {
+          setFields((Map<String,List<String>>)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case SOLR:
+        return getSolr();
+
+      case QUERY:
+        return getQuery();
+
+      case FIELDS:
+        return getFields();
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case SOLR:
+        return isSetSolr();
+      case QUERY:
+        return isSetQuery();
+      case FIELDS:
+        return isSetFields();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof setFields_args)
+        return this.equals((setFields_args)that);
+      return false;
+    }
+
+    public boolean equals(setFields_args that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_solr = true && this.isSetSolr();
+      boolean that_present_solr = true && that.isSetSolr();
+      if (this_present_solr || that_present_solr) {
+        if (!(this_present_solr && that_present_solr))
+          return false;
+        if (!this.solr.equals(that.solr))
+          return false;
+      }
+
+      boolean this_present_query = true && this.isSetQuery();
+      boolean that_present_query = true && that.isSetQuery();
+      if (this_present_query || that_present_query) {
+        if (!(this_present_query && that_present_query))
+          return false;
+        if (!this.query.equals(that.query))
+          return false;
+      }
+
+      boolean this_present_fields = true && this.isSetFields();
+      boolean that_present_fields = true && that.isSetFields();
+      if (this_present_fields || that_present_fields) {
+        if (!(this_present_fields && that_present_fields))
+          return false;
+        if (!this.fields.equals(that.fields))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(setFields_args other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      setFields_args typedOther = (setFields_args)other;
+
+      lastComparison = Boolean.valueOf(isSetSolr()).compareTo(typedOther.isSetSolr());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetSolr()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.solr, typedOther.solr);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = Boolean.valueOf(isSetQuery()).compareTo(typedOther.isSetQuery());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetQuery()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.query, typedOther.query);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = Boolean.valueOf(isSetFields()).compareTo(typedOther.isSetFields());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetFields()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.fields, typedOther.fields);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      schemes.get(iprot.getScheme()).getScheme().read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("setFields_args(");
+      boolean first = true;
+
+      sb.append("solr:");
+      if (this.solr == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.solr);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("query:");
+      if (this.query == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.query);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("fields:");
+      if (this.fields == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.fields);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class setFields_argsStandardSchemeFactory implements SchemeFactory {
+      public setFields_argsStandardScheme getScheme() {
+        return new setFields_argsStandardScheme();
+      }
+    }
+
+    private static class setFields_argsStandardScheme extends StandardScheme<setFields_args> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, setFields_args struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            case 1: // SOLR
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+                struct.solr = iprot.readString();
+                struct.setSolrIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            case 2: // QUERY
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+                struct.query = iprot.readString();
+                struct.setQueryIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            case 3: // FIELDS
+              if (schemeField.type == org.apache.thrift.protocol.TType.MAP) {
+                {
+                  org.apache.thrift.protocol.TMap _map42 = iprot.readMapBegin();
+                  struct.fields = new HashMap<String,List<String>>(2*_map42.size);
+                  for (int _i43 = 0; _i43 < _map42.size; ++_i43)
+                  {
+                    String _key44; // required
+                    List<String> _val45; // required
+                    _key44 = iprot.readString();
+                    {
+                      org.apache.thrift.protocol.TList _list46 = iprot.readListBegin();
+                      _val45 = new ArrayList<String>(_list46.size);
+                      for (int _i47 = 0; _i47 < _list46.size; ++_i47)
+                      {
+                        String _elem48; // required
+                        _elem48 = iprot.readString();
+                        _val45.add(_elem48);
+                      }
+                      iprot.readListEnd();
+                    }
+                    struct.fields.put(_key44, _val45);
+                  }
+                  iprot.readMapEnd();
+                }
+                struct.setFieldsIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, setFields_args struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        if (struct.solr != null) {
+          oprot.writeFieldBegin(SOLR_FIELD_DESC);
+          oprot.writeString(struct.solr);
+          oprot.writeFieldEnd();
+        }
+        if (struct.query != null) {
+          oprot.writeFieldBegin(QUERY_FIELD_DESC);
+          oprot.writeString(struct.query);
+          oprot.writeFieldEnd();
+        }
+        if (struct.fields != null) {
+          oprot.writeFieldBegin(FIELDS_FIELD_DESC);
+          {
+            oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.LIST, struct.fields.size()));
+            for (Map.Entry<String, List<String>> _iter49 : struct.fields.entrySet())
+            {
+              oprot.writeString(_iter49.getKey());
+              {
+                oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, _iter49.getValue().size()));
+                for (String _iter50 : _iter49.getValue())
+                {
+                  oprot.writeString(_iter50);
+                }
+                oprot.writeListEnd();
+              }
+            }
+            oprot.writeMapEnd();
+          }
+          oprot.writeFieldEnd();
+        }
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class setFields_argsTupleSchemeFactory implements SchemeFactory {
+      public setFields_argsTupleScheme getScheme() {
+        return new setFields_argsTupleScheme();
+      }
+    }
+
+    private static class setFields_argsTupleScheme extends TupleScheme<setFields_args> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, setFields_args struct) throws org.apache.thrift.TException {
+        TTupleProtocol oprot = (TTupleProtocol) prot;
+        BitSet optionals = new BitSet();
+        if (struct.isSetSolr()) {
+          optionals.set(0);
+        }
+        if (struct.isSetQuery()) {
+          optionals.set(1);
+        }
+        if (struct.isSetFields()) {
+          optionals.set(2);
+        }
+        oprot.writeBitSet(optionals, 3);
+        if (struct.isSetSolr()) {
+          oprot.writeString(struct.solr);
+        }
+        if (struct.isSetQuery()) {
+          oprot.writeString(struct.query);
+        }
+        if (struct.isSetFields()) {
+          {
+            oprot.writeI32(struct.fields.size());
+            for (Map.Entry<String, List<String>> _iter51 : struct.fields.entrySet())
+            {
+              oprot.writeString(_iter51.getKey());
+              {
+                oprot.writeI32(_iter51.getValue().size());
+                for (String _iter52 : _iter51.getValue())
+                {
+                  oprot.writeString(_iter52);
+                }
+              }
+            }
+          }
+        }
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, setFields_args struct) throws org.apache.thrift.TException {
+        TTupleProtocol iprot = (TTupleProtocol) prot;
+        BitSet incoming = iprot.readBitSet(3);
+        if (incoming.get(0)) {
+          struct.solr = iprot.readString();
+          struct.setSolrIsSet(true);
+        }
+        if (incoming.get(1)) {
+          struct.query = iprot.readString();
+          struct.setQueryIsSet(true);
+        }
+        if (incoming.get(2)) {
+          {
+            org.apache.thrift.protocol.TMap _map53 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.LIST, iprot.readI32());
+            struct.fields = new HashMap<String,List<String>>(2*_map53.size);
+            for (int _i54 = 0; _i54 < _map53.size; ++_i54)
+            {
+              String _key55; // required
+              List<String> _val56; // required
+              _key55 = iprot.readString();
+              {
+                org.apache.thrift.protocol.TList _list57 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+                _val56 = new ArrayList<String>(_list57.size);
+                for (int _i58 = 0; _i58 < _list57.size; ++_i58)
+                {
+                  String _elem59; // required
+                  _elem59 = iprot.readString();
+                  _val56.add(_elem59);
+                }
+              }
+              struct.fields.put(_key55, _val56);
+            }
+          }
+          struct.setFieldsIsSet(true);
+        }
+      }
+    }
+
+  }
+
+  public static class setFields_result implements org.apache.thrift.TBase<setFields_result, setFields_result._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("setFields_result");
+
+
+    private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
+    static {
+      schemes.put(StandardScheme.class, new setFields_resultStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new setFields_resultTupleSchemeFactory());
+    }
+
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+;
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+    public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(setFields_result.class, metaDataMap);
+    }
+
+    public setFields_result() {
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public setFields_result(setFields_result other) {
+    }
+
+    public setFields_result deepCopy() {
+      return new setFields_result(this);
+    }
+
+    @Override
+    public void clear() {
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof setFields_result)
+        return this.equals((setFields_result)that);
+      return false;
+    }
+
+    public boolean equals(setFields_result that) {
+      if (that == null)
+        return false;
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(setFields_result other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      setFields_result typedOther = (setFields_result)other;
+
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      schemes.get(iprot.getScheme()).getScheme().read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
+      }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("setFields_result(");
+      boolean first = true;
+
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class setFields_resultStandardSchemeFactory implements SchemeFactory {
+      public setFields_resultStandardScheme getScheme() {
+        return new setFields_resultStandardScheme();
+      }
+    }
+
+    private static class setFields_resultStandardScheme extends StandardScheme<setFields_result> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, setFields_result struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, setFields_result struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class setFields_resultTupleSchemeFactory implements SchemeFactory {
+      public setFields_resultTupleScheme getScheme() {
+        return new setFields_resultTupleScheme();
+      }
+    }
+
+    private static class setFields_resultTupleScheme extends TupleScheme<setFields_result> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, setFields_result struct) throws org.apache.thrift.TException {
+        TTupleProtocol oprot = (TTupleProtocol) prot;
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, setFields_result struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
       }
     }
