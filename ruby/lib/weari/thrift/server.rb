@@ -105,13 +105,13 @@ require 'weari/thrift/weari_types'
                   return
                 end
 
-                def setFields(solr, query, fields)
-                  send_setFields(solr, query, fields)
+                def setFields(solr, query, fieldList)
+                  send_setFields(solr, query, fieldList)
                   recv_setFields()
                 end
 
-                def send_setFields(solr, query, fields)
-                  send_message('setFields', SetFields_args, :solr => solr, :query => query, :fields => fields)
+                def send_setFields(solr, query, fieldList)
+                  send_message('setFields', SetFields_args, :solr => solr, :query => query, :fieldList => fieldList)
                 end
 
                 def recv_setFields()
@@ -189,7 +189,7 @@ require 'weari/thrift/weari_types'
                 def process_setFields(seqid, iprot, oprot)
                   args = read_args(iprot, SetFields_args)
                   result = SetFields_result.new()
-                  @handler.setFields(args.solr, args.query, args.fields)
+                  @handler.setFields(args.solr, args.query, args.fieldList)
                   write_result(result, oprot, 'setFields', seqid)
                 end
 
@@ -411,12 +411,12 @@ require 'weari/thrift/weari_types'
                 include ::Thrift::Struct, ::Thrift::Struct_Union
                 SOLR = 1
                 QUERY = 2
-                FIELDS = 3
+                FIELDLIST = 3
 
                 FIELDS = {
                   SOLR => {:type => ::Thrift::Types::STRING, :name => 'solr'},
                   QUERY => {:type => ::Thrift::Types::STRING, :name => 'query'},
-                  FIELDS => {:type => ::Thrift::Types::MAP, :name => 'fields', :key => {:type => ::Thrift::Types::STRING}, :value => {:type => ::Thrift::Types::LIST, :element => {:type => ::Thrift::Types::STRING}}}
+                  FIELDLIST => {:type => ::Thrift::Types::MAP, :name => 'fieldList', :key => {:type => ::Thrift::Types::STRING}, :value => {:type => ::Thrift::Types::LIST, :element => {:type => ::Thrift::Types::STRING}}}
                 }
 
                 def struct_fields; FIELDS; end

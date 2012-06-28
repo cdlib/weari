@@ -44,5 +44,5 @@ service Server {
 
   void setFields(1: string solr,
                  2: string query,
-                 3: map<string,list<string>> fields);
+                 3: map<string,list<string>> fieldList);
 }

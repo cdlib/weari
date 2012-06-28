@@ -43,7 +43,7 @@ public class Server {
 
     public void deleteParse(String arc) throws org.apache.thrift.TException;
 
-    public void setFields(String solr, String query, Map<String,List<String>> fields) throws org.apache.thrift.TException;
+    public void setFields(String solr, String query, Map<String,List<String>> fieldList) throws org.apache.thrift.TException;
 
   }
 
@@ -61,7 +61,7 @@ public class Server {
 
     public void deleteParse(String arc, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.deleteParse_call> resultHandler) throws org.apache.thrift.TException;
 
-    public void setFields(String solr, String query, Map<String,List<String>> fields, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.setFields_call> resultHandler) throws org.apache.thrift.TException;
+    public void setFields(String solr, String query, Map<String,List<String>> fieldList, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.setFields_call> resultHandler) throws org.apache.thrift.TException;
 
   }
 
@@ -235,18 +235,18 @@ public class Server {
       return;
     }
 
-    public void setFields(String solr, String query, Map<String,List<String>> fields) throws org.apache.thrift.TException
+    public void setFields(String solr, String query, Map<String,List<String>> fieldList) throws org.apache.thrift.TException
     {
-      send_setFields(solr, query, fields);
+      send_setFields(solr, query, fieldList);
       recv_setFields();
     }
 
-    public void send_setFields(String solr, String query, Map<String,List<String>> fields) throws org.apache.thrift.TException
+    public void send_setFields(String solr, String query, Map<String,List<String>> fieldList) throws org.apache.thrift.TException
     {
       setFields_args args = new setFields_args();
       args.setSolr(solr);
       args.setQuery(query);
-      args.setFields(fields);
+      args.setFieldList(fieldList);
       sendBase("setFields", args);
     }
 
@@ -485,9 +485,9 @@ public class Server {
       }
     }
 
-    public void setFields(String solr, String query, Map<String,List<String>> fields, org.apache.thrift.async.AsyncMethodCallback<setFields_call> resultHandler) throws org.apache.thrift.TException {
+    public void setFields(String solr, String query, Map<String,List<String>> fieldList, org.apache.thrift.async.AsyncMethodCallback<setFields_call> resultHandler) throws org.apache.thrift.TException {
       checkReady();
-      setFields_call method_call = new setFields_call(solr, query, fields, resultHandler, this, ___protocolFactory, ___transport);
+      setFields_call method_call = new setFields_call(solr, query, fieldList, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
@@ -495,12 +495,12 @@ public class Server {
     public static class setFields_call extends org.apache.thrift.async.TAsyncMethodCall {
       private String solr;
       private String query;
-      private Map<String,List<String>> fields;
-      public setFields_call(String solr, String query, Map<String,List<String>> fields, org.apache.thrift.async.AsyncMethodCallback<setFields_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      private Map<String,List<String>> fieldList;
+      public setFields_call(String solr, String query, Map<String,List<String>> fieldList, org.apache.thrift.async.AsyncMethodCallback<setFields_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
         this.solr = solr;
         this.query = query;
-        this.fields = fields;
+        this.fieldList = fieldList;
       }
 
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
@@ -508,7 +508,7 @@ public class Server {
         setFields_args args = new setFields_args();
         args.setSolr(solr);
         args.setQuery(query);
-        args.setFields(fields);
+        args.setFieldList(fieldList);
         args.write(prot);
         prot.writeMessageEnd();
       }
@@ -674,7 +674,7 @@ public class Server {
 
       protected setFields_result getResult(I iface, setFields_args args) throws org.apache.thrift.TException {
         setFields_result result = new setFields_result();
-        iface.setFields(args.solr, args.query, args.fields);
+        iface.setFields(args.solr, args.query, args.fieldList);
         return result;
       }
     }
@@ -5972,7 +5972,7 @@ public class Server {
 
     private static final org.apache.thrift.protocol.TField SOLR_FIELD_DESC = new org.apache.thrift.protocol.TField("solr", org.apache.thrift.protocol.TType.STRING, (short)1);
     private static final org.apache.thrift.protocol.TField QUERY_FIELD_DESC = new org.apache.thrift.protocol.TField("query", org.apache.thrift.protocol.TType.STRING, (short)2);
-    private static final org.apache.thrift.protocol.TField FIELDS_FIELD_DESC = new org.apache.thrift.protocol.TField("fields", org.apache.thrift.protocol.TType.MAP, (short)3);
+    private static final org.apache.thrift.protocol.TField FIELD_LIST_FIELD_DESC = new org.apache.thrift.protocol.TField("fieldList", org.apache.thrift.protocol.TType.MAP, (short)3);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
@@ -5982,13 +5982,13 @@ public class Server {
 
     public String solr; // required
     public String query; // required
-    public Map<String,List<String>> fields; // required
+    public Map<String,List<String>> fieldList; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
       SOLR((short)1, "solr"),
       QUERY((short)2, "query"),
-      FIELDS((short)3, "fields");
+      FIELD_LIST((short)3, "fieldList");
 
       private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -6007,8 +6007,8 @@ public class Server {
             return SOLR;
           case 2: // QUERY
             return QUERY;
-          case 3: // FIELDS
-            return FIELDS;
+          case 3: // FIELD_LIST
+            return FIELD_LIST;
           default:
             return null;
         }
@@ -6056,7 +6056,7 @@ public class Server {
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
       tmpMap.put(_Fields.QUERY, new org.apache.thrift.meta_data.FieldMetaData("query", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
-      tmpMap.put(_Fields.FIELDS, new org.apache.thrift.meta_data.FieldMetaData("fields", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+      tmpMap.put(_Fields.FIELD_LIST, new org.apache.thrift.meta_data.FieldMetaData("fieldList", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.MapMetaData(org.apache.thrift.protocol.TType.MAP, 
               new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING), 
               new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
@@ -6071,12 +6071,12 @@ public class Server {
     public setFields_args(
       String solr,
       String query,
-      Map<String,List<String>> fields)
+      Map<String,List<String>> fieldList)
     {
       this();
       this.solr = solr;
       this.query = query;
-      this.fields = fields;
+      this.fieldList = fieldList;
     }
 
     /**
@@ -6089,23 +6089,23 @@ public class Server {
       if (other.isSetQuery()) {
         this.query = other.query;
       }
-      if (other.isSetFields()) {
-        Map<String,List<String>> __this__fields = new HashMap<String,List<String>>();
-        for (Map.Entry<String, List<String>> other_element : other.fields.entrySet()) {
+      if (other.isSetFieldList()) {
+        Map<String,List<String>> __this__fieldList = new HashMap<String,List<String>>();
+        for (Map.Entry<String, List<String>> other_element : other.fieldList.entrySet()) {
 
           String other_element_key = other_element.getKey();
           List<String> other_element_value = other_element.getValue();
 
-          String __this__fields_copy_key = other_element_key;
+          String __this__fieldList_copy_key = other_element_key;
 
-          List<String> __this__fields_copy_value = new ArrayList<String>();
+          List<String> __this__fieldList_copy_value = new ArrayList<String>();
           for (String other_element_value_element : other_element_value) {
-            __this__fields_copy_value.add(other_element_value_element);
+            __this__fieldList_copy_value.add(other_element_value_element);
           }
 
-          __this__fields.put(__this__fields_copy_key, __this__fields_copy_value);
+          __this__fieldList.put(__this__fieldList_copy_key, __this__fieldList_copy_value);
         }
-        this.fields = __this__fields;
+        this.fieldList = __this__fieldList;
       }
     }
 
@@ -6117,7 +6117,7 @@ public class Server {
     public void clear() {
       this.solr = null;
       this.query = null;
-      this.fields = null;
+      this.fieldList = null;
     }
 
     public String getSolr() {
@@ -6168,38 +6168,38 @@ public class Server {
       }
     }
 
-    public int getFieldsSize() {
-      return (this.fields == null) ? 0 : this.fields.size();
+    public int getFieldListSize() {
+      return (this.fieldList == null) ? 0 : this.fieldList.size();
     }
 
-    public void putToFields(String key, List<String> val) {
-      if (this.fields == null) {
-        this.fields = new HashMap<String,List<String>>();
+    public void putToFieldList(String key, List<String> val) {
+      if (this.fieldList == null) {
+        this.fieldList = new HashMap<String,List<String>>();
       }
-      this.fields.put(key, val);
+      this.fieldList.put(key, val);
     }
 
-    public Map<String,List<String>> getFields() {
-      return this.fields;
+    public Map<String,List<String>> getFieldList() {
+      return this.fieldList;
     }
 
-    public setFields_args setFields(Map<String,List<String>> fields) {
-      this.fields = fields;
+    public setFields_args setFieldList(Map<String,List<String>> fieldList) {
+      this.fieldList = fieldList;
       return this;
     }
 
-    public void unsetFields() {
-      this.fields = null;
+    public void unsetFieldList() {
+      this.fieldList = null;
     }
 
-    /** Returns true if field fields is set (has been assigned a value) and false otherwise */
-    public boolean isSetFields() {
-      return this.fields != null;
+    /** Returns true if field fieldList is set (has been assigned a value) and false otherwise */
+    public boolean isSetFieldList() {
+      return this.fieldList != null;
     }
 
-    public void setFieldsIsSet(boolean value) {
+    public void setFieldListIsSet(boolean value) {
       if (!value) {
-        this.fields = null;
+        this.fieldList = null;
       }
     }
 
@@ -6221,11 +6221,11 @@ public class Server {
         }
         break;
 
-      case FIELDS:
+      case FIELD_LIST:
         if (value == null) {
-          unsetFields();
+          unsetFieldList();
         } else {
-          setFields((Map<String,List<String>>)value);
+          setFieldList((Map<String,List<String>>)value);
         }
         break;
 
@@ -6240,8 +6240,8 @@ public class Server {
       case QUERY:
         return getQuery();
 
-      case FIELDS:
-        return getFields();
+      case FIELD_LIST:
+        return getFieldList();
 
       }
       throw new IllegalStateException();
@@ -6258,8 +6258,8 @@ public class Server {
         return isSetSolr();
       case QUERY:
         return isSetQuery();
-      case FIELDS:
-        return isSetFields();
+      case FIELD_LIST:
+        return isSetFieldList();
       }
       throw new IllegalStateException();
     }
@@ -6295,12 +6295,12 @@ public class Server {
           return false;
       }
 
-      boolean this_present_fields = true && this.isSetFields();
-      boolean that_present_fields = true && that.isSetFields();
-      if (this_present_fields || that_present_fields) {
-        if (!(this_present_fields && that_present_fields))
+      boolean this_present_fieldList = true && this.isSetFieldList();
+      boolean that_present_fieldList = true && that.isSetFieldList();
+      if (this_present_fieldList || that_present_fieldList) {
+        if (!(this_present_fieldList && that_present_fieldList))
           return false;
-        if (!this.fields.equals(that.fields))
+        if (!this.fieldList.equals(that.fieldList))
           return false;
       }
 
@@ -6340,12 +6340,12 @@ public class Server {
           return lastComparison;
         }
       }
-      lastComparison = Boolean.valueOf(isSetFields()).compareTo(typedOther.isSetFields());
+      lastComparison = Boolean.valueOf(isSetFieldList()).compareTo(typedOther.isSetFieldList());
       if (lastComparison != 0) {
         return lastComparison;
       }
-      if (isSetFields()) {
-        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.fields, typedOther.fields);
+      if (isSetFieldList()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.fieldList, typedOther.fieldList);
         if (lastComparison != 0) {
           return lastComparison;
         }
@@ -6386,11 +6386,11 @@ public class Server {
       }
       first = false;
       if (!first) sb.append(", ");
-      sb.append("fields:");
-      if (this.fields == null) {
+      sb.append("fieldList:");
+      if (this.fieldList == null) {
         sb.append("null");
       } else {
-        sb.append(this.fields);
+        sb.append(this.fieldList);
       }
       first = false;
       sb.append(")");
@@ -6451,11 +6451,11 @@ public class Server {
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
               break;
-            case 3: // FIELDS
+            case 3: // FIELD_LIST
               if (schemeField.type == org.apache.thrift.protocol.TType.MAP) {
                 {
                   org.apache.thrift.protocol.TMap _map42 = iprot.readMapBegin();
-                  struct.fields = new HashMap<String,List<String>>(2*_map42.size);
+                  struct.fieldList = new HashMap<String,List<String>>(2*_map42.size);
                   for (int _i43 = 0; _i43 < _map42.size; ++_i43)
                   {
                     String _key44; // required
@@ -6472,11 +6472,11 @@ public class Server {
                       }
                       iprot.readListEnd();
                     }
-                    struct.fields.put(_key44, _val45);
+                    struct.fieldList.put(_key44, _val45);
                   }
                   iprot.readMapEnd();
                 }
-                struct.setFieldsIsSet(true);
+                struct.setFieldListIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
@@ -6506,11 +6506,11 @@ public class Server {
           oprot.writeString(struct.query);
           oprot.writeFieldEnd();
         }
-        if (struct.fields != null) {
-          oprot.writeFieldBegin(FIELDS_FIELD_DESC);
+        if (struct.fieldList != null) {
+          oprot.writeFieldBegin(FIELD_LIST_FIELD_DESC);
           {
-            oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.LIST, struct.fields.size()));
-            for (Map.Entry<String, List<String>> _iter49 : struct.fields.entrySet())
+            oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.LIST, struct.fieldList.size()));
+            for (Map.Entry<String, List<String>> _iter49 : struct.fieldList.entrySet())
             {
               oprot.writeString(_iter49.getKey());
               {
@@ -6550,7 +6550,7 @@ public class Server {
         if (struct.isSetQuery()) {
           optionals.set(1);
         }
-        if (struct.isSetFields()) {
+        if (struct.isSetFieldList()) {
           optionals.set(2);
         }
         oprot.writeBitSet(optionals, 3);
@@ -6560,10 +6560,10 @@ public class Server {
         if (struct.isSetQuery()) {
           oprot.writeString(struct.query);
         }
-        if (struct.isSetFields()) {
+        if (struct.isSetFieldList()) {
           {
-            oprot.writeI32(struct.fields.size());
-            for (Map.Entry<String, List<String>> _iter51 : struct.fields.entrySet())
+            oprot.writeI32(struct.fieldList.size());
+            for (Map.Entry<String, List<String>> _iter51 : struct.fieldList.entrySet())
             {
               oprot.writeString(_iter51.getKey());
               {
@@ -6593,7 +6593,7 @@ public class Server {
         if (incoming.get(2)) {
           {
             org.apache.thrift.protocol.TMap _map53 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.LIST, iprot.readI32());
-            struct.fields = new HashMap<String,List<String>>(2*_map53.size);
+            struct.fieldList = new HashMap<String,List<String>>(2*_map53.size);
             for (int _i54 = 0; _i54 < _map53.size; ++_i54)
             {
               String _key55; // required
@@ -6609,10 +6609,10 @@ public class Server {
                   _val56.add(_elem59);
                 }
               }
-              struct.fields.put(_key55, _val56);
+              struct.fieldList.put(_key55, _val56);
             }
           }
-          struct.setFieldsIsSet(true);
+          struct.setFieldListIsSet(true);
         }
       }
     }
