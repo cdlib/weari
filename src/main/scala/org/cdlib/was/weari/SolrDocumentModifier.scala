@@ -33,9 +33,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.cdlib.was.weari;
 
-import org.apache.solr.common.SolrInputDocument;
+import org.apache.solr.common.{ SolrDocument, SolrInputDocument };
+import org.apache.solr.client.solrj.util.ClientUtils;
 
-import org.cdlib.was.weari.SolrFields.{ getId, ID_FIELD };
+import org.cdlib.was.weari.SolrFields.{ getId, COPY_FIELDS, ID_FIELD };
 
 import scala.collection.JavaConversions.collectionAsScalaIterable;
 
@@ -81,5 +82,15 @@ object SolrDocumentModifier {
     var doc = new SolrInputDocument;
     addFields(doc, fields : _*);
     return doc;
+  }
+
+  /**
+   * Convert a SolrDocument to a SolrInputDocument, stripping out copy fields along the way.
+   */
+  def toSolrInputDocument (doc : SolrDocument) : SolrInputDocument = {
+    val retval = ClientUtils.toSolrInputDocument(doc);
+    for (fieldname <- COPY_FIELDS) 
+      retval.removeField(fieldname);
+    return retval;
   }
 }

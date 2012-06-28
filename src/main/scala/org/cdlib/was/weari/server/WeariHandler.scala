@@ -55,13 +55,12 @@ import org.apache.solr.common.{SolrInputDocument,SolrInputField};
 import org.apache.solr.client.solrj.{SolrQuery,SolrServer};
 import org.apache.solr.client.solrj.impl.{ ConcurrentUpdateSolrServer, HttpClientUtil, HttpSolrServer };
 import org.apache.solr.common.params.ModifiableSolrParams;
-import org.apache.solr.client.solrj.util.ClientUtils.toSolrInputDocument;
 
 import org.cdlib.was.weari.Utility.{extractArcname,null2option};
 import org.cdlib.was.weari._;
 import org.cdlib.was.weari.solr._;
 import org.cdlib.was.weari.thrift;
-import org.cdlib.was.weari.SolrDocumentModifier.{ addFields, record2inputDocument };
+import org.cdlib.was.weari.SolrDocumentModifier.{ addFields, record2inputDocument, toSolrInputDocument };
 
 import scala.collection.JavaConversions.{ iterableAsScalaIterable, mapAsScalaMap, seqAsJavaList }
 import scala.collection.immutable.HashSet;
@@ -199,7 +198,10 @@ class WeariHandler(config: Config)
       }
     }
   }
-
+  
+  /**
+   * Set fields unconditionally on a group of documents retrieved by a query string.
+   */
   def setFields(solr : String,
                queryString : String,
                fields : JMap[String, JList[String]]) {
@@ -207,19 +209,17 @@ class WeariHandler(config: Config)
       val writeServer = mkSolrServer(solr);
       val readServer = new HttpSolrServer(solr);
       val q = new SolrQuery(queryString).setRows(10000);
-      /* create SolrInputField list to use */
-      val inputFields = fields.keySet.map {(fieldname)=>
-        val values = fields.get(fieldname);
-        val tmp = new SolrInputField(fieldname);
-        for (value <- iterableAsScalaIterable(values))
-          tmp.addValue(value, 1.0f);
-        tmp;
-      }
 
+      /* create SolrInputField list to use */
+      val inputFields = fields.map {(p)=>
+        val inputField = new SolrInputField(p._1);
+        inputField.addValue(p._2, 1.0f);
+        inputField;
+      }
       commitOrRollback(writeServer) {
         val docs = new SolrDocumentCollection(readServer, q);
-        for (doc <- docs) {
-          val inputDoc = toSolrInputDocument(doc);
+        for (doc <- docs) { 
+         val inputDoc = toSolrInputDocument(doc);
           for (field <- inputFields) 
             inputDoc.put(field.getName, field);
           writeServer.add(inputDoc);

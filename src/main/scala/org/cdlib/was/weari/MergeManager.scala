@@ -39,12 +39,11 @@ import java.util.{Collection=>JCollection}
 
 import org.apache.solr.client.solrj.{SolrQuery,SolrServer};
 import org.apache.solr.common.{SolrDocument,SolrInputDocument};
-import org.apache.solr.client.solrj.util.ClientUtils.toSolrInputDocument;
 
 import org.archive.util.BloomFilter64bit;
 
 import org.cdlib.was.weari.SolrFields._;
-
+import org.cdlib.was.weari.SolrDocumentModifier.toSolrInputDocument;
 import org.cdlib.was.weari.Utility.{null2option,null2seq};
 
 import scala.collection.mutable.{Map,SynchronizedMap,HashMap};

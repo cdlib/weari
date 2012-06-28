@@ -92,6 +92,9 @@ object SolrFields {
   val MULTI_VALUED_SET_FIELDS = 
     List(TAG_FIELD);
 
+  val COPY_FIELDS = 
+    List(HOST_TOKENIZED_FIELD, URL_TOKENIZED_FIELD);
+
   /**
    * Return the ID field in a solr document.
    */
