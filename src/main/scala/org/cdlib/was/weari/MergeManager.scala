@@ -272,10 +272,11 @@ object MergeManager {
    * content in A or B, whichever is set.
    */
   private def setSingleValuedFields (a : SolrInputDocument, b : SolrInputDocument, merged : SolrInputDocument) {
-    for { fieldname <- SINGLE_VALUED_FIELDS;
-          fieldvalue <- getSingleFieldValue(fieldname, a, b) } {
-            merged.setField(fieldname, fieldvalue);
-          }
+    for (fieldname <- SINGLE_VALUED_FIELDS) {
+      for (fieldvalue <- getSingleFieldValue(fieldname, a, b)) {
+        merged.setField(fieldname, fieldvalue);
+      }
+    }
   }
     
   /**
@@ -284,10 +285,11 @@ object MergeManager {
   private def mergeMultiValuedMergeFields (a : SolrInputDocument, 
                                            b : SolrInputDocument, 
                                            merged : SolrInputDocument) {
-    for { fieldname <- MULTI_VALUED_MERGE_FIELDS;
-          fieldvalue <- mergeFieldValues(fieldname, a, b) } {
-            merged.addField(fieldname, fieldvalue);
-          }
+    for (fieldname <- MULTI_VALUED_MERGE_FIELDS) {
+      for (fieldvalue <- mergeFieldValues(fieldname, a, b)) {
+        merged.addField(fieldname, fieldvalue);
+      }
+    }
   }
 
   /**
@@ -296,10 +298,11 @@ object MergeManager {
   private def unmergeMultiValuedMergeFields (merged : SolrInputDocument, 
                                              doc : SolrInputDocument, 
                                              unmerge : SolrInputDocument) {
-    for { fieldname <- MULTI_VALUED_MERGE_FIELDS;
-          fieldvalue <- unmergeFieldValues(fieldname, merged, doc) } {
-            unmerge.addField(fieldname, fieldvalue);
-          }
+    for (fieldname <- MULTI_VALUED_MERGE_FIELDS) {
+      for (fieldvalue <- unmergeFieldValues(fieldname, merged, doc)) {
+        unmerge.addField(fieldname, fieldvalue);
+      }
+    }
   }
   
   /**
@@ -308,11 +311,13 @@ object MergeManager {
    */
   private def setMultiValuedSetFields (orig : SolrInputDocument, 
                                        merged : SolrInputDocument) {
-    for { fieldname  <- MULTI_VALUED_SET_FIELDS;
-          rawfield   <- null2option(orig.getField(fieldname));
-          fieldvalue <- null2seq(rawfield.getValues) } {
-            merged.addField(fieldname, fieldvalue);
-          }
+    for (fieldname <- MULTI_VALUED_SET_FIELDS) {
+      for (rawfield <- null2option(orig.getField(fieldname))) {
+        for (fieldvalue <- null2seq(rawfield.getValues)) {
+          merged.addField(fieldname, fieldvalue);
+        }
+      }
+    }
   }
     
   /**

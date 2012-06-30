@@ -176,10 +176,11 @@ class WeariHandler(config: Config)
               /* group documents for batch merge */
               /* this will ensure that we don't build up a lot of merges before hitting the */
               /* trackCommitThreshold */
-              for { group <- docs.grouped(config.batchMergeGroupSize);
-                    merged <- manager.batchMerge(group) } {
-                      server.add(merged); 
-                    }
+              for (group <- docs.grouped(config.batchMergeGroupSize)) {
+                for (merged <- manager.batchMerge(group)) {
+                  server.add(merged); 
+                }
+              }
               if (manager.trackedCount > config.trackCommitThreshold) {
                 info("Merge manager threshold reached: committing.");
                 server.commit;
