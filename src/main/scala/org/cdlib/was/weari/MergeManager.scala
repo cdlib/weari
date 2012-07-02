@@ -47,6 +47,7 @@ import org.cdlib.was.weari.SolrDocumentModifier.toSolrInputDocument;
 import org.cdlib.was.weari.Utility.{null2option,null2seq};
 
 import scala.collection.mutable.{Map,SynchronizedMap,HashMap};
+import scala.collection.JavaConversions.{ bufferAsJavaList, collectionAsScalaIterable };
 import scala.math.max;
 
 /**
@@ -233,7 +234,7 @@ class MergeManager (config : Config, candidatesQuery : String, server : SolrServ
   }
 }
 
-object MergeManager {
+object MergeManager extends Logging {
   /**
    * Returns the field value of either a or b. Assumes that they should
    * have the same value. Will not return the empty string or null;
@@ -354,6 +355,29 @@ object MergeManager {
     if (retval.getFieldValue(ARCNAME_FIELD) == null) {
        return None;
     } else {
+      return Some(retval);
+    }
+  }
+
+  /**
+   * Removes a merge from the document. A merge is basically a column of values.
+   * Removes the column where fieldname = value.
+   */
+  def removeMerge(fieldname : String, value : String, doc : SolrDocument) : Option[SolrInputDocument] = {
+    val s = doc.getFieldValues(fieldname).toSeq;
+    if (s.size == 1) {
+      return None;
+    } else {
+      val retval = toSolrInputDocument(doc);
+      val position = s.indexOf(value);
+      for { fieldname <- MULTI_VALUED_MERGE_FIELDS;
+            oldvalues <- null2option(retval.getFieldValues(fieldname)) } {
+             retval.removeField(fieldname);
+             val newvalues = oldvalues.toBuffer;
+             newvalues.remove(position);
+             for (value <- newvalues)
+               retval.addField(fieldname, value);
+           }
       return Some(retval);
     }
   }

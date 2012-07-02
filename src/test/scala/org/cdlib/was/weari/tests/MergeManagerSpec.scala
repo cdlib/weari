@@ -8,6 +8,7 @@ import org.scalatest._;
 import org.scalatest.matchers._;
 
 import org.apache.solr.common.SolrInputDocument;
+import org.apache.solr.client.solrj.util.ClientUtils.toSolrDocument;
 
 import org.cdlib.was.weari._;
 import org.cdlib.was.weari.SolrFields._;
@@ -152,6 +153,29 @@ class MergeManagerSpec extends FunSpec with BeforeAndAfter with ShouldMatchers {
       manager.merge(bdoc);
       manager.unmerge(adoc);
       assert(manager.unmerge(bdoc) === None);
+    }
+  }
+  
+  describe("removeMerge") {
+    val a = makeDoc(ID_FIELD -> "abc",
+                    ARCNAME_FIELD -> "ARC-A.arc.gz",
+                    JOB_FIELD -> List("A"),
+                    CONTENT_FIELD -> "hello world");
+    val b = makeDoc(ID_FIELD -> "abc",
+                    ARCNAME_FIELD -> "ARC-B.arc.gz",
+                    JOB_FIELD -> List("B"),
+                    CONTENT_FIELD -> "hello world");
+    val m = makeDoc(ID_FIELD -> "abc",
+                    ARCNAME_FIELD -> List("ARC-A.arc.gz", "ARC-B.arc.gz"),
+                    JOB_FIELD -> List("A", "B"),
+                    CONTENT_FIELD -> "hello world");
+    it("should work") {
+      assertDocsEqual(MergeManager.removeMerge(ARCNAME_FIELD, "ARC-A.arc.gz", toSolrDocument(m)).get, b);
+    }
+
+    it("should return None when the last doc is removed") {
+      val tmp = MergeManager.removeMerge(ARCNAME_FIELD, "ARC-A.arc.gz", toSolrDocument(merged)).get;
+      assert(MergeManager.removeMerge(ARCNAME_FIELD, "ARC-B.arc.gz", toSolrDocument(tmp)) === None);
     }
   }
 }
