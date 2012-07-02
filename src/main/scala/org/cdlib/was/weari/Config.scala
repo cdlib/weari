@@ -61,4 +61,11 @@ class Config {
 
   /* size of groups to send to the batch merge at once */
   val batchMergeGroupSize = conf.getInt("batchMergeGroupSize")
+  
+  /* number of docs to load at once */
+  val numDocsPerRequest = conf.getInt("numDocsPerRequest");
+  
+  /* number of doc ids to load at once */
+  val numDocIdsPerRequest = conf.getInt("numDocIdsPerRequest");
+  
 }

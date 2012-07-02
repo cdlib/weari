@@ -90,7 +90,7 @@ class MergeManager (config : Config, candidatesQuery : String, server : SolrServ
     /* initialize */
     if (server != null) {
       debug("Loading document ids into MergeManager.");
-      val newq = new SolrQuery(candidatesQuery).setParam("fl", ID_FIELD).setRows(100000);
+      val newq = new SolrQuery(candidatesQuery).setParam("fl", ID_FIELD).setRows(config.numDocIdsPerRequest);
       val docs = new solr.SolrDocumentCollection(server, newq);
       for (doc <- docs) {
         bf.add(getId(doc))
@@ -202,7 +202,7 @@ class MergeManager (config : Config, candidatesQuery : String, server : SolrServ
    * a lot of merges to perform. Returns the number of docs loaded.
    */
   def loadDocs (q : SolrQuery) : Int = {
-    val docs = new solr.SolrDocumentCollection(server, q.getCopy.setRows(10000));
+    val docs = new solr.SolrDocumentCollection(server, q.getCopy.setRows(config.numDocsPerRequest));
     var n = 0;
     for (doc <- docs) {
       n += 1;
