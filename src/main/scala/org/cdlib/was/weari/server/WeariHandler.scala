@@ -102,6 +102,20 @@ class WeariHandler(config: Config)
     }
   }
 
+  def throwThriftException[T](f: => T) : T = {
+    try {
+      f;
+    } catch {
+      case ex : thrift.BadJSONException | ex : thrift.BadJSONException | ex : thrift.InputStream | 
+      ex : thrift.UnparsedException | ex : thrift.ParseException => {
+        throw ex;
+      case ex : Exception => {
+        debug(getStackTrace(ex));
+        throw new thrift.IndexException(ex.toString);
+      }
+    }
+  }
+
   def withArcParse[T](path : Path) (f: (Seq[ParsedArchiveRecord])=>T) : T = {
     val arcname = getArcname(path);
     var in : InputStream = null;
