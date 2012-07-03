@@ -20,7 +20,6 @@ weari.maxIdQuerySize=100
 # should probably be > maxIdQuerySize and some fraction of the size of trackCommitThreshold 
 weari.batchMergeGroupSize=1000
 
-
 #number of docs to load at once
 weari.numDocsPerRequest=10000
 
