@@ -33,37 +33,34 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.cdlib.was.weari.server;
 
-import com.codahale.jerkson.Json;
-import com.codahale.jerkson.ParsingException;
+import com.codahale.jerkson.{Json, ParsingException};
 
 import grizzled.slf4j.Logging;
 
-import java.io.{ InputStream, IOException, OutputStream };
-import java.util.UUID;
-import java.util.zip.{ GZIPInputStream, GZIPOutputStream };
-import java.util.{ List => JList, Map => JMap }
+import java.io.{InputStream, OutputStream};
+import java.util.{List => JList, Map => JMap, UUID};
+import java.util.zip.{GZIPInputStream, GZIPOutputStream};
 
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{ FileSystem, FSDataInputStream, FSDataOutputStream, Path }
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.{FSDataInputStream, FSDataOutputStream, FileSystem, Path};
 
-import org.apache.pig.{ExecType,PigServer};
+import org.apache.pig.{ExecType, PigServer};
 import org.apache.pig.backend.executionengine.ExecJob.JOB_STATUS;
 import org.apache.pig.impl.PigContext;
 import org.apache.pig.impl.util.PropertiesUtil;
 
-import org.apache.solr.common.{SolrInputDocument,SolrInputField};
-import org.apache.solr.client.solrj.{SolrQuery,SolrServer};
-import org.apache.solr.client.solrj.impl.{ ConcurrentUpdateSolrServer, HttpClientUtil, HttpSolrServer };
+import org.apache.solr.client.solrj.{SolrQuery, SolrServer};
+import org.apache.solr.client.solrj.impl.{ConcurrentUpdateSolrServer, HttpClientUtil, HttpSolrServer};
+import org.apache.solr.common.{SolrInputDocument, SolrInputField};
 import org.apache.solr.common.params.ModifiableSolrParams;
 
-import org.cdlib.was.weari.Utility.{extractArcname,null2option};
 import org.cdlib.was.weari._;
+import org.cdlib.was.weari.SolrDocumentModifier.{addFields, record2inputDocument, toSolrInputDocument};
+import org.cdlib.was.weari.Utility.{extractArcname, null2option};
 import org.cdlib.was.weari.solr._;
 import org.cdlib.was.weari.thrift;
-import org.cdlib.was.weari.SolrDocumentModifier.{ addFields, record2inputDocument, toSolrInputDocument };
 
-import scala.collection.JavaConversions.{ iterableAsScalaIterable, mapAsScalaMap, seqAsJavaList }
-import scala.collection.immutable.HashSet;
+import scala.collection.JavaConversions.{iterableAsScalaIterable, mapAsScalaMap, seqAsJavaList};
 import scala.collection.mutable;
 import scala.util.matching.Regex;
     
