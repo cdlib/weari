@@ -166,36 +166,38 @@ class WeariHandler(config: Config)
       val server = mkSolrServer(solr)
       val manager = getMergeManager(solr, extraId, filterQuery);
       val extraFieldsMap = extraFields.toMap.mapValues(iterableAsScalaIterable(_));
-      // XXX clean logic up
-      commitOrRollback(server) {
+      try {
         for ((arcname, path) <- arcs.zip(arcPaths)) {
-          try {
-            withArcParse(path) { records =>
-              manager.loadDocs(new SolrQuery("arcname:\"%s\"".format(arcname)));
-              val docs = for (rec <- records)
-                         yield record2inputDocument(rec, extraFieldsMap, extraId);
-              /* group documents for batch merge */
-              /* this will ensure that we don't build up a lot of merges before hitting the */
-              /* trackCommitThreshold */
-              for (group <- docs.grouped(config.batchMergeGroupSize)) {
-                for (merged <- manager.batchMerge(group)) {
-                  server.add(merged); 
-                }
-              }
-              if (manager.trackedCount > config.trackCommitThreshold) {
-                info("Merge manager threshold reached: committing.");
-                server.commit;
-                manager.reset;
+          withArcParse(path) { records =>
+            manager.loadDocs(new SolrQuery("arcname:\"%s\"".format(arcname)));
+            val docs = for (rec <- records)
+                       yield record2inputDocument(rec, extraFieldsMap, extraId);
+            /* group documents for batch merge */
+            /* this will ensure that we don't build up a lot of merges before hitting the */
+            /* trackCommitThreshold */
+            for (group <- docs.grouped(config.batchMergeGroupSize)) {
+              for (merged <- manager.batchMerge(group)) {
+                server.add(merged); 
               }
             }
-          } catch {
-            case ex : thrift.BadJSONException => throw ex;
-            case ex : Exception => {
-              error("Caught exception: %s".format(ex), ex);
-              debug(getStackTrace(ex));
-              throw new thrift.IndexException(ex.toString);
+            if (manager.trackedCount > config.trackCommitThreshold) {
+              info("Merge manager threshold reached: committing.");
+              server.commit;
+              manager.reset;
             }
           }
+        }
+        server.commit;
+      } catch {
+        case ex : thrift.BadJSONException => {
+          server.rollback;
+          throw ex;
+        }
+        case ex : Exception => {
+          error("Caught exception: %s".format(ex), ex);
+          debug(getStackTrace(ex));
+          server.rollback;
+          throw new thrift.IndexException(ex.toString);
         }
       }
     }
