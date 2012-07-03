@@ -35,7 +35,7 @@ public class Server {
 
     public void clearMergeManager(String managerId) throws org.apache.thrift.TException;
 
-    public void unindex(String solr, List<String> arcs, String extraId) throws IndexException, UnparsedException, BadJSONException, org.apache.thrift.TException;
+    public void remove(String solr, List<String> arcs) throws IndexException, org.apache.thrift.TException;
 
     public void parseArcs(List<String> arcs) throws ParseException, org.apache.thrift.TException;
 
@@ -53,7 +53,7 @@ public class Server {
 
     public void clearMergeManager(String managerId, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.clearMergeManager_call> resultHandler) throws org.apache.thrift.TException;
 
-    public void unindex(String solr, List<String> arcs, String extraId, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.unindex_call> resultHandler) throws org.apache.thrift.TException;
+    public void remove(String solr, List<String> arcs, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.remove_call> resultHandler) throws org.apache.thrift.TException;
 
     public void parseArcs(List<String> arcs, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.parseArcs_call> resultHandler) throws org.apache.thrift.TException;
 
@@ -138,33 +138,26 @@ public class Server {
       return;
     }
 
-    public void unindex(String solr, List<String> arcs, String extraId) throws IndexException, UnparsedException, BadJSONException, org.apache.thrift.TException
+    public void remove(String solr, List<String> arcs) throws IndexException, org.apache.thrift.TException
     {
-      send_unindex(solr, arcs, extraId);
-      recv_unindex();
+      send_remove(solr, arcs);
+      recv_remove();
     }
 
-    public void send_unindex(String solr, List<String> arcs, String extraId) throws org.apache.thrift.TException
+    public void send_remove(String solr, List<String> arcs) throws org.apache.thrift.TException
     {
-      unindex_args args = new unindex_args();
+      remove_args args = new remove_args();
       args.setSolr(solr);
       args.setArcs(arcs);
-      args.setExtraId(extraId);
-      sendBase("unindex", args);
+      sendBase("remove", args);
     }
 
-    public void recv_unindex() throws IndexException, UnparsedException, BadJSONException, org.apache.thrift.TException
+    public void recv_remove() throws IndexException, org.apache.thrift.TException
     {
-      unindex_result result = new unindex_result();
-      receiveBase(result, "unindex");
+      remove_result result = new remove_result();
+      receiveBase(result, "remove");
       if (result.ex1 != null) {
         throw result.ex1;
-      }
-      if (result.ex2 != null) {
-        throw result.ex2;
-      }
-      if (result.ex3 != null) {
-        throw result.ex3;
       }
       return;
     }
@@ -351,41 +344,38 @@ public class Server {
       }
     }
 
-    public void unindex(String solr, List<String> arcs, String extraId, org.apache.thrift.async.AsyncMethodCallback<unindex_call> resultHandler) throws org.apache.thrift.TException {
+    public void remove(String solr, List<String> arcs, org.apache.thrift.async.AsyncMethodCallback<remove_call> resultHandler) throws org.apache.thrift.TException {
       checkReady();
-      unindex_call method_call = new unindex_call(solr, arcs, extraId, resultHandler, this, ___protocolFactory, ___transport);
+      remove_call method_call = new remove_call(solr, arcs, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
 
-    public static class unindex_call extends org.apache.thrift.async.TAsyncMethodCall {
+    public static class remove_call extends org.apache.thrift.async.TAsyncMethodCall {
       private String solr;
       private List<String> arcs;
-      private String extraId;
-      public unindex_call(String solr, List<String> arcs, String extraId, org.apache.thrift.async.AsyncMethodCallback<unindex_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      public remove_call(String solr, List<String> arcs, org.apache.thrift.async.AsyncMethodCallback<remove_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
         this.solr = solr;
         this.arcs = arcs;
-        this.extraId = extraId;
       }
 
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
-        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("unindex", org.apache.thrift.protocol.TMessageType.CALL, 0));
-        unindex_args args = new unindex_args();
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("remove", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        remove_args args = new remove_args();
         args.setSolr(solr);
         args.setArcs(arcs);
-        args.setExtraId(extraId);
         args.write(prot);
         prot.writeMessageEnd();
       }
 
-      public void getResult() throws IndexException, UnparsedException, BadJSONException, org.apache.thrift.TException {
+      public void getResult() throws IndexException, org.apache.thrift.TException {
         if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
         org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
         org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
-        (new Client(prot)).recv_unindex();
+        (new Client(prot)).recv_remove();
       }
     }
 
@@ -538,7 +528,7 @@ public class Server {
     private static <I extends Iface> Map<String,  org.apache.thrift.ProcessFunction<I, ? extends  org.apache.thrift.TBase>> getProcessMap(Map<String,  org.apache.thrift.ProcessFunction<I, ? extends  org.apache.thrift.TBase>> processMap) {
       processMap.put("index", new index());
       processMap.put("clearMergeManager", new clearMergeManager());
-      processMap.put("unindex", new unindex());
+      processMap.put("remove", new remove());
       processMap.put("parseArcs", new parseArcs());
       processMap.put("isArcParsed", new isArcParsed());
       processMap.put("deleteParse", new deleteParse());
@@ -586,25 +576,21 @@ public class Server {
       }
     }
 
-    private static class unindex<I extends Iface> extends org.apache.thrift.ProcessFunction<I, unindex_args> {
-      public unindex() {
-        super("unindex");
+    private static class remove<I extends Iface> extends org.apache.thrift.ProcessFunction<I, remove_args> {
+      public remove() {
+        super("remove");
       }
 
-      protected unindex_args getEmptyArgsInstance() {
-        return new unindex_args();
+      protected remove_args getEmptyArgsInstance() {
+        return new remove_args();
       }
 
-      protected unindex_result getResult(I iface, unindex_args args) throws org.apache.thrift.TException {
-        unindex_result result = new unindex_result();
+      protected remove_result getResult(I iface, remove_args args) throws org.apache.thrift.TException {
+        remove_result result = new remove_result();
         try {
-          iface.unindex(args.solr, args.arcs, args.extraId);
+          iface.remove(args.solr, args.arcs);
         } catch (IndexException ex1) {
           result.ex1 = ex1;
-        } catch (UnparsedException ex2) {
-          result.ex2 = ex2;
-        } catch (BadJSONException ex3) {
-          result.ex3 = ex3;
         }
         return result;
       }
@@ -2742,28 +2728,25 @@ public class Server {
 
   }
 
-  public static class unindex_args implements org.apache.thrift.TBase<unindex_args, unindex_args._Fields>, java.io.Serializable, Cloneable   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("unindex_args");
+  public static class remove_args implements org.apache.thrift.TBase<remove_args, remove_args._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("remove_args");
 
     private static final org.apache.thrift.protocol.TField SOLR_FIELD_DESC = new org.apache.thrift.protocol.TField("solr", org.apache.thrift.protocol.TType.STRING, (short)1);
     private static final org.apache.thrift.protocol.TField ARCS_FIELD_DESC = new org.apache.thrift.protocol.TField("arcs", org.apache.thrift.protocol.TType.LIST, (short)2);
-    private static final org.apache.thrift.protocol.TField EXTRA_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("extraId", org.apache.thrift.protocol.TType.STRING, (short)3);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
-      schemes.put(StandardScheme.class, new unindex_argsStandardSchemeFactory());
-      schemes.put(TupleScheme.class, new unindex_argsTupleSchemeFactory());
+      schemes.put(StandardScheme.class, new remove_argsStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new remove_argsTupleSchemeFactory());
     }
 
     public String solr; // required
     public List<String> arcs; // required
-    public String extraId; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
       SOLR((short)1, "solr"),
-      ARCS((short)2, "arcs"),
-      EXTRA_ID((short)3, "extraId");
+      ARCS((short)2, "arcs");
 
       private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -2782,8 +2765,6 @@ public class Server {
             return SOLR;
           case 2: // ARCS
             return ARCS;
-          case 3: // EXTRA_ID
-            return EXTRA_ID;
           default:
             return null;
         }
@@ -2832,30 +2813,26 @@ public class Server {
       tmpMap.put(_Fields.ARCS, new org.apache.thrift.meta_data.FieldMetaData("arcs", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
               new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING))));
-      tmpMap.put(_Fields.EXTRA_ID, new org.apache.thrift.meta_data.FieldMetaData("extraId", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(unindex_args.class, metaDataMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(remove_args.class, metaDataMap);
     }
 
-    public unindex_args() {
+    public remove_args() {
     }
 
-    public unindex_args(
+    public remove_args(
       String solr,
-      List<String> arcs,
-      String extraId)
+      List<String> arcs)
     {
       this();
       this.solr = solr;
       this.arcs = arcs;
-      this.extraId = extraId;
     }
 
     /**
      * Performs a deep copy on <i>other</i>.
      */
-    public unindex_args(unindex_args other) {
+    public remove_args(remove_args other) {
       if (other.isSetSolr()) {
         this.solr = other.solr;
       }
@@ -2866,27 +2843,23 @@ public class Server {
         }
         this.arcs = __this__arcs;
       }
-      if (other.isSetExtraId()) {
-        this.extraId = other.extraId;
-      }
     }
 
-    public unindex_args deepCopy() {
-      return new unindex_args(this);
+    public remove_args deepCopy() {
+      return new remove_args(this);
     }
 
     @Override
     public void clear() {
       this.solr = null;
       this.arcs = null;
-      this.extraId = null;
     }
 
     public String getSolr() {
       return this.solr;
     }
 
-    public unindex_args setSolr(String solr) {
+    public remove_args setSolr(String solr) {
       this.solr = solr;
       return this;
     }
@@ -2925,7 +2898,7 @@ public class Server {
       return this.arcs;
     }
 
-    public unindex_args setArcs(List<String> arcs) {
+    public remove_args setArcs(List<String> arcs) {
       this.arcs = arcs;
       return this;
     }
@@ -2942,30 +2915,6 @@ public class Server {
     public void setArcsIsSet(boolean value) {
       if (!value) {
         this.arcs = null;
-      }
-    }
-
-    public String getExtraId() {
-      return this.extraId;
-    }
-
-    public unindex_args setExtraId(String extraId) {
-      this.extraId = extraId;
-      return this;
-    }
-
-    public void unsetExtraId() {
-      this.extraId = null;
-    }
-
-    /** Returns true if field extraId is set (has been assigned a value) and false otherwise */
-    public boolean isSetExtraId() {
-      return this.extraId != null;
-    }
-
-    public void setExtraIdIsSet(boolean value) {
-      if (!value) {
-        this.extraId = null;
       }
     }
 
@@ -2987,14 +2936,6 @@ public class Server {
         }
         break;
 
-      case EXTRA_ID:
-        if (value == null) {
-          unsetExtraId();
-        } else {
-          setExtraId((String)value);
-        }
-        break;
-
       }
     }
 
@@ -3005,9 +2946,6 @@ public class Server {
 
       case ARCS:
         return getArcs();
-
-      case EXTRA_ID:
-        return getExtraId();
 
       }
       throw new IllegalStateException();
@@ -3024,8 +2962,6 @@ public class Server {
         return isSetSolr();
       case ARCS:
         return isSetArcs();
-      case EXTRA_ID:
-        return isSetExtraId();
       }
       throw new IllegalStateException();
     }
@@ -3034,12 +2970,12 @@ public class Server {
     public boolean equals(Object that) {
       if (that == null)
         return false;
-      if (that instanceof unindex_args)
-        return this.equals((unindex_args)that);
+      if (that instanceof remove_args)
+        return this.equals((remove_args)that);
       return false;
     }
 
-    public boolean equals(unindex_args that) {
+    public boolean equals(remove_args that) {
       if (that == null)
         return false;
 
@@ -3061,15 +2997,6 @@ public class Server {
           return false;
       }
 
-      boolean this_present_extraId = true && this.isSetExtraId();
-      boolean that_present_extraId = true && that.isSetExtraId();
-      if (this_present_extraId || that_present_extraId) {
-        if (!(this_present_extraId && that_present_extraId))
-          return false;
-        if (!this.extraId.equals(that.extraId))
-          return false;
-      }
-
       return true;
     }
 
@@ -3078,13 +3005,13 @@ public class Server {
       return 0;
     }
 
-    public int compareTo(unindex_args other) {
+    public int compareTo(remove_args other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
 
       int lastComparison = 0;
-      unindex_args typedOther = (unindex_args)other;
+      remove_args typedOther = (remove_args)other;
 
       lastComparison = Boolean.valueOf(isSetSolr()).compareTo(typedOther.isSetSolr());
       if (lastComparison != 0) {
@@ -3106,16 +3033,6 @@ public class Server {
           return lastComparison;
         }
       }
-      lastComparison = Boolean.valueOf(isSetExtraId()).compareTo(typedOther.isSetExtraId());
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-      if (isSetExtraId()) {
-        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.extraId, typedOther.extraId);
-        if (lastComparison != 0) {
-          return lastComparison;
-        }
-      }
       return 0;
     }
 
@@ -3133,7 +3050,7 @@ public class Server {
 
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder("unindex_args(");
+      StringBuilder sb = new StringBuilder("remove_args(");
       boolean first = true;
 
       sb.append("solr:");
@@ -3149,14 +3066,6 @@ public class Server {
         sb.append("null");
       } else {
         sb.append(this.arcs);
-      }
-      first = false;
-      if (!first) sb.append(", ");
-      sb.append("extraId:");
-      if (this.extraId == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.extraId);
       }
       first = false;
       sb.append(")");
@@ -3183,15 +3092,15 @@ public class Server {
       }
     }
 
-    private static class unindex_argsStandardSchemeFactory implements SchemeFactory {
-      public unindex_argsStandardScheme getScheme() {
-        return new unindex_argsStandardScheme();
+    private static class remove_argsStandardSchemeFactory implements SchemeFactory {
+      public remove_argsStandardScheme getScheme() {
+        return new remove_argsStandardScheme();
       }
     }
 
-    private static class unindex_argsStandardScheme extends StandardScheme<unindex_args> {
+    private static class remove_argsStandardScheme extends StandardScheme<remove_args> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, unindex_args struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, remove_args struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
         while (true)
@@ -3227,14 +3136,6 @@ public class Server {
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
               break;
-            case 3: // EXTRA_ID
-              if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-                struct.extraId = iprot.readString();
-                struct.setExtraIdIsSet(true);
-              } else { 
-                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-              }
-              break;
             default:
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
           }
@@ -3246,7 +3147,7 @@ public class Server {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, unindex_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, remove_args struct) throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
@@ -3267,27 +3168,22 @@ public class Server {
           }
           oprot.writeFieldEnd();
         }
-        if (struct.extraId != null) {
-          oprot.writeFieldBegin(EXTRA_ID_FIELD_DESC);
-          oprot.writeString(struct.extraId);
-          oprot.writeFieldEnd();
-        }
         oprot.writeFieldStop();
         oprot.writeStructEnd();
       }
 
     }
 
-    private static class unindex_argsTupleSchemeFactory implements SchemeFactory {
-      public unindex_argsTupleScheme getScheme() {
-        return new unindex_argsTupleScheme();
+    private static class remove_argsTupleSchemeFactory implements SchemeFactory {
+      public remove_argsTupleScheme getScheme() {
+        return new remove_argsTupleScheme();
       }
     }
 
-    private static class unindex_argsTupleScheme extends TupleScheme<unindex_args> {
+    private static class remove_argsTupleScheme extends TupleScheme<remove_args> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, unindex_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, remove_args struct) throws org.apache.thrift.TException {
         TTupleProtocol oprot = (TTupleProtocol) prot;
         BitSet optionals = new BitSet();
         if (struct.isSetSolr()) {
@@ -3296,10 +3192,7 @@ public class Server {
         if (struct.isSetArcs()) {
           optionals.set(1);
         }
-        if (struct.isSetExtraId()) {
-          optionals.set(2);
-        }
-        oprot.writeBitSet(optionals, 3);
+        oprot.writeBitSet(optionals, 2);
         if (struct.isSetSolr()) {
           oprot.writeString(struct.solr);
         }
@@ -3312,15 +3205,12 @@ public class Server {
             }
           }
         }
-        if (struct.isSetExtraId()) {
-          oprot.writeString(struct.extraId);
-        }
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, unindex_args struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol prot, remove_args struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
-        BitSet incoming = iprot.readBitSet(3);
+        BitSet incoming = iprot.readBitSet(2);
         if (incoming.get(0)) {
           struct.solr = iprot.readString();
           struct.setSolrIsSet(true);
@@ -3338,37 +3228,27 @@ public class Server {
           }
           struct.setArcsIsSet(true);
         }
-        if (incoming.get(2)) {
-          struct.extraId = iprot.readString();
-          struct.setExtraIdIsSet(true);
-        }
       }
     }
 
   }
 
-  public static class unindex_result implements org.apache.thrift.TBase<unindex_result, unindex_result._Fields>, java.io.Serializable, Cloneable   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("unindex_result");
+  public static class remove_result implements org.apache.thrift.TBase<remove_result, remove_result._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("remove_result");
 
     private static final org.apache.thrift.protocol.TField EX1_FIELD_DESC = new org.apache.thrift.protocol.TField("ex1", org.apache.thrift.protocol.TType.STRUCT, (short)1);
-    private static final org.apache.thrift.protocol.TField EX2_FIELD_DESC = new org.apache.thrift.protocol.TField("ex2", org.apache.thrift.protocol.TType.STRUCT, (short)2);
-    private static final org.apache.thrift.protocol.TField EX3_FIELD_DESC = new org.apache.thrift.protocol.TField("ex3", org.apache.thrift.protocol.TType.STRUCT, (short)3);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
-      schemes.put(StandardScheme.class, new unindex_resultStandardSchemeFactory());
-      schemes.put(TupleScheme.class, new unindex_resultTupleSchemeFactory());
+      schemes.put(StandardScheme.class, new remove_resultStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new remove_resultTupleSchemeFactory());
     }
 
     public IndexException ex1; // required
-    public UnparsedException ex2; // required
-    public BadJSONException ex3; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-      EX1((short)1, "ex1"),
-      EX2((short)2, "ex2"),
-      EX3((short)3, "ex3");
+      EX1((short)1, "ex1");
 
       private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -3385,10 +3265,6 @@ public class Server {
         switch(fieldId) {
           case 1: // EX1
             return EX1;
-          case 2: // EX2
-            return EX2;
-          case 3: // EX3
-            return EX3;
           default:
             return null;
         }
@@ -3434,59 +3310,43 @@ public class Server {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.EX1, new org.apache.thrift.meta_data.FieldMetaData("ex1", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRUCT)));
-      tmpMap.put(_Fields.EX2, new org.apache.thrift.meta_data.FieldMetaData("ex2", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRUCT)));
-      tmpMap.put(_Fields.EX3, new org.apache.thrift.meta_data.FieldMetaData("ex3", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRUCT)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(unindex_result.class, metaDataMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(remove_result.class, metaDataMap);
     }
 
-    public unindex_result() {
+    public remove_result() {
     }
 
-    public unindex_result(
-      IndexException ex1,
-      UnparsedException ex2,
-      BadJSONException ex3)
+    public remove_result(
+      IndexException ex1)
     {
       this();
       this.ex1 = ex1;
-      this.ex2 = ex2;
-      this.ex3 = ex3;
     }
 
     /**
      * Performs a deep copy on <i>other</i>.
      */
-    public unindex_result(unindex_result other) {
+    public remove_result(remove_result other) {
       if (other.isSetEx1()) {
         this.ex1 = new IndexException(other.ex1);
       }
-      if (other.isSetEx2()) {
-        this.ex2 = new UnparsedException(other.ex2);
-      }
-      if (other.isSetEx3()) {
-        this.ex3 = new BadJSONException(other.ex3);
-      }
     }
 
-    public unindex_result deepCopy() {
-      return new unindex_result(this);
+    public remove_result deepCopy() {
+      return new remove_result(this);
     }
 
     @Override
     public void clear() {
       this.ex1 = null;
-      this.ex2 = null;
-      this.ex3 = null;
     }
 
     public IndexException getEx1() {
       return this.ex1;
     }
 
-    public unindex_result setEx1(IndexException ex1) {
+    public remove_result setEx1(IndexException ex1) {
       this.ex1 = ex1;
       return this;
     }
@@ -3506,54 +3366,6 @@ public class Server {
       }
     }
 
-    public UnparsedException getEx2() {
-      return this.ex2;
-    }
-
-    public unindex_result setEx2(UnparsedException ex2) {
-      this.ex2 = ex2;
-      return this;
-    }
-
-    public void unsetEx2() {
-      this.ex2 = null;
-    }
-
-    /** Returns true if field ex2 is set (has been assigned a value) and false otherwise */
-    public boolean isSetEx2() {
-      return this.ex2 != null;
-    }
-
-    public void setEx2IsSet(boolean value) {
-      if (!value) {
-        this.ex2 = null;
-      }
-    }
-
-    public BadJSONException getEx3() {
-      return this.ex3;
-    }
-
-    public unindex_result setEx3(BadJSONException ex3) {
-      this.ex3 = ex3;
-      return this;
-    }
-
-    public void unsetEx3() {
-      this.ex3 = null;
-    }
-
-    /** Returns true if field ex3 is set (has been assigned a value) and false otherwise */
-    public boolean isSetEx3() {
-      return this.ex3 != null;
-    }
-
-    public void setEx3IsSet(boolean value) {
-      if (!value) {
-        this.ex3 = null;
-      }
-    }
-
     public void setFieldValue(_Fields field, Object value) {
       switch (field) {
       case EX1:
@@ -3564,22 +3376,6 @@ public class Server {
         }
         break;
 
-      case EX2:
-        if (value == null) {
-          unsetEx2();
-        } else {
-          setEx2((UnparsedException)value);
-        }
-        break;
-
-      case EX3:
-        if (value == null) {
-          unsetEx3();
-        } else {
-          setEx3((BadJSONException)value);
-        }
-        break;
-
       }
     }
 
@@ -3587,12 +3383,6 @@ public class Server {
       switch (field) {
       case EX1:
         return getEx1();
-
-      case EX2:
-        return getEx2();
-
-      case EX3:
-        return getEx3();
 
       }
       throw new IllegalStateException();
@@ -3607,10 +3397,6 @@ public class Server {
       switch (field) {
       case EX1:
         return isSetEx1();
-      case EX2:
-        return isSetEx2();
-      case EX3:
-        return isSetEx3();
       }
       throw new IllegalStateException();
     }
@@ -3619,12 +3405,12 @@ public class Server {
     public boolean equals(Object that) {
       if (that == null)
         return false;
-      if (that instanceof unindex_result)
-        return this.equals((unindex_result)that);
+      if (that instanceof remove_result)
+        return this.equals((remove_result)that);
       return false;
     }
 
-    public boolean equals(unindex_result that) {
+    public boolean equals(remove_result that) {
       if (that == null)
         return false;
 
@@ -3637,24 +3423,6 @@ public class Server {
           return false;
       }
 
-      boolean this_present_ex2 = true && this.isSetEx2();
-      boolean that_present_ex2 = true && that.isSetEx2();
-      if (this_present_ex2 || that_present_ex2) {
-        if (!(this_present_ex2 && that_present_ex2))
-          return false;
-        if (!this.ex2.equals(that.ex2))
-          return false;
-      }
-
-      boolean this_present_ex3 = true && this.isSetEx3();
-      boolean that_present_ex3 = true && that.isSetEx3();
-      if (this_present_ex3 || that_present_ex3) {
-        if (!(this_present_ex3 && that_present_ex3))
-          return false;
-        if (!this.ex3.equals(that.ex3))
-          return false;
-      }
-
       return true;
     }
 
@@ -3663,13 +3431,13 @@ public class Server {
       return 0;
     }
 
-    public int compareTo(unindex_result other) {
+    public int compareTo(remove_result other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
 
       int lastComparison = 0;
-      unindex_result typedOther = (unindex_result)other;
+      remove_result typedOther = (remove_result)other;
 
       lastComparison = Boolean.valueOf(isSetEx1()).compareTo(typedOther.isSetEx1());
       if (lastComparison != 0) {
@@ -3677,26 +3445,6 @@ public class Server {
       }
       if (isSetEx1()) {
         lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.ex1, typedOther.ex1);
-        if (lastComparison != 0) {
-          return lastComparison;
-        }
-      }
-      lastComparison = Boolean.valueOf(isSetEx2()).compareTo(typedOther.isSetEx2());
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-      if (isSetEx2()) {
-        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.ex2, typedOther.ex2);
-        if (lastComparison != 0) {
-          return lastComparison;
-        }
-      }
-      lastComparison = Boolean.valueOf(isSetEx3()).compareTo(typedOther.isSetEx3());
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-      if (isSetEx3()) {
-        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.ex3, typedOther.ex3);
         if (lastComparison != 0) {
           return lastComparison;
         }
@@ -3718,7 +3466,7 @@ public class Server {
 
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder("unindex_result(");
+      StringBuilder sb = new StringBuilder("remove_result(");
       boolean first = true;
 
       sb.append("ex1:");
@@ -3726,22 +3474,6 @@ public class Server {
         sb.append("null");
       } else {
         sb.append(this.ex1);
-      }
-      first = false;
-      if (!first) sb.append(", ");
-      sb.append("ex2:");
-      if (this.ex2 == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.ex2);
-      }
-      first = false;
-      if (!first) sb.append(", ");
-      sb.append("ex3:");
-      if (this.ex3 == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.ex3);
       }
       first = false;
       sb.append(")");
@@ -3768,15 +3500,15 @@ public class Server {
       }
     }
 
-    private static class unindex_resultStandardSchemeFactory implements SchemeFactory {
-      public unindex_resultStandardScheme getScheme() {
-        return new unindex_resultStandardScheme();
+    private static class remove_resultStandardSchemeFactory implements SchemeFactory {
+      public remove_resultStandardScheme getScheme() {
+        return new remove_resultStandardScheme();
       }
     }
 
-    private static class unindex_resultStandardScheme extends StandardScheme<unindex_result> {
+    private static class remove_resultStandardScheme extends StandardScheme<remove_result> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, unindex_result struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, remove_result struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
         while (true)
@@ -3795,24 +3527,6 @@ public class Server {
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
               break;
-            case 2: // EX2
-              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-                struct.ex2 = new UnparsedException();
-                struct.ex2.read(iprot);
-                struct.setEx2IsSet(true);
-              } else { 
-                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-              }
-              break;
-            case 3: // EX3
-              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-                struct.ex3 = new BadJSONException();
-                struct.ex3.read(iprot);
-                struct.setEx3IsSet(true);
-              } else { 
-                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-              }
-              break;
             default:
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
           }
@@ -3824,7 +3538,7 @@ public class Server {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, unindex_result struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, remove_result struct) throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
@@ -3833,73 +3547,41 @@ public class Server {
           struct.ex1.write(oprot);
           oprot.writeFieldEnd();
         }
-        if (struct.ex2 != null) {
-          oprot.writeFieldBegin(EX2_FIELD_DESC);
-          struct.ex2.write(oprot);
-          oprot.writeFieldEnd();
-        }
-        if (struct.ex3 != null) {
-          oprot.writeFieldBegin(EX3_FIELD_DESC);
-          struct.ex3.write(oprot);
-          oprot.writeFieldEnd();
-        }
         oprot.writeFieldStop();
         oprot.writeStructEnd();
       }
 
     }
 
-    private static class unindex_resultTupleSchemeFactory implements SchemeFactory {
-      public unindex_resultTupleScheme getScheme() {
-        return new unindex_resultTupleScheme();
+    private static class remove_resultTupleSchemeFactory implements SchemeFactory {
+      public remove_resultTupleScheme getScheme() {
+        return new remove_resultTupleScheme();
       }
     }
 
-    private static class unindex_resultTupleScheme extends TupleScheme<unindex_result> {
+    private static class remove_resultTupleScheme extends TupleScheme<remove_result> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, unindex_result struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, remove_result struct) throws org.apache.thrift.TException {
         TTupleProtocol oprot = (TTupleProtocol) prot;
         BitSet optionals = new BitSet();
         if (struct.isSetEx1()) {
           optionals.set(0);
         }
-        if (struct.isSetEx2()) {
-          optionals.set(1);
-        }
-        if (struct.isSetEx3()) {
-          optionals.set(2);
-        }
-        oprot.writeBitSet(optionals, 3);
+        oprot.writeBitSet(optionals, 1);
         if (struct.isSetEx1()) {
           struct.ex1.write(oprot);
-        }
-        if (struct.isSetEx2()) {
-          struct.ex2.write(oprot);
-        }
-        if (struct.isSetEx3()) {
-          struct.ex3.write(oprot);
         }
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, unindex_result struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol prot, remove_result struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
-        BitSet incoming = iprot.readBitSet(3);
+        BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
           struct.ex1 = new IndexException();
           struct.ex1.read(iprot);
           struct.setEx1IsSet(true);
-        }
-        if (incoming.get(1)) {
-          struct.ex2 = new UnparsedException();
-          struct.ex2.read(iprot);
-          struct.setEx2IsSet(true);
-        }
-        if (incoming.get(2)) {
-          struct.ex3 = new BadJSONException();
-          struct.ex3.read(iprot);
-          struct.setEx3IsSet(true);
         }
       }
     }

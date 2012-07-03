@@ -44,20 +44,18 @@ require 'weari/thrift/weari_types'
                   return
                 end
 
-                def unindex(solr, arcs, extraId)
-                  send_unindex(solr, arcs, extraId)
-                  recv_unindex()
+                def remove(solr, arcs)
+                  send_remove(solr, arcs)
+                  recv_remove()
                 end
 
-                def send_unindex(solr, arcs, extraId)
-                  send_message('unindex', Unindex_args, :solr => solr, :arcs => arcs, :extraId => extraId)
+                def send_remove(solr, arcs)
+                  send_message('remove', Remove_args, :solr => solr, :arcs => arcs)
                 end
 
-                def recv_unindex()
-                  result = receive_message(Unindex_result)
+                def recv_remove()
+                  result = receive_message(Remove_result)
                   raise result.ex1 unless result.ex1.nil?
-                  raise result.ex2 unless result.ex2.nil?
-                  raise result.ex3 unless result.ex3.nil?
                   return
                 end
 
@@ -146,19 +144,15 @@ require 'weari/thrift/weari_types'
                   write_result(result, oprot, 'clearMergeManager', seqid)
                 end
 
-                def process_unindex(seqid, iprot, oprot)
-                  args = read_args(iprot, Unindex_args)
-                  result = Unindex_result.new()
+                def process_remove(seqid, iprot, oprot)
+                  args = read_args(iprot, Remove_args)
+                  result = Remove_result.new()
                   begin
-                    @handler.unindex(args.solr, args.arcs, args.extraId)
+                    @handler.remove(args.solr, args.arcs)
                   rescue Weari::Thrift::IndexException => ex1
                     result.ex1 = ex1
-                  rescue Weari::Thrift::UnparsedException => ex2
-                    result.ex2 = ex2
-                  rescue Weari::Thrift::BadJSONException => ex3
-                    result.ex3 = ex3
                   end
-                  write_result(result, oprot, 'unindex', seqid)
+                  write_result(result, oprot, 'remove', seqid)
                 end
 
                 def process_parseArcs(seqid, iprot, oprot)
@@ -272,16 +266,14 @@ require 'weari/thrift/weari_types'
                 ::Thrift::Struct.generate_accessors self
               end
 
-              class Unindex_args
+              class Remove_args
                 include ::Thrift::Struct, ::Thrift::Struct_Union
                 SOLR = 1
                 ARCS = 2
-                EXTRAID = 3
 
                 FIELDS = {
                   SOLR => {:type => ::Thrift::Types::STRING, :name => 'solr'},
-                  ARCS => {:type => ::Thrift::Types::LIST, :name => 'arcs', :element => {:type => ::Thrift::Types::STRING}},
-                  EXTRAID => {:type => ::Thrift::Types::STRING, :name => 'extraId'}
+                  ARCS => {:type => ::Thrift::Types::LIST, :name => 'arcs', :element => {:type => ::Thrift::Types::STRING}}
                 }
 
                 def struct_fields; FIELDS; end
@@ -292,16 +284,12 @@ require 'weari/thrift/weari_types'
                 ::Thrift::Struct.generate_accessors self
               end
 
-              class Unindex_result
+              class Remove_result
                 include ::Thrift::Struct, ::Thrift::Struct_Union
                 EX1 = 1
-                EX2 = 2
-                EX3 = 3
 
                 FIELDS = {
-                  EX1 => {:type => ::Thrift::Types::STRUCT, :name => 'ex1', :class => Weari::Thrift::IndexException},
-                  EX2 => {:type => ::Thrift::Types::STRUCT, :name => 'ex2', :class => Weari::Thrift::UnparsedException},
-                  EX3 => {:type => ::Thrift::Types::STRUCT, :name => 'ex3', :class => Weari::Thrift::BadJSONException}
+                  EX1 => {:type => ::Thrift::Types::STRUCT, :name => 'ex1', :class => Weari::Thrift::IndexException}
                 }
 
                 def struct_fields; FIELDS; end

@@ -65,6 +65,12 @@ module Weari
       end
     end
 
+    def remove(solr_uri, arcs)
+      with_open_transport do
+        @t_client.remove(solr_uri, arcs)
+      end
+    end
+
     def set_fields(solr_uri, query, fields)
       with_open_transport do
         @t_client.setFields(solr_uri, query, fields)

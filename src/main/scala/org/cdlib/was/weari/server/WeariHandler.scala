@@ -104,7 +104,7 @@ class WeariHandler(config: Config)
       }
     }
   }
-    
+
   def withArcParse[T](path : Path) (f: (Seq[ParsedArchiveRecord])=>T) : T = {
     val arcname = getArcname(path);
     var in : InputStream = null;
@@ -166,6 +166,7 @@ class WeariHandler(config: Config)
       val server = mkSolrServer(solr)
       val manager = getMergeManager(solr, extraId, filterQuery);
       val extraFieldsMap = extraFields.toMap.mapValues(iterableAsScalaIterable(_));
+      // XXX clean logic up
       commitOrRollback(server) {
         for ((arcname, path) <- arcs.zip(arcPaths)) {
           try {
@@ -229,10 +230,26 @@ class WeariHandler(config: Config)
     }
   }
                
-  def unindex(solr : String,
-              arcs : JList[String],
-              extraId : String) {
-    val arcPaths = arcs.map(getPath(_));
+  def remove(solr : String,
+             arcs : JList[String]) {
+    solrLock(solr) {
+      val writeServer = mkSolrServer(solr);
+      val readServer = new HttpSolrServer(solr);
+      commitOrRollback(writeServer) {
+        for (arcname <- arcs) {
+          val q = new SolrQuery("arcname:%s".format(arcname)).setRows(10000);
+          val docs = new SolrDocumentCollection(readServer, q);
+          for (doc <- docs) { 
+            MergeManager.removeMerge(SolrFields.ARCNAME_FIELD, arcname, doc) match {
+              case None => 
+                writeServer.deleteById(SolrFields.getId(doc));
+              case Some(inputDoc) =>
+                writeServer.add(inputDoc);
+            }
+          }
+        }
+      }
+    }
   }
 
   def clearMergeManager(managerId : String) {

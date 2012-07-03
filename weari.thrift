@@ -30,10 +30,9 @@ service Server {
 
   void clearMergeManager(1: string managerId);
 
-  void unindex (1: string solr,
-                2: list<string> arcs,
-                3: string extraId)
-    throws (1: IndexException ex1, 2: UnparsedException ex2, 3: BadJSONException ex3);
+  void remove (1: string solr,
+               2: list<string> arcs)
+    throws (1: IndexException ex1);
 
   void parseArcs(1: list<string> arcs)
     throws (1: ParseException ex1);
