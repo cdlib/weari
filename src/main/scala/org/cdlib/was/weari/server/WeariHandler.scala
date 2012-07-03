@@ -247,7 +247,8 @@ class WeariHandler(config: Config)
                 writeServer.add(inputDoc);
             }
           }
-          writeServer.deleteById(deletes);
+          if (deletes.length > 0) 
+            writeServer.deleteById(deletes);
         }
       }
     }
