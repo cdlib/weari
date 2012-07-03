@@ -60,7 +60,7 @@ import org.cdlib.was.weari.Utility.{extractArcname, null2option};
 import org.cdlib.was.weari.solr._;
 import org.cdlib.was.weari.thrift;
 
-import scala.collection.JavaConversions.{iterableAsScalaIterable, mapAsScalaMap, seqAsJavaList};
+import scala.collection.JavaConversions.{bufferAsJavaList, iterableAsScalaIterable, mapAsScalaMap, seqAsJavaList};
 import scala.collection.mutable;
 import scala.util.matching.Regex;
     
@@ -238,14 +238,16 @@ class WeariHandler(config: Config)
         for (arcname <- arcs) {
           val q = new SolrQuery("arcname:%s".format(arcname)).setRows(10000);
           val docs = new SolrDocumentCollection(readServer, q);
+          var deletes = mutable.ArrayBuffer[String]()
           for (doc <- docs) { 
             MergeManager.removeMerge(SolrFields.ARCNAME_FIELD, arcname, doc) match {
               case None => 
-                writeServer.deleteById(SolrFields.getId(doc));
+                deletes += SolrFields.getId(doc);
               case Some(inputDoc) =>
                 writeServer.add(inputDoc);
             }
           }
+          writeServer.deleteById(deletes);
         }
       }
     }
