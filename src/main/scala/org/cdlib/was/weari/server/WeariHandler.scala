@@ -225,8 +225,9 @@ class WeariHandler(config: Config)
       throwThriftException {
         commitOrRollback(writeServer) {
           for (doc <- getInputDocs(solr, queryString)) {
-            for ((name, value) <- fields) 
+            for ((name, value) <- fields) {
               doc.put(name, mkInputField(name, value))
+            }
             writeServer.add(doc);
           }
         }
