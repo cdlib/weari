@@ -67,5 +67,6 @@ class Config {
   
   /* number of doc ids to load at once */
   val numDocIdsPerRequest = conf.getInt("numDocIdsPerRequest");
-  
+
+  val commitBetweenArcs = conf.getBoolean("commitBetweenArcs");
 }

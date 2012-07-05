@@ -25,3 +25,7 @@ weari.numDocsPerRequest=10000
 
 # number of doc ids to load at once
 weari.numDocIdsPerRequest=100000
+
+# true if we should commit between indexing each arc
+# true means less memory used
+weari.commitBetweenArcs=true
