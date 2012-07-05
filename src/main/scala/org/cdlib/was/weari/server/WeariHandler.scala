@@ -96,7 +96,7 @@ class WeariHandler(config: Config)
       return retval;
     } catch {
       case ex : Exception => {
-        server.rollback;
+        server.rollback; 
         throw ex;
       }
     }
@@ -106,11 +106,12 @@ class WeariHandler(config: Config)
     try {
       f;
     } catch {
-      case ex : thrift.BadJSONException | ex : thrift.BadJSONException | ex : thrift.InputStream | 
-      ex : thrift.UnparsedException | ex : thrift.ParseException => {
-        throw ex;
+      case ex : thrift.BadJSONException  => throw ex;
+      case ex : thrift.UnparsedException => throw ex;
+      case ex : thrift.ParseException    => throw ex;
+      case ex : thrift.IndexException    => throw ex;
       case ex : Exception => {
-        debug(getStackTrace(ex));
+        error(getStackTrace(ex));
         throw new thrift.IndexException(ex.toString);
       }
     }
@@ -174,41 +175,31 @@ class WeariHandler(config: Config)
             extraFields : JMap[String, JList[String]]) {
     val arcPaths = arcs.map(getPath(_));
     solrLock (solr) {
-      val server = mkSolrServer(solr)
+      val server = mkSolrServer(solr);
       val manager = getMergeManager(solr, extraId, filterQuery);
       val extraFieldsMap = extraFields.toMap.mapValues(iterableAsScalaIterable(_));
-      try {
-        for ((arcname, path) <- arcs.zip(arcPaths)) {
-          withArcParse(path) { records =>
-            manager.loadDocs(new SolrQuery("arcname:\"%s\"".format(arcname)));
-            val docs = for (rec <- records)
-                       yield record2inputDocument(rec, extraFieldsMap, extraId);
-            /* group documents for batch merge */
-            /* this will ensure that we don't build up a lot of merges before hitting the */
-            /* trackCommitThreshold */
-            for (group <- docs.grouped(config.batchMergeGroupSize)) {
-              for (merged <- manager.batchMerge(group)) {
-                server.add(merged); 
+      commitOrRollback(server) {
+        throwThriftException {
+          for ((arcname, path) <- arcs.zip(arcPaths)) {
+            withArcParse(path) { records =>
+              manager.loadDocs(new SolrQuery("arcname:\"%s\"".format(arcname)));
+              val docs = for (rec <- records)
+                         yield record2inputDocument(rec, extraFieldsMap, extraId);
+              /* group documents for batch merge */
+              /* this will ensure that we don't build up a lot of merges before hitting the */
+              /* trackCommitThreshold */
+              for (group <- docs.grouped(config.batchMergeGroupSize)) {
+                for (merged <- manager.batchMerge(group)) {
+                  server.add(merged); 
+                }
+              }
+              if (manager.trackedCount > config.trackCommitThreshold) {
+                info("Merge manager threshold reached: committing.");
+                server.commit;
+                manager.reset;
               }
             }
-            if (manager.trackedCount > config.trackCommitThreshold) {
-              info("Merge manager threshold reached: committing.");
-              server.commit;
-              manager.reset;
-            }
           }
-        }
-        server.commit;
-      } catch {
-        case ex : thrift.BadJSONException => {
-          server.rollback;
-          throw ex;
-        }
-        case ex : Exception => {
-          error("Caught exception: %s".format(ex), ex);
-          debug(getStackTrace(ex));
-          server.rollback;
-          throw new thrift.IndexException(ex.toString);
         }
       }
     }
@@ -231,13 +222,15 @@ class WeariHandler(config: Config)
         inputField.addValue(p._2, 1.0f);
         inputField;
       }
-      commitOrRollback(writeServer) {
-        val docs = new SolrDocumentCollection(readServer, q);
-        for (doc <- docs) { 
-         val inputDoc = toSolrInputDocument(doc);
-          for (field <- inputFields) 
-            inputDoc.put(field.getName, field);
-          writeServer.add(inputDoc);
+      throwThriftException {
+        commitOrRollback(writeServer) {
+          val docs = new SolrDocumentCollection(readServer, q);
+          for (doc <- docs) { 
+            val inputDoc = toSolrInputDocument(doc);
+            for (field <- inputFields) 
+                inputDoc.put(field.getName, field);
+            writeServer.add(inputDoc);
+          }
         }
       }
     }
@@ -248,21 +241,23 @@ class WeariHandler(config: Config)
     solrLock(solr) {
       val writeServer = mkSolrServer(solr);
       val readServer = new HttpSolrServer(solr);
-      commitOrRollback(writeServer) {
-        for (arcname <- arcs) {
-          val q = new SolrQuery("arcname:%s".format(arcname)).setRows(10000);
-          val docs = new SolrDocumentCollection(readServer, q);
-          var deletes = mutable.ArrayBuffer[String]()
-          for (doc <- docs) { 
-            MergeManager.removeMerge(SolrFields.ARCNAME_FIELD, arcname, doc) match {
-              case None => 
-                deletes += SolrFields.getId(doc);
-              case Some(inputDoc) =>
-                writeServer.add(inputDoc);
+      throwThriftException {
+        commitOrRollback(writeServer) {
+          for (arcname <- arcs) {
+            val q = new SolrQuery("arcname:%s".format(arcname)).setRows(10000);
+            val docs = new SolrDocumentCollection(readServer, q);
+            var deletes = mutable.ArrayBuffer[String]()
+            for (doc <- docs) { 
+              MergeManager.removeMerge(SolrFields.ARCNAME_FIELD, arcname, doc) match {
+                case None => 
+                  deletes += SolrFields.getId(doc);
+                  case Some(inputDoc) =>
+                    writeServer.add(inputDoc);
+              }
             }
+            if (deletes.length > 0) 
+              writeServer.deleteById(deletes);
           }
-          if (deletes.length > 0) 
-            writeServer.deleteById(deletes);
         }
       }
     }
