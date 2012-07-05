@@ -370,14 +370,16 @@ object MergeManager extends Logging {
     } else {
       val retval = toSolrInputDocument(doc);
       val position = s.indexOf(value);
-      for { fieldname <- MULTI_VALUED_MERGE_FIELDS;
-            oldvalues <- null2option(retval.getFieldValues(fieldname)) } {
-             retval.removeField(fieldname);
-             val newvalues = oldvalues.toBuffer;
-             newvalues.remove(position);
-             for (value <- newvalues)
-               retval.addField(fieldname, value);
-           }
+      for (fieldname <- MULTI_VALUED_MERGE_FIELDS) {
+        for (oldvalues <- null2option(retval.getFieldValues(fieldname))) {
+          retval.removeField(fieldname);
+          val newvalues = oldvalues.toBuffer;
+          newvalues.remove(position);
+          for (value <- newvalues) {
+            retval.addField(fieldname, value);
+          }
+        }
+      }
       return Some(retval);
     }
   }
