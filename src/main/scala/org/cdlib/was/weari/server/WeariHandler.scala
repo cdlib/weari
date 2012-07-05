@@ -55,6 +55,7 @@ import org.apache.solr.common.{SolrDocument, SolrInputDocument, SolrInputField};
 import org.apache.solr.common.params.ModifiableSolrParams;
 
 import org.cdlib.was.weari._;
+import org.cdlib.was.weari.MergeManager.removeMerge;
 import org.cdlib.was.weari.SolrDocumentModifier.{addFields, mkInputField, record2inputDocument, toSolrInputDocument};
 import org.cdlib.was.weari.Utility.{extractArcname, null2option};
 import org.cdlib.was.weari.solr._;
@@ -248,7 +249,7 @@ class WeariHandler(config: Config)
             // contain that doc, or b) remove the column of merged
             // values corresponding to that arc from the document
             for (doc <- getDocs(solr, "arcname:%s".format(arcname))) {
-              MergeManager.removeMerge(SolrFields.ARCNAME_FIELD, arcname, doc) match {
+              removeMerge(SolrFields.ARCNAME_FIELD, arcname, doc) match {
                 case None => 
                   deletes += SolrFields.getId(doc);
                 case Some(inputDoc) =>
@@ -378,6 +379,7 @@ class WeariHandler(config: Config)
       if (fs.exists(jsonPath)) Some(jsonPath) else None;
     }
   }
+
   val ARCNAME_RE = new Regex("""^(.*)\.json(.gz)?$""");
 
   private def getArcname(path : Path) : String = {
