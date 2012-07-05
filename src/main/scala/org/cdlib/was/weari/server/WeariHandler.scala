@@ -51,7 +51,7 @@ import org.apache.pig.impl.util.PropertiesUtil;
 
 import org.apache.solr.client.solrj.{SolrQuery, SolrServer};
 import org.apache.solr.client.solrj.impl.{ConcurrentUpdateSolrServer, HttpClientUtil, HttpSolrServer};
-import org.apache.solr.common.{SolrInputDocument, SolrInputField};
+import org.apache.solr.common.{SolrDocument, SolrInputDocument, SolrInputField};
 import org.apache.solr.common.params.ModifiableSolrParams;
 
 import org.cdlib.was.weari._;
@@ -204,7 +204,19 @@ class WeariHandler(config: Config)
       }
     }
   }
+
+  def getDocs (server : SolrServer, query : String) : Iterable[SolrDocument] = 
+    new SolrDocumentCollection(server, new SolrQuery(query).setRows(config.numDocsPerRequest));
+
+  def getDocs (url : String, query : String) : Iterable[SolrDocument] = 
+    getDocs(new HttpSolrServer(url), query);
   
+  def getInputDocs (server : SolrServer, query : String) : Iterable[SolrInputDocument] =
+    getDocs(server, query).map(toSolrInputDocument(_));
+
+  def getInputDocs (url : String, query : String) : Iterable[SolrInputDocument] = 
+    getInputDocs(new HttpSolrServer(url), query);
+    
   /**
    * Set fields unconditionally on a group of documents retrieved by a query string.
    */
