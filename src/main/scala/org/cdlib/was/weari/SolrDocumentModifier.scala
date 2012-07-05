@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.cdlib.was.weari;
 
-import org.apache.solr.common.{ SolrDocument, SolrInputDocument };
+import org.apache.solr.common.{ SolrDocument, SolrInputDocument, SolrInputField };
 import org.apache.solr.client.solrj.util.ClientUtils;
 
 import org.cdlib.was.weari.SolrFields.{ getId, COPY_FIELDS, ID_FIELD };
@@ -82,6 +82,19 @@ object SolrDocumentModifier {
     var doc = new SolrInputDocument;
     addFields(doc, fields : _*);
     return doc;
+  }
+
+  def mkInputField (name : String, value : Any) : SolrInputField = {
+    val retval = new SolrInputField(name);
+    retval.addValue(value, 1.0f);
+    return retval;
+  }
+
+  def mkInputField (name : String, values : Seq[Any]) : SolrInputField = {
+    val retval = new SolrInputField(name);
+    for (value <- values)
+      retval.addValue(value, 1.0f);
+    return retval;
   }
 
   /**

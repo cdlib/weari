@@ -55,7 +55,7 @@ import org.apache.solr.common.{SolrInputDocument, SolrInputField};
 import org.apache.solr.common.params.ModifiableSolrParams;
 
 import org.cdlib.was.weari._;
-import org.cdlib.was.weari.SolrDocumentModifier.{addFields, record2inputDocument, toSolrInputDocument};
+import org.cdlib.was.weari.SolrDocumentModifier.{addFields, mkInputField, record2inputDocument, toSolrInputDocument};
 import org.cdlib.was.weari.Utility.{extractArcname, null2option};
 import org.cdlib.was.weari.solr._;
 import org.cdlib.was.weari.thrift;
@@ -217,11 +217,8 @@ class WeariHandler(config: Config)
       val q = new SolrQuery(queryString).setRows(10000);
 
       /* create SolrInputField list to use */
-      val inputFields = fields.map {(p)=>
-        val inputField = new SolrInputField(p._1);
-        inputField.addValue(p._2, 1.0f);
-        inputField;
-      }
+      val inputFields = for ((name, value) <- fields) 
+                        yield mkInputField(name, value);
       throwThriftException {
         commitOrRollback(writeServer) {
           val docs = new SolrDocumentCollection(readServer, q);
