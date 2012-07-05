@@ -77,15 +77,6 @@ class WeariHandler(config: Config)
   var locks : mutable.Map[String,AnyRef] = new mutable.HashMap[String,AnyRef]
     with mutable.SynchronizedMap[String,AnyRef];
 
-  def mkHttpClient = {
-    val params = new ModifiableSolrParams();
-    params.set(HttpClientUtil.PROP_MAX_CONNECTIONS, 16);
-    params.set(HttpClientUtil.PROP_MAX_CONNECTIONS_PER_HOST, 16);
-    params.set(HttpClientUtil.PROP_FOLLOW_REDIRECTS, false);
-    params.set(HttpClientUtil.PROP_SO_TIMEOUT, 0);
-    HttpClientUtil.createClient(params);
-  }
-
   /**
    * Perform f, and either commit at the end if there were no exceptions,
    * or rollback if there were.
@@ -149,8 +140,16 @@ class WeariHandler(config: Config)
 
   def withLockedSolrServer[T] (url : String) (f: (SolrServer)=>T) : T = {
     locks.getOrElseUpdate(url, new Object).synchronized {
+      val httpClient = {
+        val params = new ModifiableSolrParams();
+        params.set(HttpClientUtil.PROP_MAX_CONNECTIONS, 16);
+        params.set(HttpClientUtil.PROP_MAX_CONNECTIONS_PER_HOST, 16);
+        params.set(HttpClientUtil.PROP_FOLLOW_REDIRECTS, false);
+        params.set(HttpClientUtil.PROP_SO_TIMEOUT, 0);
+        HttpClientUtil.createClient(params);
+      }
       val server = new ConcurrentUpdateSolrServer(url,
-                                                  mkHttpClient,
+                                                  httpClient,
                                                   config.queueSize,
                                                   config.threadCount);
       f(server);
