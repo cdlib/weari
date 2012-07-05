@@ -233,24 +233,33 @@ class WeariHandler(config: Config)
     }
   }
                
+  /**
+   * Remove index entries for these ARC files from the solr server.
+   */
   def remove(solr : String,
              arcs : JList[String]) {
     withLockedSolrServer(solr) { writeServer =>
       throwThriftException {
         commitOrRollback(writeServer) {
           for (arcname <- arcs) {
-            val docs = getDocs(solr, "arcname:%s".format(arcname))
             var deletes = mutable.ArrayBuffer[String]()
-            for (doc <- docs) { 
+            // for each document that matches the arcname: query, we
+            // will either a) delete it, if it is the last arc file to
+            // contain that doc, or b) remove the column of merged
+            // values corresponding to that arc from the document
+            for (doc <- getDocs(solr, "arcname:%s".format(arcname))) {
               MergeManager.removeMerge(SolrFields.ARCNAME_FIELD, arcname, doc) match {
                 case None => 
                   deletes += SolrFields.getId(doc);
-                  case Some(inputDoc) =>
-                    writeServer.add(inputDoc);
+                case Some(inputDoc) =>
+                  writeServer.add(inputDoc);
               }
             }
             if (deletes.length > 0) 
               writeServer.deleteById(deletes);
+            // commit between arcs to ensure that if our next arc to
+            // remove has any of the same docs they will get removed too
+            writeServer.commit;
           }
         }
       }
