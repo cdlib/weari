@@ -152,28 +152,6 @@ class MergeManager (config : Config, candidatesQuery : String, server : SolrServ
     return retval;
   }
 
-  def unmerge(doc : SolrInputDocument) : Option[SolrInputDocument] = {
-    val id = getId(doc);
-    var retval : Option[SolrInputDocument] = None;
-    if (bf.contains(id)) {
-      val merged = getDocById(id);
-      if (merged.isEmpty) {
-        throw new Exception();
-      } else {
-        retval = MergeManager.unmergeDocs(merged.get, doc);
-      }
-    } else {
-      throw new Exception();
-    }
-    if (retval.isDefined) {
-      tracked.put(id, retval.get);
-      bf.add(id);
-    } else {
-      tracked.remove(id);
-    }
-    return retval;
-  }
-
   private def cleanId (id : String) =
     id.replace("\\", "\\\\").replace("\"", "\\\"");
 
@@ -260,15 +238,6 @@ object MergeManager extends Logging {
     }
 
   /**
-   * Remove the field values in one doc from a merged doc.
-   */
-  def unmergeFieldValues (fieldname : String, merged : SolrInputDocument, doc : SolrInputDocument) : Seq[Any] = {
-    val valuesToDelete = safeFieldValues(fieldname, doc).toSet;
-    val values = safeFieldValues(fieldname, merged);
-    return values.filterNot(valuesToDelete.contains(_));
-  }
-
-  /**
    * Sets the field values of SINGLE_VALUED_FIELDS to either the
    * content in A or B, whichever is set.
    */
@@ -293,19 +262,6 @@ object MergeManager extends Logging {
     }
   }
 
-  /**
-   * "Unmmerge" MULTI_VALUED_MERGE_FIELDS in doc from the values in merged.
-   */
-  private def unmergeMultiValuedMergeFields (merged : SolrInputDocument, 
-                                             doc : SolrInputDocument, 
-                                             unmerge : SolrInputDocument) {
-    for (fieldname <- MULTI_VALUED_MERGE_FIELDS) {
-      for (fieldvalue <- unmergeFieldValues(fieldname, merged, doc)) {
-        unmerge.addField(fieldname, fieldvalue);
-      }
-    }
-  }
-  
   /**
    * Sets values from MULTI_VALUED_SET_FIELDS in the merged document to the value in
    * orig.
@@ -336,27 +292,6 @@ object MergeManager extends Logging {
       setMultiValuedSetFields(b, retval);
     }
     return retval;
-  }
-
-  /**
-   * "Unmerge" doc from a merged doc.
-   */
-  def unmergeDocs (merged : SolrInputDocument, doc : SolrInputDocument) : Option[SolrInputDocument] = {
-    val retval = new SolrInputDocument;
-    if (merged.getFieldValue(ID_FIELD) != doc.getFieldValue(ID_FIELD)) {
-      throw new Exception;
-    } else {
-      setSingleValuedFields(doc, merged, retval);
-      unmergeMultiValuedMergeFields(merged, doc, retval);
-      setMultiValuedSetFields(merged, retval);
-    }
-    /* check ARCNAME field. If this document no longer exists in some */
-    /* arc, then we should delete it from the index */
-    if (retval.getFieldValue(ARCNAME_FIELD) == null) {
-       return None;
-    } else {
-      return Some(retval);
-    }
   }
 
   /**
