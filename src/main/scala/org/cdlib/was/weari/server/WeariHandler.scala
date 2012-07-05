@@ -141,20 +141,18 @@ class WeariHandler(config: Config)
     }
   }
 
-  def mkSolrServer (url : String) = 
-    new ConcurrentUpdateSolrServer(url,
-                                   mkHttpClient,
-                                   config.queueSize,
-                                   config.threadCount);
-
   def getMergeManager (solr : String, extraId : String, filterQuery : String) = 
     mergeManagerCache.getOrElseUpdate(extraId, 
                                       new MergeManager(config, filterQuery, 
                                                        new HttpSolrServer(solr)));
 
-  def solrLock[T] (url : String) (f: => T) : T = {
+  def withLockedSolrServer[T] (url : String) (f: (SolrServer)=>T) : T = {
     locks.getOrElseUpdate(url, new Object).synchronized {
-      f;
+      val server = new ConcurrentUpdateSolrServer(url,
+                                                  mkHttpClient,
+                                                  config.queueSize,
+                                                  config.threadCount);
+      f(server);
     }
   }
 
@@ -174,8 +172,7 @@ class WeariHandler(config: Config)
             extraId : String,
             extraFields : JMap[String, JList[String]]) {
     val arcPaths = arcs.map(getPath(_));
-    solrLock (solr) {
-      val server = mkSolrServer(solr);
+    withLockedSolrServer (solr) { server =>
       val manager = getMergeManager(solr, extraId, filterQuery);
       val extraFieldsMap = extraFields.toMap.mapValues(iterableAsScalaIterable(_));
       commitOrRollback(server) {
@@ -223,22 +220,13 @@ class WeariHandler(config: Config)
   def setFields(solr : String,
                queryString : String,
                fields : JMap[String, JList[String]]) {
-    solrLock(solr) {
-      val writeServer = mkSolrServer(solr);
-      val readServer = new HttpSolrServer(solr);
-      val q = new SolrQuery(queryString).setRows(10000);
-
-      /* create SolrInputField list to use */
-      val inputFields = for ((name, value) <- fields) 
-                        yield mkInputField(name, value);
+    withLockedSolrServer(solr) { writeServer =>
       throwThriftException {
         commitOrRollback(writeServer) {
-          val docs = new SolrDocumentCollection(readServer, q);
-          for (doc <- docs) { 
-            val inputDoc = toSolrInputDocument(doc);
-            for (field <- inputFields) 
-                inputDoc.put(field.getName, field);
-            writeServer.add(inputDoc);
+          for (doc <- getInputDocs(solr, queryString)) {
+            for ((name, value) <- fields) 
+              doc.put(name, mkInputField(name, value))
+            writeServer.add(doc);
           }
         }
       }
@@ -247,14 +235,11 @@ class WeariHandler(config: Config)
                
   def remove(solr : String,
              arcs : JList[String]) {
-    solrLock(solr) {
-      val writeServer = mkSolrServer(solr);
-      val readServer = new HttpSolrServer(solr);
+    withLockedSolrServer(solr) { writeServer =>
       throwThriftException {
         commitOrRollback(writeServer) {
           for (arcname <- arcs) {
-            val q = new SolrQuery("arcname:%s".format(arcname)).setRows(10000);
-            val docs = new SolrDocumentCollection(readServer, q);
+            val docs = getDocs(solr, "arcname:%s".format(arcname))
             var deletes = mutable.ArrayBuffer[String]()
             for (doc <- docs) { 
               MergeManager.removeMerge(SolrFields.ARCNAME_FIELD, arcname, doc) match {
