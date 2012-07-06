@@ -11,11 +11,11 @@ import org.apache.solr.common.SolrInputDocument;
 
 import org.cdlib.was.weari._;
 import org.cdlib.was.weari.SolrFields._;
-import org.cdlib.was.weari.SolrDocumentModifier.{ makeDoc, record2inputDocument };
+import org.cdlib.was.weari.SolrUtils.{ makeDoc, record2inputDocument };
 
 //import scala.collection.JavaConversions.mapAsScalaMap;
 
-class SolrDocumentModifierTest extends FunSpec with BeforeAndAfter with ShouldMatchers {
+class SolrUtilsTest extends FunSpec with BeforeAndAfter with ShouldMatchers {
   describe ("record2inputDocument") {
     it("should generate the right input document") {
       val rec = new ParsedArchiveRecord(filename = "ARC-A.arc.gz",

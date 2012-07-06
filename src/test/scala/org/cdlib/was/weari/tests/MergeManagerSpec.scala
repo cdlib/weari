@@ -12,7 +12,7 @@ import org.apache.solr.client.solrj.util.ClientUtils.toSolrDocument;
 
 import org.cdlib.was.weari._;
 import org.cdlib.was.weari.SolrFields._;
-import org.cdlib.was.weari.SolrDocumentModifier.makeDoc;
+import org.cdlib.was.weari.SolrUtils.makeDoc;
 
 import scala.collection.JavaConversions.mapAsScalaMap;
 

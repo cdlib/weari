@@ -40,7 +40,7 @@ import org.cdlib.was.weari.SolrFields.{ getId, COPY_FIELDS, ID_FIELD };
 
 import scala.collection.JavaConversions.collectionAsScalaIterable;
 
-object SolrDocumentModifier {
+object SolrUtils {
   /**
    * Convert a ParsedArchiveRecord into a SolrInputDocument, merging
    * in extraFields and extraId.

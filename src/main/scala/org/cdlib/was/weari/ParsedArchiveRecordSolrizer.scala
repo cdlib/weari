@@ -36,7 +36,7 @@ package org.cdlib.was.weari;
 import org.apache.solr.common.SolrInputDocument;
 
 import org.cdlib.was.weari.SolrFields._;
-import org.cdlib.was.weari.SolrDocumentModifier.addFields;
+import org.cdlib.was.weari.SolrUtils.addFields;
 
 object ParsedArchiveRecordSolrizer {
   

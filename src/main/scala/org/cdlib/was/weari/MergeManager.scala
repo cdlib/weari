@@ -43,7 +43,7 @@ import org.apache.solr.common.{SolrDocument,SolrInputDocument};
 import org.archive.util.BloomFilter64bit;
 
 import org.cdlib.was.weari.SolrFields._;
-import org.cdlib.was.weari.SolrDocumentModifier.toSolrInputDocument;
+import org.cdlib.was.weari.SolrUtils.toSolrInputDocument;
 import org.cdlib.was.weari.Utility.{null2option,null2seq};
 
 import scala.collection.mutable.{Map,SynchronizedMap,HashMap};
