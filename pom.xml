@@ -239,6 +239,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>com.gu</groupId>
+      <artifactId>integration-tools_${scala.version}</artifactId>
+      <version>1.4</version>
+    </dependency>
+    <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>  
       <version>1.9.0</version> 
@@ -289,6 +294,11 @@
     <repository>
       <id>repo.codahale.com</id>
       <url>http://repo.codahale.com</url>
+    </repository>
+    <repository>
+      <name>"Guardian Github Releases</name>
+      <id>guardian.github.com</id>
+      <url>http://guardian.github.com/maven/repo-releases</url>
     </repository>
   </repositories>
 

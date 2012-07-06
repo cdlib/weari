@@ -43,6 +43,7 @@ object MyBuild extends Build {
         "maven" at "http://repo1.maven.org/maven2/",
         "repo.codahale.com" at "http://repo.codahale.com",
         "apache.org-snapshots" at "http://repository.apache.org/content/groups/snapshots/",
+        "Guardian Github Releases" at "http://guardian.github.com/maven/repo-releases",
         "Local Maven Repository" at Path.userHome.asURL + "/.m2/repository");
 
   lazy val root = 
