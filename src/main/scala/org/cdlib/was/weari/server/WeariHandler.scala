@@ -113,7 +113,10 @@ class WeariHandler(config: Config)
     }
   }
 
-  def withArcParse[T](path : Path) (f: (Seq[ParsedArchiveRecord])=>T) : T = {
+  /**
+   * Load and parse a JSON file. Call a function with a sequence 
+   */
+  def readJson[T](path : Path) : Seq[ParsedArchiveRecord] = {
     val arcname = getArcname(path);
     var in : InputStream = null;
     try {
@@ -121,8 +124,7 @@ class WeariHandler(config: Config)
       if (path.getName.endsWith("gz")) {
         in = new GZIPInputStream(in);
       }
-      val records = Json.parse[List[ParsedArchiveRecord]](in);
-      f(records);
+      return Json.parse[List[ParsedArchiveRecord]](in);
     } catch {
       case ex : ParsingException => {
         error("Bad JSON: %s".format(arcname));
@@ -182,23 +184,22 @@ class WeariHandler(config: Config)
       commitOrRollback(server) {
         throwThriftException {
           for ((arcname, path) <- arcs.zip(arcPaths)) {
-            withArcParse(path) { records =>
-              manager.loadDocs(new SolrQuery("arcname:\"%s\"".format(arcname)));
-              val docs = for (rec <- records)
-                         yield record2inputDocument(rec, extraFieldsMap, extraId);
-              /* group documents for batch merge */
-              /* this will ensure that we don't build up a lot of merges before hitting the */
-              /* trackCommitThreshold */
-              for (group <- docs.grouped(config.batchMergeGroupSize)) {
-                for (merged <- manager.batchMerge(group)) {
-                  server.add(merged); 
-                }
+            val records = readJson(path);
+            manager.loadDocs(new SolrQuery("arcname:\"%s\"".format(arcname)));
+            val docs = for (rec <- records)
+                       yield record2inputDocument(rec, extraFieldsMap, extraId);
+            /* group documents for batch merge */
+            /* this will ensure that we don't build up a lot of merges before hitting the */
+            /* trackCommitThreshold */
+            for (group <- docs.grouped(config.batchMergeGroupSize)) {
+              for (merged <- manager.batchMerge(group)) {
+                server.add(merged); 
               }
-              if (manager.trackedCount > config.trackCommitThreshold) {
-                info("Merge manager threshold reached: committing.");
-                server.commit;
-                manager.reset;
-              }
+            }
+            if (manager.trackedCount > config.trackCommitThreshold) {
+              info("Merge manager threshold reached: committing.");
+              server.commit;
+              manager.reset;
             }
           }
         }
