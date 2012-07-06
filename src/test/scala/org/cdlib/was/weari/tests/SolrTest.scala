@@ -8,7 +8,7 @@ import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.scalatest._;
 import org.scalatest.matchers._;
 
-import org.cdlib.was.weari.solr._;
+import org.cdlib.was.weari._;
 
 class SolrTest extends FunSpec with BeforeAndAfter with ShouldMatchers with RequiresRunningContentApi {
   describe("solr") {

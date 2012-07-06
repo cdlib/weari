@@ -31,37 +31,41 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.cdlib.was.weari.solr;
+package org.cdlib.was.weari;
 
-import scala.collection.mutable.ArrayBuffer;
+import org.apache.solr.client.solrj.{SolrQuery,SolrServer};
+import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.params.SolrParams;
 
-abstract class CachingIterator[T] extends Iterator[T] {
-  protected var cachePos = 0;
-  protected var cache = new ArrayBuffer[T]();
-  
-  def fillCache;
+/**
+ * Iterable which is used to fetch terms from solr index. Lazy loads
+ * the terms.
+ *
+ */
+class SolrTermIterable(server : SolrServer, field : String, queryString : String)
+  extends Iterable[String] {
 
-  def _fillCache {
-    if (cache.length <= cachePos) {
-      cache.clear;
-      cachePos = 0;
-      fillCache;
+  def this(server : SolrServer, field : String) = this(server, field, "*:*");
+
+  override def toString = 
+    iterator.peek.map(el=>"(%s, ...)".format(el)).getOrElse("(empty)");
+
+  override def iterator = new CachingIterator[String]() {
+    var lowerLimit : String = "";
+
+    def fillCache {
+      val q = new SolrQuery(queryString).setTerms(true).setTermsSortString("index").
+        addTermsField(field).setTermsLimit(100000).setQueryType("/terms").
+        setTermsLower(lowerLimit);
+      val results = server.query(q).getTermsResponse.getTerms(field);
+      for (i <- new Range(0, results.size, 1)) {
+        cache += results.get(i).getTerm;
+      }
+      if (lowerLimit != "") {
+        // drop the first one, which is a dup of our last
+        cache.trimStart(1);
+      }
+      if (cache.length > 0) lowerLimit = cache(cache.length-1);
     }
-  }
-
-  def peek : Option[T] = 
-    if (hasNext) { Some(cache(cachePos)); }
-    else { return None; }
-
-  def hasNext : Boolean = {
-    if (cache.length <= cachePos) _fillCache;
-    return (cache.length != 0);
-  }
-  
-  def next : T = { 
-    if (!hasNext)  throw new NoSuchElementException();
-    val retval = cache(cachePos);
-    cachePos += 1;
-    return retval;
   }
 }

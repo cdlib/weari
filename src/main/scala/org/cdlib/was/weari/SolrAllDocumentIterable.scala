@@ -31,41 +31,33 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.cdlib.was.weari.solr;
+package org.cdlib.was.weari;
 
 import org.apache.solr.client.solrj.{SolrQuery,SolrServer};
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.params.SolrParams;
 
-/**
- * Iterable which is used to fetch terms from solr index. Lazy loads
- * the terms.
- *
- */
-class SolrTermIterable(server : SolrServer, field : String, queryString : String)
-  extends Iterable[String] {
-
-  def this(server : SolrServer, field : String) = this(server, field, "*:*");
-
+class SolrAllDocumentIterable(server : SolrServer, field : String, fieldVals : Seq[String])
+extends Iterable[SolrDocument] {
+  
   override def toString = 
     iterator.peek.map(el=>"(%s, ...)".format(el)).getOrElse("(empty)");
 
-  override def iterator = new CachingIterator[String]() {
-    var lowerLimit : String = "";
+  def iterator = new CachingIterator[SolrDocument]() {
+    val atOnce = 100;
+    val rowsAtOnce = 1000;
+    var nextUrlPos = 0;
 
     def fillCache {
-      val q = new SolrQuery(queryString).setTerms(true).setTermsSortString("index").
-        addTermsField(field).setTermsLimit(100000).setQueryType("/terms").
-        setTermsLower(lowerLimit);
-      val results = server.query(q).getTermsResponse.getTerms(field);
-      for (i <- new Range(0, results.size, 1)) {
-        cache += results.get(i).getTerm;
+      val lastVal = fieldVals(scala.math.min(nextUrlPos + atOnce, fieldVals.length));
+      val q = new SolrQuery().
+        setQuery("%s:[%s TO %s]".format(field, fieldVals(nextUrlPos), lastVal))
+        .setSortField(field, SolrQuery.ORDER.asc).setRows(rowsAtOnce);
+      for (d <- new SolrDocumentCollection(server, q)) {
+        cache += d;
       }
-      if (lowerLimit != "") {
-        // drop the first one, which is a dup of our last
-        cache.trimStart(1);
-      }
-      if (cache.length > 0) lowerLimit = cache(cache.length-1);
-    }
+      nextUrlPos += (atOnce + 1);
+    }   
   }
 }

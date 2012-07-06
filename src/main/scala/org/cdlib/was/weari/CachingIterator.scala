@@ -31,33 +31,37 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.cdlib.was.weari.solr;
+package org.cdlib.was.weari;
 
-import org.apache.solr.client.solrj.{SolrQuery,SolrServer};
-import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.common.SolrDocument;
-import org.apache.solr.common.params.SolrParams;
+import scala.collection.mutable.ArrayBuffer;
 
-class SolrAllDocumentIterable(server : SolrServer, field : String, fieldVals : Seq[String])
-extends Iterable[SolrDocument] {
+abstract class CachingIterator[T] extends Iterator[T] {
+  protected var cachePos = 0;
+  protected var cache = new ArrayBuffer[T]();
   
-  override def toString = 
-    iterator.peek.map(el=>"(%s, ...)".format(el)).getOrElse("(empty)");
+  def fillCache;
 
-  def iterator = new CachingIterator[SolrDocument]() {
-    val atOnce = 100;
-    val rowsAtOnce = 1000;
-    var nextUrlPos = 0;
+  def _fillCache {
+    if (cache.length <= cachePos) {
+      cache.clear;
+      cachePos = 0;
+      fillCache;
+    }
+  }
 
-    def fillCache {
-      val lastVal = fieldVals(scala.math.min(nextUrlPos + atOnce, fieldVals.length));
-      val q = new SolrQuery().
-        setQuery("%s:[%s TO %s]".format(field, fieldVals(nextUrlPos), lastVal))
-        .setSortField(field, SolrQuery.ORDER.asc).setRows(rowsAtOnce);
-      for (d <- new SolrDocumentCollection(server, q)) {
-        cache += d;
-      }
-      nextUrlPos += (atOnce + 1);
-    }   
+  def peek : Option[T] = 
+    if (hasNext) { Some(cache(cachePos)); }
+    else { return None; }
+
+  def hasNext : Boolean = {
+    if (cache.length <= cachePos) _fillCache;
+    return (cache.length != 0);
+  }
+  
+  def next : T = { 
+    if (!hasNext)  throw new NoSuchElementException();
+    val retval = cache(cachePos);
+    cachePos += 1;
+    return retval;
   }
 }

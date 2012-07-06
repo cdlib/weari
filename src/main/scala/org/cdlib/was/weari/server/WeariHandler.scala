@@ -58,7 +58,6 @@ import org.cdlib.was.weari._;
 import org.cdlib.was.weari.MergeManager.removeMerge;
 import org.cdlib.was.weari.SolrUtils.{addFields, mkInputField, record2inputDocument, toSolrInputDocument};
 import org.cdlib.was.weari.Utility.{extractArcname, null2option};
-import org.cdlib.was.weari.solr._;
 import org.cdlib.was.weari.thrift;
 
 import scala.collection.JavaConversions.{bufferAsJavaList, iterableAsScalaIterable, mapAsScalaMap, seqAsJavaList};
