@@ -9,13 +9,15 @@ object ContentApi extends AppServer with LazyStop {
   lazy val apps = List(SolrWebApp)
 
   object SolrWebApp extends WarWebApp {
-    lazy val warPath = "solr-server/src/main/solr-server/webapps/solr.war"
+    lazy val warPath = Path(".ivy2", "cache",
+                            "org.apache.solr", "solr", "wars", "solr-4.0-SNAPSHOT.war").path;
     override lazy val contextPath = "/solr"
 
     override def preStart() {
       System.setProperty("solr.solr.home",
-                         SiblingProjectFile("solr-server/src/main/solr-server/solr").path)
-      System.setProperty("solr.data.dir", Path("integration/target/dependency/solr/data").toAbsolute.path);
+                         SiblingProjectFile("src/test/resources/solr/").path);
+      System.setProperty("solr.data.dir", 
+                         Path("integration/target/dependency/solr/data").toAbsolute.path);
       System.setProperty("master.enable", "true");
     }
   }
