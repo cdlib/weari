@@ -29,7 +29,10 @@ class MergeManagerSpec extends FunSpec with BeforeAndAfter with ShouldMatchers {
 
   /* reset for every run */
   before {
-    manager = new MergeManager(config, "*:*", null);
+    manager = new MergeManager(config=config,
+                               candidatesQuery="*:*",
+                               server=null,
+                               trackMerges = true);
   }
 
   val adoc = makeDoc(ID_FIELD -> "abc",

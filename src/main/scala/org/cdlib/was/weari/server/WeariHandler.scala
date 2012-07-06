@@ -114,7 +114,7 @@ class WeariHandler(config: Config)
   }
 
   /**
-   * Load and parse a JSON file. Call a function with a sequence 
+   * Load and parse a JSON file.
    */
   def readJson[T](path : Path) : Seq[ParsedArchiveRecord] = {
     val arcname = getArcname(path);
@@ -142,8 +142,12 @@ class WeariHandler(config: Config)
   def getMergeManager (solr : String, extraId : String, filterQuery : String) = 
     mergeManagerCache.getOrElseUpdate(extraId, 
                                       new MergeManager(config, filterQuery, 
-                                                       new HttpSolrServer(solr)));
+                                                       new HttpSolrServer(solr),
+                                                       !config.commitBetweenArcs));
 
+  /**
+   * Synchronize around a solr server url, and call a function with the solr server.
+   */
   def withLockedSolrServer[T] (url : String) (f: (SolrServer)=>T) : T = {
     locks.getOrElseUpdate(url, new Object).synchronized {
       val httpClient = {
@@ -198,6 +202,10 @@ class WeariHandler(config: Config)
             }
             if (manager.trackedCount > config.trackCommitThreshold) {
               info("Merge manager threshold reached: committing.");
+              server.commit;
+              manager.reset;
+            }
+            if (config.commitBetweenArcs) {
               server.commit;
               manager.reset;
             }
