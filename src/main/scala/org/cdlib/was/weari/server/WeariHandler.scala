@@ -94,6 +94,10 @@ class WeariHandler(config: Config)
     }
   }
 
+  /**
+   * Catch all non thrift._ exceptions and wrap them in a thrift._ Exception suitable
+   * for sending back to a client.
+   */
   def throwThriftException[T](f: => T) : T = {
     try {
       f;
