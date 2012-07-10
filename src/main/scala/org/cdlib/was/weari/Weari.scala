@@ -329,35 +329,51 @@ class Weari(config: Config)
   def isArcParsed (arcName : String) : Boolean = 
     getPathOption(arcName).isDefined;
 
-  /**
-   * Parse ARC files.
-   */
-  def parseArcs (arcs : Seq[String]) {
+  def parseArcsLocal (arcs : Seq[String]) : File = {
+    val arcListPath = mkArcListLocal(arcs.toSeq);
+    val storePath = File.createTempFile("weari", "json.gz");
+    storePath.delete;
+    val jobStatus = parseArcs(ExecType.LOCAL, arcListPath.toString, storePath.toString);
+    if (jobStatus == JOB_STATUS.FAILED) {
+      throw new thrift.ParseException("");
+    } else {
+      return storePath;
+    }
+  }
+  
+  private def parseArcs(execType : ExecType, arcListPath : String, storePath : String) : JOB_STATUS = {
     val properties = PropertiesUtil.loadDefaultProperties();
     properties.setProperty("pig.splitCombination", "false");
-    val pigContext = new PigContext(ExecType.MAPREDUCE, properties);
+    val pigContext = new PigContext(execType, properties);
     val pigServer = new PigServer(pigContext);
-    val arcListPath = mkArcListHDFS(arcs.toSeq);
 
     /* add jars in classpath to registered jars in pig */
     val cp = System.getProperty("java.class.path").split(System.getProperty("path.separator"));
     for (entry <- cp if entry.endsWith("jar")) {
       pigServer.registerJar(entry);
     }
-
     pigServer.registerQuery("""
       Data = LOAD '%s' 
       USING org.cdlib.was.weari.pig.ArchiveURLParserLoader()
       AS (filename:chararray, url:chararray, digest:chararray, date:chararray, length:long, content:chararray, detectedMediaType:chararray, suppliedMediaType:chararray, title:chararray, outlinks);""".
         format(arcListPath));
-    val storePath = "%s.json.gz".format(mkUUID);
     val job = pigServer.store("Data", storePath,
     		                 "org.cdlib.was.weari.pig.JsonParsedArchiveRecordStorer");
     
     while (!job.hasCompleted) {
       Thread.sleep(100);
     }
-    if (job.getStatus == JOB_STATUS.FAILED) {
+    return job.getStatus;
+  }
+
+  /**
+   * Parse ARC files.
+   */
+  def parseArcs (arcs : Seq[String]) {
+    val arcListPath = mkArcListHDFS(arcs.toSeq);
+    val storePath = "%s.json.gz".format(mkUUID);
+    val jobStatus = parseArcs(ExecType.MAPREDUCE, arcListPath.toString, storePath);
+    if (jobStatus == JOB_STATUS.FAILED) {
       throw new thrift.ParseException("");
     } else {
       refileJson(new Path(storePath));
