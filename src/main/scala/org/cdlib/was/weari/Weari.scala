@@ -37,7 +37,7 @@ import com.codahale.jerkson.{Json, ParsingException};
 
 import grizzled.slf4j.Logging;
 
-import java.io.{InputStream, OutputStream};
+import java.io.{ DataOutputStream, File, FileOutputStream, InputStream, OutputStream };
 import java.util.UUID;
 import java.util.zip.{GZIPInputStream, GZIPOutputStream};
 
@@ -281,15 +281,28 @@ class Weari(config: Config)
 
   private def mkUUID : String = UUID.randomUUID().toString();
 
-  private def mkArcList(arcs : Seq[String]) : Path = {
+  private def mkArcListHDFS(arcs : Seq[String]) : Path = {
     val arclistName = mkUUID;
     val path = new Path(arclistName)
-    val os = fs.create(path);
-    for (arcname <- arcs) {
-      os.writeBytes("%s\n".format(arcname));
-    }
-    os.close;
+    writeArcList(arcs, fs.create(path));
     return path;
+  }
+
+  private def mkArcListLocal(arcs : Seq[String]) : File = {
+    val arclistName = mkUUID;
+    val tempfile = File.createTempFile("arcs", "list");
+    writeArcList(arcs, new DataOutputStream(new FileOutputStream(tempfile)));
+    return tempfile;
+  }
+
+  private def writeArcList (arcs : Seq[String], os : DataOutputStream) {
+    try {
+      for (arcname <- arcs) {
+        os.writeBytes("%s\n".format(arcname));
+      }
+    } finally {
+      os.close;
+    }
   }
 
   /**
@@ -324,7 +337,7 @@ class Weari(config: Config)
     properties.setProperty("pig.splitCombination", "false");
     val pigContext = new PigContext(ExecType.MAPREDUCE, properties);
     val pigServer = new PigServer(pigContext);
-    val arcListPath = mkArcList(arcs.toSeq);
+    val arcListPath = mkArcListHDFS(arcs.toSeq);
 
     /* add jars in classpath to registered jars in pig */
     val cp = System.getProperty("java.class.path").split(System.getProperty("path.separator"));
