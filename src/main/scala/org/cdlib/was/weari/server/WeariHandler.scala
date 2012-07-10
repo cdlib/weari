@@ -39,7 +39,7 @@ import java.util.{List => JList, Map => JMap, UUID};
 
 import org.cdlib.was.weari._;
 
-import scala.collection.JavaConversions.{iterableAsScalaIterable, mapAsScalaMap, seqAsJavaList};
+import scala.collection.JavaConversions.{ iterableAsScalaIterable, mapAsScalaMap, seqAsJavaList };
     
 class WeariHandler(config: Config)
   extends thrift.Server.Iface with Logging with ExceptionLogger {
@@ -65,8 +65,8 @@ class WeariHandler(config: Config)
     }
   }
 
-  private implicit def convertMap (m : JMap[String, JList[String]]) : Map[String, Seq[String]] =
-    m.toMap.mapValues(iterableAsScalaIterable(_).toSeq);
+  private implicit def convertMap (m : JMap[String, JList[String]]) : scala.collection.immutable.Map[String, Seq[String]] =
+    mapAsScalaMap(m).toMap.mapValues(iterableAsScalaIterable(_).toSeq)
     
   /**
    * Index a set of ARCs on a solr server.
