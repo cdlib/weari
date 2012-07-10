@@ -65,7 +65,7 @@ class WeariHandler(config: Config)
     }
   }
 
-  private implicit def convertMap (m : JMap[String, JList[String]]) : scala.collection.immutable.Map[String, Seq[String]] =
+  private def convertMap (m : JMap[String, JList[String]]) : scala.collection.immutable.Map[String, Seq[String]] =
     mapAsScalaMap(m).toMap.mapValues(iterableAsScalaIterable(_).toSeq)
     
   /**
@@ -84,7 +84,7 @@ class WeariHandler(config: Config)
             extraId : String,
             extraFields : JMap[String, JList[String]]) {
     throwThriftException {
-      weari.index(solr, filterQuery, arcs.toSeq, extraId, extraFields);
+      weari.index(solr, filterQuery, arcs.toSeq, extraId, convertMap(extraFields));
     }
   }
 
@@ -95,7 +95,7 @@ class WeariHandler(config: Config)
                 queryString : String,
                 fields : JMap[String, JList[String]]) {
     throwThriftException {
-      weari.setFields(solr, queryString, fields);
+      weari.setFields(solr, queryString, convertMap(fields));
     }
   }
                
