@@ -39,7 +39,7 @@ import java.util.{List => JList, Map => JMap, UUID};
 
 import org.cdlib.was.weari._;
 
-import scala.collection.JavaConversions.{ iterableAsScalaIterable, mapAsScalaMap, seqAsJavaList };
+import scala.collection.JavaConversions;
     
 class WeariHandler(config: Config)
   extends thrift.Server.Iface with Logging with ExceptionLogger {
@@ -65,8 +65,8 @@ class WeariHandler(config: Config)
     }
   }
 
-  private def convertMap (m : JMap[String, JList[String]]) : scala.collection.immutable.Map[String, Seq[String]] =
-    mapAsScalaMap(m).toMap.mapValues(iterableAsScalaIterable(_).toSeq)
+  private def convertMap (m : JMap[String, JList[String]]) : scala.collection.immutable.Map[String, Seq[String]] = 
+    JavaConversions.mapAsScalaMap(m).toMap.mapValues(JavaConversions.iterableAsScalaIterable(_).toSeq);
     
   /**
    * Index a set of ARCs on a solr server.
@@ -84,7 +84,7 @@ class WeariHandler(config: Config)
             extraId : String,
             extraFields : JMap[String, JList[String]]) {
     throwThriftException {
-      weari.index(solr, filterQuery, arcs.toSeq, extraId, convertMap(extraFields));
+      weari.index(solr, filterQuery, JavaConversions.iterableAsScalaIterable(arcs).toSeq, extraId, convertMap(extraFields));
     }
   }
 
@@ -105,7 +105,7 @@ class WeariHandler(config: Config)
   def remove(solr : String,
              arcs : JList[String]) {
     throwThriftException {
-      weari.remove(solr, arcs.toSeq);
+      weari.remove(solr, JavaConversions.iterableAsScalaIterable(arcs).toSeq);
     }
   }
 
@@ -129,7 +129,7 @@ class WeariHandler(config: Config)
    */
   def parseArcs (arcs : JList[String]) {
     throwThriftException {
-      weari.parseArcs(arcs.toSeq);
+      weari.parseArcs(JavaConversions.iterableAsScalaIterable(arcs).toSeq);
     }
   }
 
