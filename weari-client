@@ -1,0 +1,86 @@
+#!/usr/bin/env ruby
+# -*- ruby -*-
+
+require "rubygems"
+require 'optparse'
+require 'weari/client'
+
+options = {
+  :host        => "localhost",
+  :solrserver  => "http://localhost:8983/solr/",
+  :port        => 59816,
+  :extrafields => {},
+  :extraid     => "",
+  :query       => "*:*"
+}
+
+def parse_field(raw)
+  md = raw.match(/^([^=]+)=(.*)$/)
+  return [md[1], md[2].split(/,\s*/)]
+end
+
+opt_parser = OptionParser.new do |opt|
+  opt.banner = "Usage: weari-client COMMAND [OPTIONS]"
+  opt.separator  ""
+  opt.separator  "Commands"
+  opt.separator  "    parse URL ... : parse a set of (W)ARC files"
+  opt.separator  "    deleteparse (W)ARCNAME ... : delete the (W)ARCNAME parse"
+  opt.separator  "    isparsed (W)ARCNAME ... : checks if (W)ARCNAME has been parsed"
+  opt.separator  "    remove (W)ARCNAME ... : removes (W)ARCs from the index"
+  opt.separator  "    set-fields QUERY FIELD ... : sets field values"
+  opt.separator  ""
+  opt.separator  "Options"
+
+  opt.on("-h","--host HOST","hostname for the weari server") do |host|
+    options[:host] = host
+  end
+  opt.on("-s","--solr SOLRSERVER","URL for the solr server, default http://localhost:8890/solr/") do |solrserver|
+    options[:solrserver] = solrserver
+  end
+  opt.on("-i","--extraid EXTRA","append the following to the ID") do |extraid|
+    options[:extraid] = extraid
+  end
+  opt.on("-f","--field NAME=VALUE","set a field value") do |arg|
+    (key, value) = parse_field(arg)
+    options[:extrafields][key] = value
+  end
+  opt.on("-q","--query QUERY","query to use to find merge candidates") do |query|
+    options[:query] = query
+  end
+end
+
+opt_parser.parse!
+
+client = Weari::Client.new(options[:host], options[:port])
+
+begin
+  case ARGV[0]
+  when "parse"
+    client.parse_arcs(ARGV[1..-1])
+  when "isparsed"
+    puts(if client.is_arc_parsed(ARGV[1]) then
+           "#{ARGV[1]} has been parsed."
+         else 
+           "#{ARGV[1]} has NOT been parsed."
+         end)
+  when "deleteparse"
+    client.delete_parse(ARGV[1])
+  when "index"
+    client.index(options[:solrserver], options[:query], ARGV[1..-1], options[:extraid], options[:extrafields])
+  when "set-fields"
+    fields = {}
+    ARGV[2..-1].each do |raw|
+      (key, value) = parse_field(raw)
+      fields[key] = value
+    end
+    client.set_fields(options[:solrserver], ARGV[1], fields)
+  when "remove"
+    client.remove(options[:solrserver], ARGV[1..-1])
+  else
+    puts opt_parser
+  end
+  exit!(0)
+rescue Exception=>ex
+  puts ex
+  exit!(1)
+end
