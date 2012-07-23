@@ -71,6 +71,12 @@ module Weari
       end
     end
 
+    def move(query, from, to)
+      with_open_transport do
+        @t_client.move(query, from, to)
+      end
+    end
+
     def set_fields(solr_uri, query, fields)
       with_open_transport do
         @t_client.setFields(solr_uri, query, fields)

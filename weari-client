@@ -76,6 +76,8 @@ begin
     client.set_fields(options[:solrserver], ARGV[1], fields)
   when "remove"
     client.remove(options[:solrserver], ARGV[1..-1])
+  when "move"
+    client.move(ARGV[0], ARGV[1], ARGV[2])
   else
     puts opt_parser
   end

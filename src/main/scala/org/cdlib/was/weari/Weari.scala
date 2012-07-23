@@ -191,6 +191,25 @@ class Weari(config: Config)
     }
   }
 
+  def move(query : String,
+           fromUrl : String,
+           toUrl : String) {
+    withLockedSolrServer(fromUrl) { from =>
+      withLockedSolrServer(toUrl) { to =>
+        commitOrRollback(from) {
+          commitOrRollback(to) {
+            val docs = new SolrDocumentCollection(from, new SolrQuery(query).setRows(config.numDocsPerRequest));
+            for (doc <- docs) {
+              to.add(toSolrInputDocument(doc));
+            }
+            to.commit;
+            from.deleteByQuery(query);
+          }
+        }
+      }
+    }
+  }
+
   /**
    * Index a seq of ParsedArchiveRecods.
    * Used for testing. Simplified version of index with seq of arcnames to parse.

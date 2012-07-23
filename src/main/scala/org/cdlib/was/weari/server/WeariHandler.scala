@@ -109,6 +109,18 @@ class WeariHandler(config: Config)
     }
   }
 
+  /**
+   * Move documents matching a query from one server to another.
+   * Should be a merge group.
+   */
+  def move(query : String,
+           from : String,
+           to : String) {
+    throwThriftException {
+      weari.move(query, from, to);
+    }
+  }
+
   def clearMergeManager(managerId : String) {
     throwThriftException {
       weari.clearMergeManager(managerId);

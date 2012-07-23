@@ -103,6 +103,20 @@ require 'weari/thrift/weari_types'
                   return
                 end
 
+                def move(query, from, to)
+                  send_move(query, from, to)
+                  recv_move()
+                end
+
+                def send_move(query, from, to)
+                  send_message('move', Move_args, :query => query, :from => from, :to => to)
+                end
+
+                def recv_move()
+                  result = receive_message(Move_result)
+                  return
+                end
+
                 def setFields(solr, query, fieldList)
                   send_setFields(solr, query, fieldList)
                   recv_setFields()
@@ -178,6 +192,13 @@ require 'weari/thrift/weari_types'
                   result = DeleteParse_result.new()
                   @handler.deleteParse(args.arc)
                   write_result(result, oprot, 'deleteParse', seqid)
+                end
+
+                def process_move(seqid, iprot, oprot)
+                  args = read_args(iprot, Move_args)
+                  result = Move_result.new()
+                  @handler.move(args.query, args.from, args.to)
+                  write_result(result, oprot, 'move', seqid)
                 end
 
                 def process_setFields(seqid, iprot, oprot)
@@ -381,6 +402,41 @@ require 'weari/thrift/weari_types'
               end
 
               class DeleteParse_result
+                include ::Thrift::Struct, ::Thrift::Struct_Union
+
+                FIELDS = {
+
+                }
+
+                def struct_fields; FIELDS; end
+
+                def validate
+                end
+
+                ::Thrift::Struct.generate_accessors self
+              end
+
+              class Move_args
+                include ::Thrift::Struct, ::Thrift::Struct_Union
+                QUERY = 1
+                FROM = 2
+                TO = 3
+
+                FIELDS = {
+                  QUERY => {:type => ::Thrift::Types::STRING, :name => 'query'},
+                  FROM => {:type => ::Thrift::Types::STRING, :name => 'from'},
+                  TO => {:type => ::Thrift::Types::STRING, :name => 'to'}
+                }
+
+                def struct_fields; FIELDS; end
+
+                def validate
+                end
+
+                ::Thrift::Struct.generate_accessors self
+              end
+
+              class Move_result
                 include ::Thrift::Struct, ::Thrift::Struct_Union
 
                 FIELDS = {
