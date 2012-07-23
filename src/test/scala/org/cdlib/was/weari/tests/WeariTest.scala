@@ -10,7 +10,7 @@ import org.scalatest.matchers._;
 
 import org.cdlib.was.weari._;
 
-class SolrTest extends FunSpec with BeforeAndAfter with ShouldMatchers {
+class WeariTest extends FunSpec with BeforeAndAfter with ShouldMatchers {
   describe("weari") {
     it("should parse arcs") {
       val config = new Config {};
