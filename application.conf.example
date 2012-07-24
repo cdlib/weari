@@ -29,3 +29,6 @@ weari.numDocIdsPerRequest=100000
 # true if we should commit between indexing each arc
 # true means less memory used
 weari.commitBetweenArcs=true
+
+# number of docs between commits (for move)
+weari.commitThreshold=50000

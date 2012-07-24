@@ -200,15 +200,19 @@ class Weari(config: Config)
           commitOrRollback(to) {
             val docs = new SolrDocumentCollection(from, new SolrQuery(query).setRows(config.numDocsPerRequest));
             var n = 0;
+            var deleteBuffer = mutable.Buffer[String]();
             for (doc <- docs) {
               to.add(toSolrInputDocument(doc));
-              from.deleteById(SolrFields.getId(doc));
+              deleteBuffer += SolrFields.getId(doc);
               n = n + 1;
-              if (n > config.trackCommitThreshold) {
+              if (n >= config.commitThreshold) {
                 info("Move threshold reached: committing.");
+                from.deleteById(deleteBuffer);
                 to.commit;
                 from.commit;
+                /* reset */
                 n = 0;
+                deleteBuffer = mutable.Buffer[String]();
               }
             }
           }

@@ -69,4 +69,6 @@ class Config {
   val numDocIdsPerRequest = conf.getInt("numDocIdsPerRequest");
 
   val commitBetweenArcs = conf.getBoolean("commitBetweenArcs");
+
+  val commitThreshold = conf.getInt("commitThreshold");
 }
