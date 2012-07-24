@@ -211,6 +211,8 @@ class Weari(config: Config)
                 deleteBuffer = mutable.Buffer[String]();
               }
             }
+            /* delete any thing left over */
+            from.deleteById(deleteBuffer);
           }
         }
       }
