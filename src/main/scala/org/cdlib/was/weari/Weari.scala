@@ -207,6 +207,7 @@ class Weari(config: Config)
                 info("Move threshold reached: committing.");
                 from.deleteById(deleteBuffer);
                 to.commit;
+                from.commit;
                 /* reset */
                 deleteBuffer = mutable.Buffer[String]();
               }
