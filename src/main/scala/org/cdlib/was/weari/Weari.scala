@@ -212,7 +212,7 @@ class Weari(config: Config)
               }
             }
             /* delete any thing left over */
-            from.deleteById(deleteBuffer);
+            if (deleteBuffer.size > 0) { from.deleteById(deleteBuffer); }
           }
         }
       }
