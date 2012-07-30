@@ -61,6 +61,7 @@ import org.cdlib.was.weari.Utility.{extractArcname, null2option};
 
 import scala.collection.mutable;
 import scala.collection.JavaConversions.seqAsJavaList;
+import scala.util.control.Breaks._;
 import scala.util.matching.Regex;
     
 class Weari(config: Config)
@@ -198,22 +199,31 @@ class Weari(config: Config)
       withLockedSolrServer(toUrl) { to =>
         commitOrRollback(from) {
           commitOrRollback(to) {
-            val docs = new SolrDocumentCollection(from, new SolrQuery(query).setRows(config.numDocsPerRequest));
-            var deleteBuffer = mutable.Buffer[String]();
-            for (doc <- docs) {
-              to.add(toSolrInputDocument(doc));
-              deleteBuffer += SolrFields.getId(doc);
-              if (deleteBuffer.size >= config.commitThreshold) {
+            breakable {
+              var docs : SolrDocumentCollection = null;
+
+              /* we have to group the docs here (see take(...) below) 
+               * because we delete docs while we are iterating over 
+               * them */
+
+              while (true) {
+                docs = new SolrDocumentCollection(from, new SolrQuery(query).setRows(config.numDocsPerRequest));
+
+                if (docs.isEmpty) { break; }
+
+                var deleteBuffer = mutable.Buffer[String]();
+                
+                for (doc <- docs.take(config.commitThreshold)) {
+                  to.add(toSolrInputDocument(doc));
+                  deleteBuffer += SolrFields.getId(doc);
+                }
+                
                 info("Move threshold reached: committing.");
-                from.deleteById(deleteBuffer);
+                if (!deleteBuffer.isEmpty) { from.deleteById(deleteBuffer); }
                 to.commit;
                 from.commit;
-                /* reset */
-                deleteBuffer = mutable.Buffer[String]();
               }
             }
-            /* delete any thing left over */
-            if (deleteBuffer.size > 0) { from.deleteById(deleteBuffer); }
           }
         }
       }
