@@ -73,6 +73,10 @@ class Weari(config: Config)
   val conf = new Configuration();
   val fs = FileSystem.get(conf);
   val jsonDir = new Path(config.jsonBaseDir);
+  fs.mkdirs(jsonDir);
+  val tmpDir = new Path("%s/tmp".format(config.jsonBaseDir));
+  fs.mkdirs(tmpDir);
+
   var locks : mutable.Map[String,AnyRef] = new mutable.HashMap[String,AnyRef]
     with mutable.SynchronizedMap[String,AnyRef];
 
@@ -348,7 +352,6 @@ class Weari(config: Config)
    * Moves all json.gz files beneath the source to their proper resting place.
    */
   private def refileJson (source : Path) {
-    fs.mkdirs(jsonDir);
     for (children <- null2option(fs.listStatus(source));
          child <- children) {
       val path = child.getPath;
@@ -410,7 +413,7 @@ class Weari(config: Config)
    */
   def parseArcs (arcs : Seq[String]) {
     val arcListPath = mkArcListHDFS(arcs.toSeq);
-    val storePath = "%s.json.gz".format(mkUUID);
+    val storePath = "%s/%s.json.gz".format(tmpDir, mkUUID);
     val jobStatus = parseArcs(ExecType.MAPREDUCE, arcListPath.toString, storePath);
     if (jobStatus == JOB_STATUS.FAILED) {
       throw new thrift.ParseException("");
