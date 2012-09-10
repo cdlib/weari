@@ -360,6 +360,8 @@ class Weari(config: Config)
       } else {
         if (path.getName.endsWith(".json.gz")) {
           fs.rename(path, new Path(jsonDir, path.getName));
+        } else if (path.getName == "_SUCCESS") {
+          fs.delete(path);
         }
       }
     }
