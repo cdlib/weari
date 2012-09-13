@@ -92,6 +92,8 @@ class Weari(config: Config)
     } catch {
       case ex : Exception => {
         server.rollback; 
+        error("Rolled back!");
+        error(ex);
         throw ex;
       }
     }
