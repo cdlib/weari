@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.cdlib.was.weari;
 
-import java.io.{BufferedInputStream,EOFException,File,InputStream,FileInputStream,FileOutputStream,OutputStream};
+import java.io.{ BufferedInputStream, File, InputStream, IOException, FileInputStream, FileOutputStream, OutputStream};
 import java.util.{Collection=>JCollection,Date};
 import java.util.zip.GZIPInputStream;
 
@@ -159,7 +159,7 @@ object Utility {
         return true;
       }
     } catch {
-      case ex : EOFException => return false;
+      case ex : IOException => return false;
     }
   }
 }
