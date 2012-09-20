@@ -80,6 +80,21 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String)
       case _ => None;
     }
 
+  lazy val isRevisit : Boolean = {
+    if (rec.getClass == classOf[ARCRecord]) {
+      false;
+    } else {
+    if (!ready) cueUp;
+      if (!isHttpResponse) {
+        false;
+      } else {
+        val header = rec.getHeader();
+        val headerVal = header.getHeaderValue(WARCConstants.HEADER_KEY_TYPE).toString;
+        (headerVal == WARCConstants.REVISIT);
+      }
+    }
+  }
+
   /**
    * Parse the headers from a WARCRecord.
    */

@@ -190,11 +190,12 @@ class ArchiveURLParserLoader extends LoadFunc with Logging {
                       date2string(rec.getDate),       // 3
                       rec.getLength,                  // 4
                       rec.content.getOrElse(""),      // 5
-                      rec.detectedContentType.        // 
+                      rec.detectedContentType.        // 6
                         getOrElse(ContentType.DEFAULT).mediaType,
                       rec.suppliedContentType.mediaType,  // 7
                       rec.title.getOrElse(""),        // 8
-                      outlinks)) {                    // 9
+                      outlinks,                       // 9
+                      rec.isRevisit)) {               // 10
       tuple.append(value);
     }
     return tuple;
