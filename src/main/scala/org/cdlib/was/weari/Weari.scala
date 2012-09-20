@@ -401,7 +401,7 @@ class Weari(config: Config)
     pigServer.registerQuery("""
       Data = LOAD '%s' 
       USING org.cdlib.was.weari.pig.ArchiveURLParserLoader()
-      AS (filename:chararray, url:chararray, digest:chararray, date:chararray, length:long, content:chararray, detectedMediaType:chararray, suppliedMediaType:chararray, title:chararray, outlinks);""".
+      AS (filename:chararray, url:chararray, digest:chararray, date:chararray, length:long, content:chararray, detectedMediaType:chararray, suppliedMediaType:chararray, title:chararray, isRevisit, outlinks);""".
         format(arcListPath));
     val job = pigServer.store("Data", storePath,
     		                 "org.cdlib.was.weari.pig.JsonParsedArchiveRecordStorer");
