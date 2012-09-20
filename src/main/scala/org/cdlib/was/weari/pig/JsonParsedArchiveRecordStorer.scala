@@ -137,12 +137,12 @@ class JsonParsedArchiveRecordStorer extends StoreFunc {
   var writer : RecordWriter[Text,ParsedArchiveRecord] = _;
 
   implicit def tuple2rec (f : Tuple) : ParsedArchiveRecord = {
-    val outlinks = for (link <- f.get(9).asInstanceOf[DataBag].iterator)
+    val outlinks = for (link <- f.get(10).asInstanceOf[DataBag].iterator)
       yield link.get(0).asInstanceOf[Long];
 
     return ParsedArchiveRecord(filename            = f.get(0).asInstanceOf[String],
-                               digest              = Some(f.get(2).asInstanceOf[String]),
                                url                 = f.get(1).asInstanceOf[String],
+                               digest              = Some(f.get(2).asInstanceOf[String]),
                                date                = f.get(3).asInstanceOf[String],
                                length              = f.get(4).asInstanceOf[Long],
                                content             = Some(f.get(5).asInstanceOf[String]),
@@ -151,8 +151,8 @@ class JsonParsedArchiveRecordStorer extends StoreFunc {
                                suppliedContentType = 
                                  ContentType.forceParse(f.get(7).asInstanceOf[String]),
                                title               = Some(f.get(8).asInstanceOf[String]),
-                               outlinks            = outlinks.toSeq,
-                               isRevisit           = f.get(10).asInstanceOf[Boolean])
+                               isRevisit           = f.get(9).asInstanceOf[Boolean],
+                               outlinks            = outlinks.toSeq);
   }
 
   override def putNext(f : Tuple) {
