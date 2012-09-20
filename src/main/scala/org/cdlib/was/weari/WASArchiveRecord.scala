@@ -55,4 +55,6 @@ trait WASArchiveRecord {
   def isHttpResponse : Boolean;
   
   def getContentType : ContentType;
+  
+  def isRevisit : Boolean;
 }

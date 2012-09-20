@@ -144,14 +144,15 @@ class JsonParsedArchiveRecordStorer extends StoreFunc {
                                digest              = Some(f.get(2).asInstanceOf[String]),
                                url                 = f.get(1).asInstanceOf[String],
                                date                = f.get(3).asInstanceOf[String],
-                               title               = Some(f.get(8).asInstanceOf[String]),
                                length              = f.get(4).asInstanceOf[Long],
                                content             = Some(f.get(5).asInstanceOf[String]),
-                               suppliedContentType = 
-                                 ContentType.forceParse(f.get(7).asInstanceOf[String]),
                                detectedContentType = 
                                  ContentType.parse(f.get(6).asInstanceOf[String]),
-                               outlinks            = outlinks.toSeq)
+                               suppliedContentType = 
+                                 ContentType.forceParse(f.get(7).asInstanceOf[String]),
+                               title               = Some(f.get(8).asInstanceOf[String]),
+                               outlinks            = outlinks.toSeq,
+                               isRevisit           = f.get(10).asInstanceOf[Boolean])
   }
 
   override def putNext(f : Tuple) {
