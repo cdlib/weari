@@ -46,12 +46,14 @@ object MyBuild extends Build {
         "Guardian Github Releases" at "http://guardian.github.com/maven/repo-releases",
         "Local Maven Repository" at Path.userHome.asURL + "/.m2/repository");
 
+
   lazy val root = 
     Project("root",
             file("."),
             settings = buildSettings ++ 
               Seq(distTask) ++ 
               Seq(name := "weari",
+                  unmanagedClasspath in Test <+= (baseDirectory) map { bd => Attributed.blank(bd / ".." / "hadoop" / "conf") },
                   distFiles := Seq(),
                   distPath <<= (target) { (target) =>
                     target / "dist" / "artifacts.zip" 
