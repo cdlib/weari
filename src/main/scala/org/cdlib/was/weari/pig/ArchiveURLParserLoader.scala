@@ -194,7 +194,7 @@ class ArchiveURLParserLoader extends LoadFunc with Logging {
                         getOrElse(ContentType.DEFAULT).mediaType,
                       rec.suppliedContentType.mediaType, // 7
                       rec.title.getOrElse(""),           // 8
-                      rec.isRevisit,                     // 9
+                      rec.isRevisit.getOrElse(false),    // 9
                       outlinks)) {                       // 10
       tuple.append(value);
     }

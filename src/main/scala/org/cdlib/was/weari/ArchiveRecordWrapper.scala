@@ -80,17 +80,17 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String)
       case _ => None;
     }
 
-  lazy val isRevisit : Boolean = {
+  lazy val isRevisit : Option[Boolean] = {
     if (rec.getClass == classOf[ARCRecord]) {
-      false;
+      None;
     } else {
     if (!ready) cueUp;
       if (!isHttpResponse) {
-        false;
+        Some(false);
       } else {
         val header = rec.getHeader();
         val headerVal = header.getHeaderValue(WARCConstants.HEADER_KEY_TYPE).toString;
-        (headerVal == WARCConstants.REVISIT);
+        Some(headerVal == WARCConstants.REVISIT);
       }
     }
   }

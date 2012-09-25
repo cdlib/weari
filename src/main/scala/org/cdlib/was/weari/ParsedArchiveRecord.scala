@@ -51,7 +51,7 @@ case class ParsedArchiveRecord (
   val content : Option[String],
   val suppliedContentType : ContentType,
   val detectedContentType : Option[ContentType],
-  val isRevisit : Boolean,
+  val isRevisit : Option[Boolean],
   val outlinks : Seq[Long]) extends WASArchiveRecord {
 
   def getFilename = filename;

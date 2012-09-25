@@ -151,7 +151,7 @@ class JsonParsedArchiveRecordStorer extends StoreFunc {
                                suppliedContentType = 
                                  ContentType.forceParse(f.get(7).asInstanceOf[String]),
                                title               = Some(f.get(8).asInstanceOf[String]),
-                               isRevisit           = f.get(9).asInstanceOf[Boolean],
+                               isRevisit           = Some(f.get(9).asInstanceOf[Boolean]),
                                outlinks            = outlinks.toSeq);
   }
 

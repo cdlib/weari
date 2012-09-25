@@ -56,5 +56,5 @@ trait WASArchiveRecord {
   
   def getContentType : ContentType;
   
-  def isRevisit : Boolean;
+  def isRevisit : Option[Boolean];
 }
