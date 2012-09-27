@@ -33,13 +33,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.cdlib.was.weari;
 
-import org.apache.solr.client.solrj.{SolrQuery,SolrServer};
+import org.apache.solr.client.solrj.{ SolrQuery, SolrServer };
 import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.common.SolrDocument;
+import org.apache.solr.common.{ SolrDocument, SolrException };
 import org.apache.solr.common.params.SolrParams;
 
+import grizzled.slf4j.Logging;
+
 class SolrDocumentCollection(server : SolrServer, q : SolrQuery)
-  extends Iterable[SolrDocument] {
+  extends Iterable[SolrDocument] with Logging {
 
   /* you don't want to call this. */
   def apply (idx : Int) = this.iterator.toSeq(idx);
@@ -58,12 +60,20 @@ class SolrDocumentCollection(server : SolrServer, q : SolrQuery)
     }
 
     def fillCache {
-      val results = server.query(q.getCopy.setStart(pos)).getResults;
-      this._length = results.getNumFound.asInstanceOf[Int];
-      for (i <- new Range(0, results.size, 1)) {
-        cache += results.get(i);
+      val q2 = q.getCopy.setStart(pos);
+      try {
+        val results = server.query(q2).getResults;
+        this._length = results.getNumFound.asInstanceOf[Int];
+        for (i <- new Range(0, results.size, 1)) {
+          cache += results.get(i);
+        }
+        pos = (results.getStart.asInstanceOf[Int] + results.size.asInstanceOf[Int]);
+      } catch {
+        case ex : SolrException => {
+          error("Caught exception %s with query %s.".format(ex, q2));
+          throw ex;
+        }
       }
-      pos = (results.getStart.asInstanceOf[Int] + results.size.asInstanceOf[Int]);
     }
   }    
 }
