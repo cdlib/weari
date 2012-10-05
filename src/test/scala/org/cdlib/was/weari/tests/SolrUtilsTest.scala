@@ -25,7 +25,7 @@ class SolrUtilsTest extends FunSpec with BeforeAndAfter with ShouldMatchers {
                                         title = Some("title"),
                                           length = 10,
                                         content = Some("hello world"),
-                                        isRevisit = false,
+                                        isRevisit = None,
                                         suppliedContentType = ContentType.forceParse("text/html"),
                                         detectedContentType = ContentType.parse("text/plain"),
                                         outlinks = Seq[Long]());
