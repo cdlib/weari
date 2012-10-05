@@ -1,34 +1,34 @@
 # port to listen on
-weari.port=59816
+#weari.port=59816
 
 # number of threads to use for ConcurrentUpdateSolrServer
-weari.threadCount=5
+#weari.threadCount=5
 
 # size of queue for ConcurrentUpdateSolrServer
-weari.queueSize=1000
+#weari.queueSize=1000
 
-weari.jsonBaseDir=/user/was/json
+#weari.jsonBaseDir=/user/was/json
 
 # threshold of tracked merged documents at which we should commit.
 # Lower if running out of memory.
-weari.trackCommitThreshold=5000
+#weari.trackCommitThreshold=5000
 
 # max number of id queries to send to the server at once when batch merging
-weari.maxIdQuerySize=100
+#weari.maxIdQuerySize=100
 
 # size of groups to send to the batch merge at once */
 # should probably be > maxIdQuerySize and some fraction of the size of trackCommitThreshold 
-weari.batchMergeGroupSize=1000
+#weari.batchMergeGroupSize=1000
 
 #number of docs to load at once
-weari.numDocsPerRequest=10000
+#weari.numDocsPerRequest=10000
 
 # number of doc ids to load at once
-weari.numDocIdsPerRequest=100000
+#weari.numDocIdsPerRequest=100000
 
 # true if we should commit between indexing each arc
 # true means less memory used
-weari.commitBetweenArcs=true
+#weari.commitBetweenArcs=true
 
 # number of docs between commits (for move)
-weari.commitThreshold=50000
+#weari.commitThreshold=50000
