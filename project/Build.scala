@@ -58,6 +58,7 @@ object MyBuild extends Build {
                   distPath <<= (target) { (target) =>
                     target / "dist" / "artifacts.zip" 
                   },
+                  libraryDependencies += "com.codahale" %% "jerkson" % "0.5.0",
                   exportJars := true,
                   externalPom(baseDirectory(_ / "pom.xml")),
                   resolvers := extraResolvers));
