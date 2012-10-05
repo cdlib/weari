@@ -99,17 +99,8 @@ class Weari(config: Config)
     }
   }
 
-  /**
-   * Load and parse a JSON file.
-   */
-  def readJson[T](path : Path) : Seq[ParsedArchiveRecord] = {
-    val arcname = getArcname(path);
-    var in : InputStream = null;
+  def readJson[T](arcname : String, in : InputStream) : Seq[ParsedArchiveRecord] = {
     try {
-      in = fs.open(path);
-      if (path.getName.endsWith("gz")) {
-        in = new GZIPInputStream(in);
-      }
       return Json.parse[List[ParsedArchiveRecord]](in);
     } catch {
       case ex : ParsingException => {
@@ -123,6 +114,19 @@ class Weari(config: Config)
     } finally {
       if (in != null) in.close;
     }
+  }
+
+  /**
+   * Load and parse a JSON file.
+   */
+  def readJson[T](path : Path) : Seq[ParsedArchiveRecord] = {
+    val arcname = getArcname(path);
+    var in : InputStream = null;
+    in = fs.open(path);
+    if (path.getName.endsWith("gz")) {
+      in = new GZIPInputStream(in);
+    }
+    return readJson(arcname, in);
   }
 
   def getMergeManager (solr : String, extraId : String, filterQuery : String) = 
