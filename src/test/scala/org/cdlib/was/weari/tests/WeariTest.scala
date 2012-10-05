@@ -12,10 +12,10 @@ import org.cdlib.was.weari._;
 
 class WeariTest extends FunSpec with BeforeAndAfter with ShouldMatchers {
   describe("weari") {
-    it("should parse arcs") {
-      val config = new Config {};
-      val weari = new Weari(config);
-      weari.parseArcsLocal(List[String]("http://archive.org/download/ExampleArcAndWarcFiles/IAH-20080430204825-00000-blackbook.arc.gz"));
-    }
+    // it("should parse arcs") {
+    //   val config = new Config {};
+    //   val weari = new Weari(config);
+    //   weari.parseArcsLocal(List[String]("http://archive.org/download/ExampleArcAndWarcFiles/IAH-20080430204825-00000-blackbook.arc.gz"));
+    // }
   }
 }
