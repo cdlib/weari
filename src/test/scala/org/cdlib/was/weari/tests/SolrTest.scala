@@ -10,7 +10,7 @@ import org.scalatest.matchers._;
 
 import org.cdlib.was.weari._;
 
-class SolrTest extends FunSpec with BeforeAndAfter with ShouldMatchers with RequiresRunningContentApi {
+// class SolrTest extends FunSpec with BeforeAndAfter with ShouldMatchers with RequiresRunningContentApi {
   // describe("solr") {
   //   it("should not return any results to start with") {
   //     val server = new HttpSolrServer("http://localhost:8700/solr");
@@ -24,4 +24,4 @@ class SolrTest extends FunSpec with BeforeAndAfter with ShouldMatchers with Requ
   //     weari.index("http://localhost:8700/solr", "*:*", List("CDL-20070613180402-00006-ingest1.arc.gz"), "", Map[String,Seq[String]]());
   //   }
   // }
-}
+// }
