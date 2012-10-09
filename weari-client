@@ -27,6 +27,7 @@ opt_parser = OptionParser.new do |opt|
   opt.separator  "    deleteparse (W)ARCNAME ... : delete the (W)ARCNAME parse"
   opt.separator  "    isparsed (W)ARCNAME ... : checks if (W)ARCNAME has been parsed"
   opt.separator  "    remove (W)ARCNAME ... : removes (W)ARCs from the index"
+  opt.separator  "    move query FROM_SERVER TO_SERVER ... : moves all records found by QUERY from one server to another"
   opt.separator  "    set-fields QUERY FIELD ... : sets field values"
   opt.separator  ""
   opt.separator  "Options"
