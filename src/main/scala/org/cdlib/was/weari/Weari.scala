@@ -135,11 +135,7 @@ class Weari(config: Config)
                                                        new HttpSolrServer(solr),
                                                        !config.commitBetweenArcs));
 
-  /**
-   * Synchronize around a solr server url, and call a function with the solr server.
-   */
-  def withLockedSolrServer[T] (url : String) (f: (SolrServer)=>T) : T = {
-    locks.getOrElseUpdate(url, new Object).synchronized {
+  def withSolrServer[T] (solrUrl : String) (f: (SolrServer)=>T) : T = {
       val httpClient = {
         val params = new ModifiableSolrParams();
         params.set(HttpClientUtil.PROP_MAX_CONNECTIONS, 16);
@@ -148,11 +144,28 @@ class Weari(config: Config)
         params.set(HttpClientUtil.PROP_SO_TIMEOUT, 0);
         HttpClientUtil.createClient(params);
       }
-      val server = new ConcurrentUpdateSolrServer(url,
+      val server = new ConcurrentUpdateSolrServer(solrUrl,
                                                   httpClient,
                                                   config.queueSize,
                                                   config.threadCount);
       f(server);
+  }
+    
+  /**
+   * Synchronize around a unique string.
+   */
+  def withLock[T] (lockId : String) (f : => T) : T = {
+    locks.getOrElseUpdate(lockId, new Object).synchronized {
+      f;
+    }
+  }
+  
+  /**
+   * Synchronize around a solr server url, and call a function with the solr server.
+   */
+  def withLockedSolrServer[T] (solrUrl : String) (f: (SolrServer)=>T) : T = {
+    withLock(solrUrl) {
+      withSolrServer[T](solrUrl)(f);
     }
   }
 
@@ -172,33 +185,34 @@ class Weari(config: Config)
             extraId : String,
             extraFields : Map[String, Seq[String]]) {
     val arcPaths = arcs.map(getPath(_));
-    withLockedSolrServer (solr) { server =>
-      val manager = getMergeManager(solr, extraId, filterQuery);
-      commitOrRollback(server) {
-        for ((arcname, path) <- arcs.zip(arcPaths)) {
-          val records = readJson(path);
-          manager.loadDocs(new SolrQuery("arcname:\"%s\"".format(arcname)));
-          val docs = for (rec <- records)
+    withLock (extraId) {
+      withSolrServer(solr) { (server) =>
+        val manager = getMergeManager(solr, extraId, filterQuery);
+        commitOrRollback(server) {
+          for ((arcname, path) <- arcs.zip(arcPaths)) {
+            val records = readJson(path);
+            manager.loadDocs(new SolrQuery("arcname:\"%s\"".format(arcname)));
+              val docs = for (rec <- records)
                      yield record2inputDocument(rec, extraFields, extraId);
-          /* group documents for batch merge */
-          /* this will ensure that we don't build up a lot of merges before hitting the */
-          /* trackCommitThreshold */
-          for (group <- docs.grouped(config.batchMergeGroupSize)) {
-            for (merged <- manager.batchMerge(group)) {
-              server.add(merged); 
+              /* group documents for batch merge */
+            /* this will ensure that we don't build up a lot of merges before hitting the */
+            /* trackCommitThreshold */
+            for (group <- docs.grouped(config.batchMergeGroupSize)) {
+              for (merged <- manager.batchMerge(group)) {
+                server.add(merged); 
+              }
+            }
+            if (manager.trackedCount > config.trackCommitThreshold) {
+              info("Merge manager threshold reached: committing.");
+              server.commit;
+              manager.reset;
+            }
+            if (config.commitBetweenArcs) {
+              server.commit;
+              manager.reset;
             }
           }
-          if (manager.trackedCount > config.trackCommitThreshold) {
-            info("Merge manager threshold reached: committing.");
-            server.commit;
-            manager.reset;
-          }
-          if (config.commitBetweenArcs) {
-            server.commit;
-            manager.reset;
-          }
-        }
-      }
+}      }
     }
   }
 
