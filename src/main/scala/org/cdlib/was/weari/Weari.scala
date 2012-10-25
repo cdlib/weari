@@ -186,33 +186,32 @@ class Weari(config: Config)
             extraFields : Map[String, Seq[String]]) {
     val arcPaths = arcs.map(getPath(_));
     withLock (extraId) {
-      withSolrServer(solr) { (server) =>
+      withSolrServer(solr) { (server) => {
         val manager = getMergeManager(solr, extraId, filterQuery);
-        commitOrRollback(server) {
-          for ((arcname, path) <- arcs.zip(arcPaths)) {
-            val records = readJson(path);
-            manager.loadDocs(new SolrQuery("arcname:\"%s\"".format(arcname)));
-              val docs = for (rec <- records)
+        for ((arcname, path) <- arcs.zip(arcPaths)) {
+          val records = readJson(path);
+          manager.loadDocs(new SolrQuery("arcname:\"%s\"".format(arcname)));
+          val docs = for (rec <- records)
                      yield record2inputDocument(rec, extraFields, extraId);
-              /* group documents for batch merge */
-            /* this will ensure that we don't build up a lot of merges before hitting the */
-            /* trackCommitThreshold */
-            for (group <- docs.grouped(config.batchMergeGroupSize)) {
-              for (merged <- manager.batchMerge(group)) {
-                server.add(merged); 
-              }
-            }
-            if (manager.trackedCount > config.trackCommitThreshold) {
-              info("Merge manager threshold reached: committing.");
-              server.commit;
-              manager.reset;
-            }
-            if (config.commitBetweenArcs) {
-              server.commit;
-              manager.reset;
+          /* group documents for batch merge */
+          /* this will ensure that we don't build up a lot of merges before hitting the */
+          /* trackCommitThreshold */
+          for (group <- docs.grouped(config.batchMergeGroupSize)) {
+            for (merged <- manager.batchMerge(group)) {
+              server.add(merged); 
             }
           }
-}      }
+          if (manager.trackedCount > config.trackCommitThreshold) {
+            info("Merge manager threshold reached: committing.");
+            server.commit;
+            manager.reset;
+          }
+          if (config.commitBetweenArcs) {
+            server.commit;
+            manager.reset;
+          }
+        }
+      }}
     }
   }
 
