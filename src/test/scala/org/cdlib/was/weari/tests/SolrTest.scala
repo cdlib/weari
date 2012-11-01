@@ -44,8 +44,7 @@ class SolrTest extends FunSpec with ShouldMatchers {
       w.index(solrurl, "*:*", List(arcname), "", Map[String,Seq[String]]());
       val docsb = mkSearch("*:*").toList.sortBy(_.getFirstValue("id").asInstanceOf[String])
       for ((a, b) <- docsa.zip(docsb);
-           field <- List("id", "date", "content")) {
-             println(a.getFirstValue("id"));
+           field <- List("id", "date", "content", "url", "canonicalurl", "title", "mediatypedet", "mediatypesup")) {
              assert (a.getFieldValue(field) === b.getFieldValue(field));
            }
     }
