@@ -2,11 +2,9 @@
 
 package org.cdlib.was.weari.tests;
 
-import java.util.zip.GZIPInputStream;
-
 import org.cdlib.was.weari._;
 
-import org.scalatest.{FeatureSpec,GivenWhenThen,Ignore};
+import org.scalatest.GivenWhenThen;
 
 import com.typesafe.config.ConfigFactory;
 
@@ -15,8 +13,8 @@ class ParseTest extends FeatureSpec {
   val config = new Config(ConfigFactory.load("test"));
   val arcName = "IAH-20080430204825-00000-blackbook.arc.gz";
 
-  feature ("Pig Parser") {
-    scenario ("we can parse an ARC file") {
+  feature ("pig parser") {
+    scenario ("can parse an ARC file") {
       val w = new Weari(config);
       w.deleteParse(arcName);
       w.parseArcs (List(cl.getResource(arcName).toString));
