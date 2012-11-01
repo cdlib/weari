@@ -223,7 +223,7 @@ object MergeManager extends Logging {
    */
   def getSingleFieldValue (fieldname : String, a : SolrInputDocument, b : SolrInputDocument) : Option[Any] = 
     List(a,b).map(_.getFieldValue(fieldname)).
-      filter(f=>(f != null) && (f != "")).
+      filter(f=>(f != null)).
       headOption;
 
   /**
