@@ -17,11 +17,5 @@ class SolrTest extends FunSpec with BeforeAndAfter with ShouldMatchers {
       val docs = new SolrDocumentCollection(server, new SolrQuery("*:*").setRows(10));
       assert (docs.size === 0);
     }
-
-  //   it("should index properly") {
-  //     val config = new Config {};
-  //     val weari = new Weari(config);
-  //     weari.index("http://localhost:8700/solr", "*:*", List("CDL-20070613180402-00006-ingest1.arc.gz"), "", Map[String,Seq[String]]());
-  //   }
-  // }
-// }
+  }
+}
