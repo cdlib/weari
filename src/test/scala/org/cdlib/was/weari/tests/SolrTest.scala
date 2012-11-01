@@ -18,12 +18,18 @@ class SolrTest extends FunSpec with ShouldMatchers {
   val w = new Weari(config);
   val arcname = "IAH-20080430204825-00000-blackbook.arc.gz";
   var arcpath = cl.getResource(arcname).toString;
-  val server = new HttpSolrServer("http://localhost:8983/solr");
+  val solrurl = "http://localhost:8983/solr";
+  val server = new HttpSolrServer(solrurl);
+
+  def mkSearch(query : String) = 
+      new SolrDocumentCollection(server, new SolrQuery(query));
+
+  def assertSearchSize(query : String, size : Int) =
+    assert(size === mkSearch(query).size);
 
   describe("solr") {
     it("should not return any results to start with") {
-      val docs = new SolrDocumentCollection(server, new SolrQuery("*:*").setRows(10));
-      assert (docs.size === 0);
+      assertSearchSize("*:*", 0);
     }
     
     it("should index properly") {
@@ -31,18 +37,23 @@ class SolrTest extends FunSpec with ShouldMatchers {
       if (!w.isArcParsed(arcname)) {
         w.parseArcs(List(arcpath));
       }
-      w.index("http://localhost:8983/solr", "*:*", 
-              List(arcname), "", Map[String,Seq[String]]());
+      w.index(solrurl, "*:*", List(arcname), "", Map[String,Seq[String]]());
     }
     
     it("should have indexed images") {
-      val docs = new SolrDocumentCollection(server, new SolrQuery("mediatypegroupdet:image").setRows(10));
-      assert (docs.size === 55);
+      assertSearchSize("mediatypegroupdet:image", 55);
     }
 
+    it("can set some tags") {
+      assertSearchSize("tag:hello", 0);
+      w.setFields(solrurl, "arcname:%s".format(arcname), Map("tag"->List("hello", "world")));
+      assertSearchSize("tag:hello", 214);
+      assertSearchSize("tag:world", 214);
+    }
+      
     it("should be able to remove arcs") {
-      w.remove("http://localhost:8983/solr", List(arcname));
-      assert (0 === new SolrDocumentCollection(server, new SolrQuery("*:*")).size);
+      w.remove(solrurl, List(arcname));
+      assertSearchSize("*:*", 0);
     }
   }
 }
