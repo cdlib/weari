@@ -34,6 +34,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.cdlib.was.weari;
 
 import org.codehaus.jackson.annotate.JsonIgnore;
+import com.codahale.jerkson.{Json, ParsingException};
+
+import java.io.InputStream;
 
 import java.util.Date;
 
@@ -92,5 +95,22 @@ object ParsedArchiveRecord {
                             suppliedContentType = suppliedContentType,
                             detectedContentType = detectedContentType,
                             outlinks = outlinks);
+  }
+
+  def readJson(arcname : String, in : InputStream) : Seq[ParsedArchiveRecord] = {
+    try {
+      return Json.parse[List[ParsedArchiveRecord]](in);
+    } catch {
+      case ex : ParsingException => {
+        error("Bad JSON: %s".format(arcname));
+        throw new thrift.BadJSONException(ex.toString, arcname);
+      }
+      case ex : java.io.EOFException => {
+        error("Bad JSON: %s".format(arcname));
+        throw new thrift.BadJSONException(ex.toString, arcname);
+      }
+    } finally {
+      if (in != null) in.close;
+    }
   }
 }

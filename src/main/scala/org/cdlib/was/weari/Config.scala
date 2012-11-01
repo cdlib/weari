@@ -35,10 +35,11 @@ package org.cdlib.was.weari;
 
 import java.io.File;
 
-import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.{ ConfigFactory, Config => TSConfig };
 
-class Config {
-  val confRoot = ConfigFactory.load();
+class Config (confRoot : TSConfig) {
+  def this() = this (ConfigFactory.load());
+
   confRoot.checkValid(ConfigFactory.defaultReference(), "weari");
 
   val conf = confRoot.getConfig("weari");
@@ -71,4 +72,8 @@ class Config {
   val commitBetweenArcs = conf.getBoolean("commitBetweenArcs");
 
   val commitThreshold = conf.getInt("commitThreshold");
+
+  val useHadoop = conf.getBoolean("useHadoop");
+
+  val useRealTimeGet = conf.getBoolean("useRealTimeGet");
 }

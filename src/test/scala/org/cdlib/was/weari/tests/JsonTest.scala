@@ -16,7 +16,7 @@ class JsonTest extends FeatureSpec {
 
   feature ("JSON") {
     scenario ("we can parse a JSON file") {
-      val records = weari.readJson("test.arc.gz", new GZIPInputStream(cl.getResourceAsStream(jsonName)));
+      val records = ParsedArchiveRecord.readJson("test.arc.gz", new GZIPInputStream(cl.getResourceAsStream(jsonName)));
       assert(records.length === 1);
       val record = records(0);
       assert (record.url === "http://www.actorsequity.org/home.asp");

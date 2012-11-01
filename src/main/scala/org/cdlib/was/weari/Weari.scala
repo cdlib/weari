@@ -33,21 +33,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.cdlib.was.weari;
 
-import com.codahale.jerkson.{Json, ParsingException};
-
 import grizzled.slf4j.Logging;
 
-import java.io.{ DataOutputStream, File, FileOutputStream, InputStream, OutputStream };
-import java.util.UUID;
-import java.util.zip.{GZIPInputStream, GZIPOutputStream};
-
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.{FSDataInputStream, FSDataOutputStream, FileSystem, Path};
-
-import org.apache.pig.{ExecType, PigServer};
-import org.apache.pig.backend.executionengine.ExecJob.JOB_STATUS;
-import org.apache.pig.impl.PigContext;
-import org.apache.pig.impl.util.PropertiesUtil;
+import java.io.{ File, FileOutputStream, InputStream, OutputStream };
 
 import org.apache.solr.client.solrj.{SolrQuery, SolrServer};
 import org.apache.solr.client.solrj.impl.{ConcurrentUpdateSolrServer, HttpClientUtil, HttpSolrServer};
@@ -59,10 +47,13 @@ import org.cdlib.was.weari.MergeManager.removeMerge;
 import org.cdlib.was.weari.SolrUtils.{addFields, mkInputField, record2inputDocument, toSolrInputDocument};
 import org.cdlib.was.weari.Utility.{extractArcname, null2option};
 
+import org.apache.hadoop.fs.Path;
+
 import scala.collection.mutable;
 import scala.collection.JavaConversions.seqAsJavaList;
 import scala.util.control.Breaks._;
-import scala.util.matching.Regex;
+
+import org.cdlib.was.weari.pig.PigUtil;
     
 class Weari(config: Config)
   extends Logging with ExceptionLogger {
@@ -70,15 +61,10 @@ class Weari(config: Config)
   var mergeManagerCache = new mutable.HashMap[String,MergeManager]
     with mutable.SynchronizedMap[String,MergeManager];
 
-  val conf = new Configuration();
-  val fs = FileSystem.get(conf);
-  val jsonDir = new Path(config.jsonBaseDir);
-  fs.mkdirs(jsonDir);
-  val tmpDir = new Path("%s/tmp".format(config.jsonBaseDir));
-  fs.mkdirs(tmpDir);
-
   var locks : mutable.Map[String,AnyRef] = new mutable.HashMap[String,AnyRef]
     with mutable.SynchronizedMap[String,AnyRef];
+
+  val pigUtil = new PigUtil(config);
 
   /**
    * Perform f, and either commit at the end if there were no exceptions,
@@ -97,36 +83,6 @@ class Weari(config: Config)
         throw ex;
       }
     }
-  }
-
-  def readJson[T](arcname : String, in : InputStream) : Seq[ParsedArchiveRecord] = {
-    try {
-      return Json.parse[List[ParsedArchiveRecord]](in);
-    } catch {
-      case ex : ParsingException => {
-        error("Bad JSON: %s".format(arcname));
-        throw new thrift.BadJSONException(ex.toString, arcname);
-      }
-      case ex : java.io.EOFException => {
-        error("Bad JSON: %s".format(arcname));
-        throw new thrift.BadJSONException(ex.toString, arcname);
-      }
-    } finally {
-      if (in != null) in.close;
-    }
-  }
-
-  /**
-   * Load and parse a JSON file.
-   */
-  def readJson[T](path : Path) : Seq[ParsedArchiveRecord] = {
-    val arcname = getArcname(path);
-    var in : InputStream = null;
-    in = fs.open(path);
-    if (path.getName.endsWith("gz")) {
-      in = new GZIPInputStream(in);
-    }
-    return readJson(arcname, in);
   }
 
   def getMergeManager (solr : String, extraId : String, filterQuery : String) = 
@@ -184,12 +140,12 @@ class Weari(config: Config)
             arcs : Seq[String],
             extraId : String,
             extraFields : Map[String, Seq[String]]) {
-    val arcPaths = arcs.map(getPath(_));
+    val arcPaths = arcs.map(pigUtil.getPath(_));
     withLock (extraId) {
       withSolrServer(solr) { (server) => {
         val manager = getMergeManager(solr, extraId, filterQuery);
         for ((arcname, path) <- arcs.zip(arcPaths)) {
-          val records = readJson(path);
+          val records : Seq[ParsedArchiveRecord] = pigUtil.readJson(path);
           manager.loadDocs(new SolrQuery("arcname:\"%s\"".format(arcname)));
           val docs = for (rec <- records)
                      yield record2inputDocument(rec, extraFields, extraId);
@@ -341,166 +297,20 @@ class Weari(config: Config)
     mergeManagerCache.remove(managerId);
   }
 
-  private def mkUUID : String = UUID.randomUUID().toString();
-
-  private def mkArcListHDFS(arcs : Seq[String]) : Path = {
-    val arclistName = mkUUID;
-    val path = new Path(arclistName)
-    writeArcList(arcs, fs.create(path));
-    return path;
-  }
-
-  private def mkArcListLocal(arcs : Seq[String]) : File = {
-    val arclistName = mkUUID;
-    val tempfile = File.createTempFile("arcs", "list");
-    writeArcList(arcs, new DataOutputStream(new FileOutputStream(tempfile)));
-    return tempfile;
-  }
-
-  private def writeArcList (arcs : Seq[String], os : DataOutputStream) {
-    try {
-      for (arcname <- arcs) {
-        os.writeBytes("%s\n".format(arcname));
-      }
-    } finally {
-      os.close;
-    }
-  }
-
-  /**
-   * Moves all json.gz files beneath the source to their proper resting place.
-   */
-  private def refileJson (source : Path) {
-    for (children <- null2option(fs.listStatus(source));
-         child <- children) {
-      val path = child.getPath;
-      if (child.isDir) {
-        refileJson(path);
-      } else {
-        if (path.getName.endsWith(".json.gz")) {
-          fs.rename(path, new Path(jsonDir, path.getName));
-        } else if (path.getName == "_SUCCESS") {
-          fs.delete(path, false);
-        }
-      }
-    }
-  }
-
   /**
    * Check to see if a given ARC file has been parsed.
    */
   def isArcParsed (arcName : String) : Boolean = 
-    getPathOption(arcName).isDefined;
-
-  def parseArcsLocal (arcs : Seq[String]) : File = {
-    val arcListPath = mkArcListLocal(arcs.toSeq);
-    val storePath = File.createTempFile("weari", "json.gz");
-    storePath.delete;
-    val jobStatus = parseArcs(ExecType.LOCAL, arcListPath.toString, storePath.toString);
-    if (jobStatus == JOB_STATUS.FAILED) {
-      throw new thrift.ParseException("");
-    } else {
-      return storePath;
-    }
-  }
-  
-  private def parseArcs(execType : ExecType, arcListPath : String, storePath : String) : JOB_STATUS = {
-    val properties = PropertiesUtil.loadDefaultProperties();
-    properties.setProperty("pig.splitCombination", "false");
-    val pigContext = new PigContext(execType, properties);
-    val pigServer = new PigServer(pigContext);
-
-    /* add jars in classpath to registered jars in pig */
-    val cp = System.getProperty("java.class.path").split(System.getProperty("path.separator"));
-    for (entry <- cp if entry.endsWith("jar")) {
-      pigServer.registerJar(entry);
-    }
-    pigServer.registerQuery("""
-      Data = LOAD '%s' 
-      USING org.cdlib.was.weari.pig.ArchiveURLParserLoader()
-      AS (filename:chararray, url:chararray, digest:chararray, date:chararray, length:long, content:chararray, detectedMediaType:chararray, suppliedMediaType:chararray, title:chararray, isRevisit, outlinks);""".
-        format(arcListPath));
-    val job = pigServer.store("Data", storePath,
-    		                 "org.cdlib.was.weari.pig.JsonParsedArchiveRecordStorer");
-    
-    while (!job.hasCompleted) {
-      Thread.sleep(100);
-    }
-    return job.getStatus;
-  }
+    pigUtil.getPathOption(arcName).isDefined;
 
   /**
    * Parse ARC files.
    */
   def parseArcs (arcs : Seq[String]) {
-    val arcListPath = mkArcListHDFS(arcs.toSeq);
-    val storePath = "%s/%s.json.gz".format(tmpDir, mkUUID);
-    val jobStatus = parseArcs(ExecType.MAPREDUCE, arcListPath.toString, storePath);
-    if (jobStatus == JOB_STATUS.FAILED) {
-      throw new thrift.ParseException("");
-    } else {
-      refileJson(new Path(storePath));
-      for (arc <- arcs if (!isArcParsed(arc))) {
-        /* must have been an ARC without non-404 reponses, make an */
-        /* empty JSON for it */
-        makeEmptyJson(arc);
-      }
-    }
+    pigUtil.parseArcs(arcs);
   }
 
   def deleteParse (arc : String) {
-    getPathOption(arc).map(this.fs.delete(_, false));
-  }
-
-  /**
-   * Get the HDFS path for the JSON parse of an ARC file.
-   * Can return either a .gz or a non-gzipped file.
-   * 
-   * @param arc The name of the ARC file.
-   * @return Path 
-   */
-  private def getPath (arcName : String): Path = 
-    getPathOption(arcName).getOrElse(throw new thrift.UnparsedException(arcName));
-    
-  /**
-   * Get the HDFS path for the JSON parse of an ARC file.
-   * Can return either a .gz or a non-gzipped file. Returns None
-   * if no JSON file can be found.
-   * 
-   * @param arc The name of the ARC file.
-   * @return Option[Path]
-   */
-  private def getPathOption (arcName : String): Option[Path] = {
-    extractArcname(arcName).flatMap { extracted =>
-      val jsonPath = new Path(jsonDir, "%s.json.gz".format(extracted));
-      if (fs.exists(jsonPath)) Some(jsonPath) else None;
-    }
-  }
-
-  val ARCNAME_RE = new Regex("""^(.*)\.json(.gz)?$""");
-
-  private def getArcname(path : Path) : String = {
-    path.getName match {
-      case ARCNAME_RE(arcname) => arcname;
-      case o : String => o;
-    }
-  }
-
-  /**
-   * Make an empty JSON file for arcs that parsed to nothing.
-   */
-  private def makeEmptyJson (arc : String) {
-    val cleanArc = extractArcname(arc).get;
-    val path = new Path(jsonDir, "%s.json.gz".format(cleanArc));
-    var out : OutputStream = null;
-    try {
-      out = fs.create(path);
-      val gzout = new GZIPOutputStream(out);
-      gzout.write("[]".getBytes("UTF-8"));
-      gzout.flush;
-      gzout.close;
-    } finally {
-      if (out != null) out.close;
-    } 
+    pigUtil.getPathOption(arc).map(pigUtil.delete(_));
   }
 }
