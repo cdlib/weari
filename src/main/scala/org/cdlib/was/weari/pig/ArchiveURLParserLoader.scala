@@ -91,7 +91,7 @@ class ArchiveURLParserLoader extends LoadFunc with Logging {
         /* get a new ARC reader */
         val value = this.in.getCurrentValue.asInstanceOf[Text]
         val uri = new URI(value.toString);
-        Utility.extractArcname(uri.getPath) match {
+        Utility.extractArcname(uri.toString) match {
           case None => {
             /* this probably won't happen, but we should know about it if it does */
             throw new Exception("Not an ARC file: %s".format(value));
@@ -99,10 +99,23 @@ class ArchiveURLParserLoader extends LoadFunc with Logging {
           case arcName => {
             this.arcName = arcName;
             this.tmpfile = this.arcName.map(new File(tmpdir, _));
-            /* download to a temp file with the arc name */
-            httpClient.getUri(uri) { in =>
-              readStreamIntoFile(this.tmpfile.get, in);
+
+            if (uri.getScheme == "jar") { 
+              /* for testing only */
+              val url = new java.net.URL(uri.toString);
+              val in = url.openStream;
+              try {
+                readStreamIntoFile(this.tmpfile.get, in);
+              } finally {
+                in.close;
+              }
+            } else {
+              /* download to a temp file with the arc name */
+              httpClient.getUri(uri) { in => {
+                readStreamIntoFile(this.tmpfile.get, in); 
+              }}
             }
+
             try {
               this.it = Some(ArchiveReaderFactoryWrapper.get(this.tmpfile.get).iterator);
             } catch {
