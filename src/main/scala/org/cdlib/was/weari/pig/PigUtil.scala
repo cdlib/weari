@@ -32,10 +32,6 @@ class PigUtil (config : Config) {
     FileSystem.get(conf);
   } else {
     FileSystem.get(new URI("file:///"), conf);
-    // val rfs = new RawLocalFileSystem();
-    // rfs.setConf(conf);
-    // rfs.initialize(conf);
-    // rfs;
   }
 
   val jsonDir = new Path(config.jsonBaseDir);
