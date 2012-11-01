@@ -49,6 +49,7 @@ class SolrTest extends FunSpec with ShouldMatchers {
       w.setFields(solrurl, "arcname:%s".format(arcname), Map("tag"->List("hello", "world")));
       assertSearchSize("tag:hello", 214);
       assertSearchSize("tag:world", 214);
+      assertSearchSize("tag:\"hello world\"", 0);
     }
       
     it("should be able to remove arcs") {
