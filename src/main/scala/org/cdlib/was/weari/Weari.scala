@@ -51,6 +51,7 @@ import org.apache.hadoop.fs.Path;
 
 import scala.collection.mutable;
 import scala.collection.JavaConversions.seqAsJavaList;
+import scala.concurrent.Lock;
 import scala.util.control.Breaks._;
 
 import org.cdlib.was.weari.pig.PigUtil;
@@ -61,8 +62,8 @@ class Weari(config: Config)
   var mergeManagerCache = new mutable.HashMap[String,MergeManager]
     with mutable.SynchronizedMap[String,MergeManager];
 
-  var locks : mutable.Map[String,AnyRef] = new mutable.HashMap[String,AnyRef]
-    with mutable.SynchronizedMap[String,AnyRef];
+  var locks : mutable.Map[String,Lock] = new mutable.HashMap[String,Lock]
+    with mutable.SynchronizedMap[String,Lock];
 
   val pigUtil = new PigUtil(config);
 
@@ -111,11 +112,16 @@ class Weari(config: Config)
    * Synchronize around a unique string.
    */
   def withLock[T] (lockId : String) (f : => T) : T = {
-    locks.getOrElseUpdate(lockId, new Object).synchronized {
-      f;
-    }
+    val lock = locks.getOrElseUpdate(lockId, new Lock);
+    lock.acquire;
+    val retval = f;
+    lock.release;
+    return retval;
   }
-  
+
+  def isLocked (lockId : String) : Boolean = 
+    !locks.getOrElseUpdate(lockId, new Lock).available;
+
   /**
    * Synchronize around a solr server url, and call a function with the solr server.
    */
@@ -169,6 +175,13 @@ class Weari(config: Config)
         }
       }}
     }
+  }
+
+  def index(solr : String,
+            filterQuery : String,
+            arcs : Seq[String],
+            extraId : String) {
+    index(solr, filterQuery, arcs, extraId, Map[String, Seq[String]]());
   }
 
   def move(query : String,
