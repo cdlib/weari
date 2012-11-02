@@ -73,7 +73,9 @@ class SolrTest extends FunSpec with ShouldMatchers with BeforeAndAfter {
                       val t = new Thread {
                         val is = i.toString;
                         override def run {
+                          assert(w.isLocked(is) === false);
                           w.index(solrurl, "job:%s".format(is), List(arcname), is, Map("job"->List(is)));
+                          assert(w.isLocked(is) === false);
                         }
                       }
                       t.start;
