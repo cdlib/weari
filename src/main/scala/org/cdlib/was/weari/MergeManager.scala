@@ -63,7 +63,7 @@ import scala.math.max;
  * 
  * @author Erik Hetzner <erik.hetzner@ucop.edu>
  */
-class MergeManager (config : Config, candidatesQuery : String, server : SolrServer, trackMerges : Boolean)
+class MergeManager (config : Config, candidatesQuery : String, server : SolrServer)
     extends Logging {
 
   /* candiatesQuery is a query that should return all <em>possible</em> merge
@@ -146,11 +146,9 @@ class MergeManager (config : Config, candidatesQuery : String, server : SolrServ
       val mergedDoc = getDocById(id).map(MergeManager.mergeDocs(_, doc));
       retval = mergedDoc.getOrElse(doc);
     }
-    if (trackMerges) {
-      /* whether or not we merged this, we save it for possible later merging */
-      tracked.put(id, retval);
-      bf.add(id);
-    }
+    /* whether or not we merged this, we save it for possible later merging */
+    tracked.put(id, retval);
+    bf.add(id);
     return retval;
   }
 

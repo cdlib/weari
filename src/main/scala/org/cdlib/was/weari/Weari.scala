@@ -89,8 +89,7 @@ class Weari(config: Config)
   def getMergeManager (solr : String, extraId : String, filterQuery : String) = 
     mergeManagerCache.getOrElseUpdate(extraId, 
                                       new MergeManager(config, filterQuery, 
-                                                       new HttpSolrServer(solr),
-                                                       !config.commitBetweenArcs));
+                                                       new HttpSolrServer(solr)));
 
   def withSolrServer[T] (solrUrl : String) (f: (SolrServer)=>T) : T = {
       val httpClient = {
@@ -168,11 +167,11 @@ class Weari(config: Config)
             server.commit;
             manager.reset;
           }
-          if (config.commitBetweenArcs) {
-            server.commit;
-            manager.reset;
-          }
+          server.commit;
+          manager.reset;
         }
+        server.commit;
+        manager.reset;
       }}
     }
   }
