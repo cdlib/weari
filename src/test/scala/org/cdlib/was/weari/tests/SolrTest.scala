@@ -28,7 +28,7 @@ class SolrTest extends FunSpec with ShouldMatchers with BeforeAndAfter {
   def assertSearchSize(query : String, size : Int) =
     assert(size === mkSearch(query).size);
 
-  describe("solr") {
+  describe("basic indexing") {
     it("should not return any results to start with") {
       assertSearchSize("*:*", 0);
     }
