@@ -222,29 +222,6 @@ class Weari(config: Config)
     }
   }
 
-  /**
-   * Index a seq of ParsedArchiveRecods.
-   * Used for testing. Simplified version of index with seq of arcnames to parse.
-   */
-  def indexRecords(solr : String,
-                   filterQuery : String,
-                   records : Seq[ParsedArchiveRecord],
-                   extraId : String,
-                   extraFields : Map[String, Seq[String]]) {
-    withLockedSolrServer (solr) { server =>
-      val manager = getMergeManager(solr, extraId, filterQuery);
-      commitOrRollback(server) {
-        val docs = for (rec <- records)
-                   yield record2inputDocument(rec, extraFields, extraId);
-        for (group <- docs.grouped(config.batchMergeGroupSize)) {
-          for (merged <- manager.batchMerge(group)) {
-            server.add(merged); 
-          }
-        }
-      }
-    }
-  }
-
   def getDocs (server : SolrServer, query : String) : Iterable[SolrDocument] = 
     new SolrDocumentCollection(server, new SolrQuery(query).setRows(config.numDocsPerRequest));
 
