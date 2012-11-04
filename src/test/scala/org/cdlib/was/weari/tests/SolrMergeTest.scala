@@ -31,6 +31,14 @@ class SolrMergeTest extends FunSpec with ShouldMatchers {
   def assertSearchSize(query : String, size : Int) =
     assert(size === mkSearch(query).size);
 
+  def testResultSize (query : String, size : Map[String, Int]) {
+    for (doc <- mkSearch(query)) {
+      val id = doc.getFieldValue("id").asInstanceOf[String];
+      val dates = doc.getFieldValues("date");
+      assert (dates.size === size.getOrElse(id, -1));
+    }
+  }
+
   describe("merging") {
     it("should work") {
       if (!w.isArcParsed(mergearc1)) {
@@ -46,27 +54,11 @@ class SolrMergeTest extends FunSpec with ShouldMatchers {
       w.index(solrurl, "*:*", List(mergearc2), "XXX");
       /* one added file, one changed file, one file the same as before */
       assertSearchSize("*:*", 4);
-      for (doc <- mkSearch("*:*")) {
-        val id = doc.getFieldValue("id").asInstanceOf[String];
-        val dates = doc.getFieldValues("date");
-        id match {
-          case "http://gales.cdlib.org/robots.txt.MNSXZO35OCDMK2YM2TS4NGM3W2BWMSDI.XXX" => {
-            assert (dates.size === 1);
-          }
-          case "http://gales.cdlib.org/.GNQD4SRUO7VSBGHTDQUO4AIWDG2PJ74M.XXX" => {
-            assert (dates.size === 1);
-          }
-          case "http://gales.cdlib.org/.R4OI4U63VX5OM5NYDZPUECTERBGWOCLD.XXX" => {
-            assert (dates.size === 1);
-          }
-          case "http://gales.cdlib.org/b-traven3.jpeg.ZKCMBC3DSMM3RYW4KFRJCQJZFR6G3C4J.XXX" => {
-            assert (dates.size === 2);
-          }
-          case _ => {
-            assert(false);
-          }
-        }
-      }
+      testResultSize("*:*", 
+        Map("http://gales.cdlib.org/robots.txt.MNSXZO35OCDMK2YM2TS4NGM3W2BWMSDI.XXX" -> 1,
+            "http://gales.cdlib.org/.GNQD4SRUO7VSBGHTDQUO4AIWDG2PJ74M.XXX"-> 1,          
+            "http://gales.cdlib.org/.R4OI4U63VX5OM5NYDZPUECTERBGWOCLD.XXX" -> 1,
+            "http://gales.cdlib.org/b-traven3.jpeg.ZKCMBC3DSMM3RYW4KFRJCQJZFR6G3C4J.XXX" -> 2))
       w.remove(solrurl, List(mergearc1, mergearc2, mergearc3));
     }
     
@@ -82,27 +74,31 @@ class SolrMergeTest extends FunSpec with ShouldMatchers {
       assertSearchSize("*:*", 4);
       w.index(solrurl, "*:*", List(mergearc3), "XXX");
       assertSearchSize("*:*", 4);
-      for (doc <- mkSearch("*:*")) {
-        val id = doc.getFieldValue("id").asInstanceOf[String];
-        val dates = doc.getFieldValues("date");
-        id match {
-          case "http://gales.cdlib.org/robots.txt.MNSXZO35OCDMK2YM2TS4NGM3W2BWMSDI.XXX" => {
-            assert (dates.size === 1);
-          }
-          case "http://gales.cdlib.org/.GNQD4SRUO7VSBGHTDQUO4AIWDG2PJ74M.XXX" => {
-            assert (dates.size === 1);
-          }
-          case "http://gales.cdlib.org/.R4OI4U63VX5OM5NYDZPUECTERBGWOCLD.XXX" => {
-            assert (dates.size === 2);
-          }
-          case "http://gales.cdlib.org/b-traven3.jpeg.ZKCMBC3DSMM3RYW4KFRJCQJZFR6G3C4J.XXX" => {
-            assert (dates.size === 3);
-          }
-          case _ => {
-            assert(false);
-          }
-        }
-      }
+      testResultSize("*:*", 
+        Map("http://gales.cdlib.org/robots.txt.MNSXZO35OCDMK2YM2TS4NGM3W2BWMSDI.XXX" -> 1,
+            "http://gales.cdlib.org/.GNQD4SRUO7VSBGHTDQUO4AIWDG2PJ74M.XXX"-> 1,          
+            "http://gales.cdlib.org/.R4OI4U63VX5OM5NYDZPUECTERBGWOCLD.XXX" -> 2,
+            "http://gales.cdlib.org/b-traven3.jpeg.ZKCMBC3DSMM3RYW4KFRJCQJZFR6G3C4J.XXX" -> 3))
+    }
+
+    it("should unmerge successfully") {
+      w.remove(solrurl, List(mergearc1, mergearc2, mergearc3));
+      w.index(solrurl, "*:*", List(mergearc1, mergearc2, mergearc3), "XXX");
+      w.remove(solrurl, List(mergearc3));
+      assertSearchSize("*:*", 4);
+      testResultSize("*:*", 
+        Map("http://gales.cdlib.org/robots.txt.MNSXZO35OCDMK2YM2TS4NGM3W2BWMSDI.XXX" -> 1,
+            "http://gales.cdlib.org/.GNQD4SRUO7VSBGHTDQUO4AIWDG2PJ74M.XXX"-> 1,          
+            "http://gales.cdlib.org/.R4OI4U63VX5OM5NYDZPUECTERBGWOCLD.XXX" -> 1,
+            "http://gales.cdlib.org/b-traven3.jpeg.ZKCMBC3DSMM3RYW4KFRJCQJZFR6G3C4J.XXX" -> 2))
+      w.remove(solrurl, List(mergearc2));
+      assertSearchSize("*:*", 3);
+      testResultSize("*:*", 
+        Map("http://gales.cdlib.org/robots.txt.MNSXZO35OCDMK2YM2TS4NGM3W2BWMSDI.XXX" -> 1,
+            "http://gales.cdlib.org/.GNQD4SRUO7VSBGHTDQUO4AIWDG2PJ74M.XXX"-> 1,          
+            "http://gales.cdlib.org/b-traven3.jpeg.ZKCMBC3DSMM3RYW4KFRJCQJZFR6G3C4J.XXX" -> 1))
+      w.remove(solrurl, List(mergearc1));
+      assertSearchSize("*:*", 0);
     }
   }
 }
