@@ -130,6 +130,22 @@ class Weari(config: Config)
     }
   }
 
+  def tryCommit (s : SolrServer, times : Int) {
+    try {
+      s.commit;
+    } catch {
+      case ex : org.apache.solr.common.SolrException => {
+        if (times >= 10) {
+          throw ex;
+        } else {
+          tryCommit(s, times + 1);
+        }
+      }
+    }
+  }
+
+  def tryCommit (s : SolrServer) { tryCommit(s, 0); }
+      
   /**
    * Index a set of ARCs on a solr server.
    *
@@ -164,13 +180,13 @@ class Weari(config: Config)
           }
           if (manager.trackedCount > config.trackCommitThreshold) {
             info("Merge manager threshold reached: committing.");
-            server.commit;
+            tryCommit(server);
             manager.reset;
           }
-          server.commit;
+          tryCommit(server);
           manager.reset;
         }
-        server.commit;
+        tryCommit(server);
         manager.reset;
       }}
     }
