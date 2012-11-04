@@ -20,8 +20,10 @@ class SolrMergeTest extends FunSpec with ShouldMatchers {
   val server = new HttpSolrServer(solrurl);
   val mergearc1 = "CDL-20100505172641-00000-kandinsky.cdlib.org-00018489.warc.gz";
   val mergearc2 = "CDL-20120529064748-00000-dp02-00025431.warc.gz";
+  val mergearc3 = "CDL-20120529071722-00000-dp02-00025434.warc.gz";
   var mergearcpath1 = cl.getResource(mergearc1).toString;
   var mergearcpath2 = cl.getResource(mergearc2).toString;
+  var mergearcpath3 = cl.getResource(mergearc3).toString;
 
   def mkSearch(query : String) = 
       new SolrDocumentCollection(server, new SolrQuery(query));
@@ -37,7 +39,7 @@ class SolrMergeTest extends FunSpec with ShouldMatchers {
       if (!w.isArcParsed(mergearc2)) {
         w.parseArcs(List(mergearcpath2));
       }
-      w.remove(solrurl, List(mergearc1, mergearc2));
+      w.remove(solrurl, List(mergearc1, mergearc2, mergearc3));
       assertSearchSize("*:*", 0);
       w.index(solrurl, "*:*", List(mergearc1), "XXX");
       assertSearchSize("*:*", 3);
@@ -65,7 +67,42 @@ class SolrMergeTest extends FunSpec with ShouldMatchers {
           }
         }
       }
-      w.remove(solrurl, List(mergearc1, mergearc2));
+      w.remove(solrurl, List(mergearc1, mergearc2, mergearc3));
+    }
+    
+    it("should work with de-duplicated arcs") {
+      w.remove(solrurl, List(mergearc1, mergearc2, mergearc3));
+      if (!w.isArcParsed(mergearc3)) {
+        w.parseArcs(List(mergearcpath3));
+      }
+      assertSearchSize("*:*", 0);
+      w.index(solrurl, "*:*", List(mergearc1), "XXX");
+      assertSearchSize("*:*", 3);
+      w.index(solrurl, "*:*", List(mergearc2), "XXX");
+      assertSearchSize("*:*", 4);
+      w.index(solrurl, "*:*", List(mergearc3), "XXX");
+      assertSearchSize("*:*", 4);
+      for (doc <- mkSearch("*:*")) {
+        val id = doc.getFieldValue("id").asInstanceOf[String];
+        val dates = doc.getFieldValues("date");
+        id match {
+          case "http://gales.cdlib.org/robots.txt.MNSXZO35OCDMK2YM2TS4NGM3W2BWMSDI.XXX" => {
+            assert (dates.size === 1);
+          }
+          case "http://gales.cdlib.org/.GNQD4SRUO7VSBGHTDQUO4AIWDG2PJ74M.XXX" => {
+            assert (dates.size === 1);
+          }
+          case "http://gales.cdlib.org/.R4OI4U63VX5OM5NYDZPUECTERBGWOCLD.XXX" => {
+            assert (dates.size === 2);
+          }
+          case "http://gales.cdlib.org/b-traven3.jpeg.ZKCMBC3DSMM3RYW4KFRJCQJZFR6G3C4J.XXX" => {
+            assert (dates.size === 3);
+          }
+          case _ => {
+            assert(false);
+          }
+        }
+      }
     }
   }
 }
