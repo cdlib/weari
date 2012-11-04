@@ -12,7 +12,7 @@ import org.cdlib.was.weari._;
 
 import com.typesafe.config.ConfigFactory;
 
-class SolrMergeTest extends FunSpec with ShouldMatchers {
+class SolrMergeTest extends FunSpec with ShouldMatchers with BeforeAndAfter {
   val cl = classOf[ParseTest].getClassLoader;
   val config = new Config(ConfigFactory.load("test"));
   val w = new Weari(config);
@@ -41,21 +41,25 @@ class SolrMergeTest extends FunSpec with ShouldMatchers {
     }
   }
 
-  describe("merging") {
-    it("should have parsed the arcs") {
-      if (!w.isArcParsed(mergearc1)) {
-        w.parseArcs(List(mergearcpath1));
-      }
-      if (!w.isArcParsed(mergearc2)) {
-        w.parseArcs(List(mergearcpath2));
-      }
-      if (!w.isArcParsed(mergearc3)) {
-        w.parseArcs(List(mergearcpath3));
-      }
+  before {
+    if (!w.isArcParsed(mergearc1)) {
+      w.parseArcs(List(mergearcpath1));
     }
+    if (!w.isArcParsed(mergearc2)) {
+      w.parseArcs(List(mergearcpath2));
+    }
+    if (!w.isArcParsed(mergearc3)) {
+      w.parseArcs(List(mergearcpath3));
+    }
+    w.remove(solrurl, List(mergearc1, mergearc2, mergearc3));
+  }
+  
+  after {
+    w.remove(solrurl, List(mergearc1, mergearc2, mergearc3));
+  }
 
+  describe("merging") {
     it("should work") {
-      w.remove(solrurl, List(mergearc1, mergearc2, mergearc3));
       assertSearchSize("*:*", 0);
       w.index(solrurl, "*:*", List(mergearc1), "XXX");
       testResults("*:*", 3,
@@ -63,17 +67,15 @@ class SolrMergeTest extends FunSpec with ShouldMatchers {
             "http://gales.cdlib.org/.GNQD4SRUO7VSBGHTDQUO4AIWDG2PJ74M.XXX"-> 1,          
             "http://gales.cdlib.org/b-traven3.jpeg.ZKCMBC3DSMM3RYW4KFRJCQJZFR6G3C4J.XXX" -> 1))
       w.index(solrurl, "*:*", List(mergearc2), "XXX");
-      /* one added file, one changed file, one file the same as before */
+      /* one changed file, one file the same as before, one file (robots) missing */
       testResults("*:*", 4,
         Map("http://gales.cdlib.org/robots.txt.MNSXZO35OCDMK2YM2TS4NGM3W2BWMSDI.XXX" -> 1,
             "http://gales.cdlib.org/.GNQD4SRUO7VSBGHTDQUO4AIWDG2PJ74M.XXX"-> 1,          
             "http://gales.cdlib.org/.R4OI4U63VX5OM5NYDZPUECTERBGWOCLD.XXX" -> 1,
             "http://gales.cdlib.org/b-traven3.jpeg.ZKCMBC3DSMM3RYW4KFRJCQJZFR6G3C4J.XXX" -> 2))
-      w.remove(solrurl, List(mergearc1, mergearc2, mergearc3));
     }
     
     it("should work with de-duplicated arcs") {
-      w.remove(solrurl, List(mergearc1, mergearc2, mergearc3));
       assertSearchSize("*:*", 0);
       w.index(solrurl, "*:*", List(mergearc1, mergearc2, mergearc3), "XXX");
       testResults("*:*", 4,
@@ -84,7 +86,6 @@ class SolrMergeTest extends FunSpec with ShouldMatchers {
     }
 
     it("should unmerge successfully") {
-      w.remove(solrurl, List(mergearc1, mergearc2, mergearc3));
       w.index(solrurl, "*:*", List(mergearc1, mergearc2, mergearc3), "XXX");
       w.remove(solrurl, List(mergearc3));
       testResults("*:*", 4,
