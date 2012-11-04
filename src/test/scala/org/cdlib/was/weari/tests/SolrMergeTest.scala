@@ -37,7 +37,7 @@ class SolrMergeTest extends FunSpec with ShouldMatchers with BeforeAndAfter {
     for (doc <- mkSearch(query)) {
       val id = doc.getFieldValue("id").asInstanceOf[String];
       val dates = doc.getFieldValues("date");
-      assert (dates.size === dateSize.getOrElse(id, -1));
+      assert (dates.size === dateSize.getOrElse(id, -1), "Bad date size for %s".format(id));
     }
   }
 
@@ -100,6 +100,30 @@ class SolrMergeTest extends FunSpec with ShouldMatchers with BeforeAndAfter {
             "http://gales.cdlib.org/b-traven3.jpeg.ZKCMBC3DSMM3RYW4KFRJCQJZFR6G3C4J.XXX" -> 1))
       w.remove(solrurl, List(mergearc1));
       assertSearchSize("*:*", 0);
+    }
+    
+    it("should do threaded merge properly") {
+      val threads = 
+        for (i <- (1 to 10))
+        yield {
+          new Thread {
+            val is = i.toString;
+            override def run {
+              w.index(solrurl, "job:%s".format(is), List(mergearc1), is, Map("job"->List(is)));
+              w.index(solrurl, "job:%s".format(is), List(mergearc2), is, Map("job"->List(is)));
+              w.index(solrurl, "job:%s".format(is), List(mergearc3), is, Map("job"->List(is)));
+            }
+          }
+        }
+      threads.map(_.start);
+      threads.map(_.join);
+      for (i <- (1 to 10)) {
+        testResults("job:%d".format(i), 4,
+                    Map("http://gales.cdlib.org/robots.txt.MNSXZO35OCDMK2YM2TS4NGM3W2BWMSDI.%d".format(i) -> 1,
+                        "http://gales.cdlib.org/.GNQD4SRUO7VSBGHTDQUO4AIWDG2PJ74M.%d".format(i)-> 1,          
+                        "http://gales.cdlib.org/.R4OI4U63VX5OM5NYDZPUECTERBGWOCLD.%d".format(i) -> 2,
+                        "http://gales.cdlib.org/b-traven3.jpeg.ZKCMBC3DSMM3RYW4KFRJCQJZFR6G3C4J.%d".format(i) -> 3))
+      }
     }
   }
 }
