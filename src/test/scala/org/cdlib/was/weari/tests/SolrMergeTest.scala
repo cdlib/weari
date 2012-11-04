@@ -42,17 +42,26 @@ class SolrMergeTest extends FunSpec with ShouldMatchers {
   }
 
   describe("merging") {
-    it("should work") {
+    it("should have parsed the arcs") {
       if (!w.isArcParsed(mergearc1)) {
         w.parseArcs(List(mergearcpath1));
       }
       if (!w.isArcParsed(mergearc2)) {
         w.parseArcs(List(mergearcpath2));
       }
+      if (!w.isArcParsed(mergearc3)) {
+        w.parseArcs(List(mergearcpath3));
+      }
+    }
+
+    it("should work") {
       w.remove(solrurl, List(mergearc1, mergearc2, mergearc3));
       assertSearchSize("*:*", 0);
       w.index(solrurl, "*:*", List(mergearc1), "XXX");
-      assertSearchSize("*:*", 3);
+      testResults("*:*", 3,
+        Map("http://gales.cdlib.org/robots.txt.MNSXZO35OCDMK2YM2TS4NGM3W2BWMSDI.XXX" -> 1,
+            "http://gales.cdlib.org/.GNQD4SRUO7VSBGHTDQUO4AIWDG2PJ74M.XXX"-> 1,          
+            "http://gales.cdlib.org/b-traven3.jpeg.ZKCMBC3DSMM3RYW4KFRJCQJZFR6G3C4J.XXX" -> 1))
       w.index(solrurl, "*:*", List(mergearc2), "XXX");
       /* one added file, one changed file, one file the same as before */
       testResults("*:*", 4,
@@ -65,15 +74,8 @@ class SolrMergeTest extends FunSpec with ShouldMatchers {
     
     it("should work with de-duplicated arcs") {
       w.remove(solrurl, List(mergearc1, mergearc2, mergearc3));
-      if (!w.isArcParsed(mergearc3)) {
-        w.parseArcs(List(mergearcpath3));
-      }
       assertSearchSize("*:*", 0);
-      w.index(solrurl, "*:*", List(mergearc1), "XXX");
-      assertSearchSize("*:*", 3);
-      w.index(solrurl, "*:*", List(mergearc2), "XXX");
-      assertSearchSize("*:*", 4);
-      w.index(solrurl, "*:*", List(mergearc3), "XXX");
+      w.index(solrurl, "*:*", List(mergearc1, mergearc2, mergearc3), "XXX");
       testResults("*:*", 4,
         Map("http://gales.cdlib.org/robots.txt.MNSXZO35OCDMK2YM2TS4NGM3W2BWMSDI.XXX" -> 1,
             "http://gales.cdlib.org/.GNQD4SRUO7VSBGHTDQUO4AIWDG2PJ74M.XXX"-> 1,          
