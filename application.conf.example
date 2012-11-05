@@ -32,3 +32,6 @@
 
 # number of docs between commits (for move)
 #weari.commitThreshold=50000
+
+# use hadoop to parse (W)ARCs
+#weari.useHadoop=false
