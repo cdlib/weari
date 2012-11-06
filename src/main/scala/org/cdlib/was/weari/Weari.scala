@@ -59,8 +59,7 @@ import org.cdlib.was.weari.pig.PigUtil;
 class Weari(config: Config)
   extends Logging with ExceptionLogger {
 
-  var mergeManagerCache = new mutable.HashMap[String,MergeManager]
-    with mutable.SynchronizedMap[String,MergeManager];
+  var mergeManagerCache = new mutable.HashMap[String,MergeManager];
 
   var locks : mutable.Map[String,Lock] = new mutable.HashMap[String,Lock]
     with mutable.SynchronizedMap[String,Lock];
@@ -86,7 +85,8 @@ class Weari(config: Config)
     }
   }
 
-  def getMergeManager (solr : String, extraId : String, filterQuery : String) = 
+  def getMergeManager (solr : String, extraId : String, filterQuery : String) =
+    /* no need to lock, this is always called within a lock. */
     mergeManagerCache.getOrElseUpdate(extraId, 
                                       new MergeManager(config, filterQuery, 
                                                        new HttpSolrServer(solr)));
