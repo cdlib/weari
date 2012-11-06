@@ -40,6 +40,8 @@ import java.io.InputStream;
 
 import java.util.Date;
 
+import grizzled.slf4j.Logging;
+
 /**
  * A class representing a WASArchiveRecord that has been parsed.
  */
@@ -74,7 +76,7 @@ case class ParsedArchiveRecord (
   lazy val canonicalHost = UriUtils.string2handyUrl(canonicalUrl).getHost;
 }
 
-object ParsedArchiveRecord {
+object ParsedArchiveRecord extends Logging {
   def apply(rec : WASArchiveRecord) : ParsedArchiveRecord =
     apply(rec, None, None, None, Seq[Long]());
 
