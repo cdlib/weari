@@ -112,7 +112,9 @@ class Weari(config: Config)
    */
   def withLock[T] (lockId : String) (f : => T) : T = {
     val lock = locks.getOrElseUpdate(lockId, new Lock);
+    info("Trying to acquire lock on %s".format(lockId));
     lock.acquire;
+    info("Acquired lock on %s".format(lockId));
     val retval = f;
     lock.release;
     return retval;
