@@ -37,6 +37,8 @@ import grizzled.slf4j.Logging;
 
 import java.io.{ File, FileOutputStream, InputStream, OutputStream };
 
+import org.apache.http.client.HttpClient;
+
 import org.apache.solr.client.solrj.{SolrQuery, SolrServer};
 import org.apache.solr.client.solrj.impl.{ConcurrentUpdateSolrServer, HttpClientUtil, HttpSolrServer};
 import org.apache.solr.common.{SolrDocument, SolrInputDocument, SolrInputField};
@@ -63,6 +65,9 @@ class Weari(config: Config)
 
   var locks : mutable.Map[String,Lock] = new mutable.HashMap[String,Lock]
     with mutable.SynchronizedMap[String,Lock];
+
+  var clients : mutable.Map[String,HttpClient] = new mutable.HashMap[String,HttpClient]
+    with mutable.SynchronizedMap[String,HttpClient];
 
   val pigUtil = new PigUtil(config);
 
@@ -91,20 +96,24 @@ class Weari(config: Config)
                                       new MergeManager(config, filterQuery, 
                                                        new HttpSolrServer(solr)));
 
+  def mkHttpClient(solrUrl : String) : HttpClient = {
+    val params = new ModifiableSolrParams();
+    params.set(HttpClientUtil.PROP_MAX_CONNECTIONS, 16);
+    params.set(HttpClientUtil.PROP_MAX_CONNECTIONS_PER_HOST, 16);
+    params.set(HttpClientUtil.PROP_FOLLOW_REDIRECTS, false);
+    params.set(HttpClientUtil.PROP_SO_TIMEOUT, 0);
+    return HttpClientUtil.createClient(params);
+  }
+
   def withSolrServer[T] (solrUrl : String) (f: (SolrServer)=>T) : T = {
-      val httpClient = {
-        val params = new ModifiableSolrParams();
-        params.set(HttpClientUtil.PROP_MAX_CONNECTIONS, 16);
-        params.set(HttpClientUtil.PROP_MAX_CONNECTIONS_PER_HOST, 16);
-        params.set(HttpClientUtil.PROP_FOLLOW_REDIRECTS, false);
-        params.set(HttpClientUtil.PROP_SO_TIMEOUT, 0);
-        HttpClientUtil.createClient(params);
-      }
-      val server = new ConcurrentUpdateSolrServer(solrUrl,
-                                                  httpClient,
-                                                  config.queueSize,
-                                                  config.threadCount);
-      f(server);
+    val client = clients.getOrElseUpdate(solrUrl, mkHttpClient(solrUrl));
+    val server = new ConcurrentUpdateSolrServer(solrUrl,
+                                                client,
+                                                config.queueSize,
+                                                config.threadCount);
+    val retval = f(server);
+    server.blockUntilFinished;
+    return retval;
   }
     
   /**
