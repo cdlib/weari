@@ -188,8 +188,6 @@ class Weari(config: Config)
             tryCommit(server);
             manager.reset;
           }
-          tryCommit(server);
-          manager.reset;
         }
         tryCommit(server);
         manager.reset;
