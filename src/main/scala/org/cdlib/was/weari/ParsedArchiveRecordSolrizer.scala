@@ -42,12 +42,12 @@ import org.cdlib.was.weari.SolrUtils.addFields;
 object ParsedArchiveRecordSolrizer {
   
   private def getContent (rec : ParsedArchiveRecord) : Option[String] = 
-    if (shouldIndexContentType(rec.suppliedContentType) ||
-        shouldIndexContentType(rec.detectedContentType.getOrElse(ContentType.DEFAULT)))
+    if (shouldIndexContent(rec.suppliedContentType) ||
+        shouldIndexContent(rec.detectedContentType.getOrElse(ContentType.DEFAULT)))
           rec.content
     else None;
 
-  private def shouldIndexContentType (contentType : ContentType) : Boolean = {
+  private def shouldIndexContent (contentType : ContentType) : Boolean = {
     /* Right now we index everything except audio, video, image, js, & css */
     contentType.top match {
       case "audio" | "video" | "image" => false;
