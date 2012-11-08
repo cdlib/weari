@@ -35,6 +35,7 @@ package org.cdlib.was.weari;
 
 import org.apache.solr.common.SolrInputDocument;
 
+import org.cdlib.was.weari.MediaTypeGroup.groupWrapper;
 import org.cdlib.was.weari.SolrFields._;
 import org.cdlib.was.weari.SolrUtils.addFields;
 
