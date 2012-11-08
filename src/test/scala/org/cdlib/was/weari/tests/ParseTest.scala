@@ -12,9 +12,12 @@ class ParseTest extends FeatureSpec {
   val cl = classOf[ParseTest].getClassLoader;
   val config = new Config(ConfigFactory.load("test"));
   val arcname = "IAH-20080430204825-00000-blackbook.arc.gz";
-  var arcpath = cl.getResource(arcname).toString;
+  val arcpath = cl.getResource(arcname).toString;
   val warcname = "IAH-20080430204825-00000-blackbook.warc.gz";
-  var warcpath = cl.getResource(warcname).toString;
+  val warcpath = cl.getResource(warcname).toString;
+  val emptyarcname = "CDL-20121105000015-00000-oriole.ucop.edu-00343531.arc.gz";
+  val emptyarcpath = cl.getResource(emptyarcname).toString;
+
   val w = new Weari(config);
 
   feature ("pig parser") {
@@ -34,6 +37,14 @@ class ParseTest extends FeatureSpec {
       val recs = w.pigUtil.readJson(w.pigUtil.getPath(arcname));
       assert (recs(0).url === "http://www.archive.org/robots.txt");
       assert (recs(0).detectedContentType === Some(ContentType("text", "plain", None)));
+    }
+    
+    scenario ("an empty ARC file should be parsed") {
+      w.deleteParse(emptyarcname);
+      w.parseArcs(List(emptyarcpath));
+      assert (w.isArcParsed(emptyarcname));
+      val recs = w.pigUtil.readJson(w.pigUtil.getPath(emptyarcname));
+      assert (recs.size === 0);
     }
   }
 }

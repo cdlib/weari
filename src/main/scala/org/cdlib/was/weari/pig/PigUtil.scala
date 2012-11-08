@@ -156,6 +156,10 @@ class PigUtil (config : Config) {
       throw new thrift.ParseException("");
     } else {
       refileJson(storePath);
+      /* make an empty JSON file if it was empty */
+      for (arc <-arcs if getPathOption(arc).isEmpty) {
+        makeEmptyJson(arc);
+      }
     }
   }
 
