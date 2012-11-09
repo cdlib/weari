@@ -55,25 +55,6 @@ case class ContentType (val top     : String,
 
   lazy val mediaType : String = "%s/%s".format(top, sub);
 
-  lazy val mediaTypeGroup : Option[String] = top match {
-    case "audio" => Some("audio");
-    case "video" => Some("video");
-    case "image" => Some("image");
-    case "application" => sub match {
-      case "pdf"    => Some("pdf");
-      case "zip"    => Some("compressed");
-      case "x-gzip" => Some("compressed");
-      case s if s.startsWith("ms") || s.startsWith("vnd.ms") =>
-        Some("office");
-      case _ => None;
-    } 
-    case "text" => sub match {
-      case "html" => Some("html");
-      case _ => None;
-    }
-    case _ => None;
-  }
-  
   override def toString = 
     charset.map("%s; charset=%s".format(mediaType, _)).getOrElse(mediaType);
 }
@@ -115,3 +96,37 @@ object ContentType {
   
   def forceParse (line : String) = parse(line).getOrElse(ContentType.DEFAULT);
 }
+
+/**
+ * Class for turning a ContentType into a group.
+ */
+class MediaTypeGroup(c : ContentType) {
+  def mediaTypeGroup = c match {
+    case ContentType ("audio", _, _) => 
+      Some("audio");
+    case ContentType ("video", _, _) => 
+      Some("video");
+    case ContentType ("image", _, _) => 
+      Some("image");
+    case ContentType ("application", "pdf", _) => 
+      Some("pdf");
+    case ContentType ("application", "zip", _) => 
+      Some("compressed");
+    case ContentType ("application", "x-gzip", _) => 
+      Some("compressed");
+    case ContentType ("application", s, _) if s.startsWith("ms") || s.startsWith("vnd.ms") =>
+      Some("office");
+    case ContentType ("application", _, _) => 
+      None;
+    case ContentType ("text", "html", _) => 
+      Some("html");
+    case ContentType (_, _, _) => 
+      None;
+  }
+}
+
+object MediaTypeGroup {
+  implicit def groupWrapper (c : ContentType) : MediaTypeGroup = 
+    new MediaTypeGroup(c);
+}
+

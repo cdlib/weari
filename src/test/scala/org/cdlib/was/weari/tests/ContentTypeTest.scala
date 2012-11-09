@@ -9,6 +9,8 @@ import org.scalatest.junit.JUnitRunner;
 
 import org.cdlib.was.weari._;
 
+import org.cdlib.was.weari.MediaTypeGroup.groupWrapper;
+
 class ContentTypeSpec extends FeatureSpec {
   feature ("We can parse Content-Type headers.") {
     scenario ("text/plain") {
@@ -44,6 +46,18 @@ class ContentTypeSpec extends FeatureSpec {
     scenario ("round trip application/pdf") {
       val ct = ContentType("application", "pdf", None);
       assert (Json.parse[ContentType](Json.generate(ct)) == ct);
+    }
+  }
+  
+  feature ("Media Type Groups") {
+    scenario ("media type groups") {
+      assert(ContentType("text", "html", None).mediaTypeGroup === Some("html"));
+      assert(ContentType("image", "XXXXX", None).mediaTypeGroup === Some("image"));
+      assert(ContentType("video", "XXXXX", None).mediaTypeGroup === Some("video"));
+      assert(ContentType("audio", "XXXXX", None).mediaTypeGroup === Some("audio"));
+      assert(ContentType("application", "pdf", None).mediaTypeGroup === Some("pdf"));
+      assert(ContentType("application", "zip", None).mediaTypeGroup === Some("compressed"));
+      assert(ContentType("application", "XXXX", None).mediaTypeGroup === None);
     }
   }
 }
