@@ -67,6 +67,8 @@ object Server {
 
   def simple(config : Config, processor : thrift.Server.Processor[WeariHandler]) {
     val serverTransport = new TServerSocket(config.port);
+    /* more info
+     * https://github.com/m1ch1/mapkeeper/wiki/Thrift-Java-Servers-Compared */
     val server = new TThreadPoolServer(new TThreadPoolServer.Args(serverTransport).processor(processor));
     server.serve();
   }
