@@ -78,7 +78,8 @@ class Weari(config: Config)
   def commitOrRollback[A](server : SolrServer) (f: => A) : A = {
     try {
       val retval = f;
-      server.commit;
+      /* don't wait for searcher */
+      server.commit(false, false);
       return retval;
     } catch {
       case ex : Exception => {
