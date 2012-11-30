@@ -126,40 +126,54 @@ class PigUtil (config : Config) {
   }
 
   def parseArcs(arcs : Seq[String]) {
-    val arcListPath = mkArcList(arcs.toSeq).toString;
+    val arcListPath = mkArcList(arcs.toSeq);
     val storePath = mkStorePath;
 
     fs.delete(storePath, false);
-
-    val properties = PropertiesUtil.loadDefaultProperties();
-    properties.setProperty("pig.splitCombination", "false");
-    val pigContext = new PigContext(execType, properties);
-    val pigServer = new PigServer(pigContext);
-
-    /* add jars in classpath to registered jars in pig */
-    val cp = System.getProperty("java.class.path").split(System.getProperty("path.separator"));
-    for (entry <- cp if entry.endsWith("jar")) {
-      pigServer.registerJar(entry);
-    }
-    pigServer.registerQuery("""
-      Data = LOAD '%s' 
-      USING org.cdlib.was.weari.pig.ArchiveURLParserLoader()
-      AS (filename:chararray, url:chararray, digest:chararray, date:chararray, length:long, content:chararray, detectedMediaType:chararray, suppliedM5A5A5A5AediaType:chararray, title:chararray, isRevisit, outlinks);""".
-        format(arcListPath));
-    val job = pigServer.store("Data", storePath.toString,
-    		                 "org.cdlib.was.weari.pig.JsonParsedArchiveRecordStorer");
-    
-    while (!job.hasCompleted) {
-      Thread.sleep(100);
-    }
-    if (job.getStatus == ExecJob.JOB_STATUS.FAILED) {
-      throw new thrift.ParseException("");
-    } else {
-      refileJson(storePath);
-      /* make an empty JSON file if it was empty */
-      for (arc <-arcs if getPathOption(arc).isEmpty) {
-        makeEmptyJson(arc);
+    try {
+      val properties = PropertiesUtil.loadDefaultProperties();
+      properties.setProperty("pig.splitCombination", "false");
+      val pigContext = new PigContext(execType, properties);
+      val pigServer = new PigServer(pigContext);
+      
+      /* add jars in classpath to registered jars in pig */
+      val cp = System.getProperty("java.class.path").split(System.getProperty("path.separator"));
+      for (entry <- cp if entry.endsWith("jar")) {
+        pigServer.registerJar(entry);
       }
+      pigServer.registerQuery("""
+        Data = LOAD '%s' 
+        USING org.cdlib.was.weari.pig.ArchiveURLParserLoader()
+        AS (filename:chararray, url:chararray, digest:chararray, date:chararray, length:long, content:chararray, detectedMediaType:chararray, suppliedM5A5A5A5AediaType:chararray, title:chararray, isRevisit, outlinks);""".
+        format(arcListPath.toString));
+      val job = pigServer.store("Data", storePath.toString,
+    		                "org.cdlib.was.weari.pig.JsonParsedArchiveRecordStorer");
+      
+      while (!job.hasCompleted) {
+        Thread.sleep(100);
+      }
+      if (job.getStatus == ExecJob.JOB_STATUS.FAILED) {
+        throw new thrift.ParseException("");
+      } else {
+        refileJson(storePath);
+        /* make an empty JSON file if it was empty */
+        for (arc <-arcs if getPathOption(arc).isEmpty) {
+          makeEmptyJson(arc);
+        }
+      }
+    } finally {
+      /* clean up temp files */
+      fs.delete(arcListPath, false);
+      /* being cautious here */
+      for (children <- null2option(fs.listStatus(storePath));
+           child <- children) {
+        val path = child.getPath;
+        if (path.getName == "_logs") { 
+          fs.delete(path, true);
+        } else if (path.getName.matches("""^part-m-[0-9]{5}$""")) {
+          fs.delete(path, false);
+        }
+      }      
     }
   }
 
