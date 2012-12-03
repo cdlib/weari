@@ -1,6 +1,6 @@
 package org.cdlib.was.weari.pig;
 
-import java.io.{ DataOutputStream, InputStream, OutputStream };
+import java.io.{ DataOutputStream, IOException, InputStream, OutputStream };
 
 import java.net.URI;
 
@@ -162,18 +162,25 @@ class PigUtil (config : Config) {
         }
       }
     } finally {
-      /* clean up temp files */
-      fs.delete(arcListPath, false);
-      /* being cautious here */
-      for (children <- null2option(fs.listStatus(storePath));
-           child <- children) {
-        val path = child.getPath;
-        if (path.getName == "_logs") { 
-          fs.delete(path, true);
-        } else if (path.getName.matches("""^part-m-[0-9]{5}$""")) {
-          fs.delete(path, false);
+      try {
+        /* clean up temp files */
+        fs.delete(arcListPath, false);
+        /* being cautious here, we could just do a recursive delete on
+         * storePath */
+        for (children <- null2option(fs.listStatus(storePath));
+             child <- children) {
+          val path = child.getPath;
+          if (path.getName == "_logs") { 
+            fs.delete(path, true);
+          } else if (path.getName.matches("""^part-m-[0-9]{5}$""")) {
+            fs.delete(path, false);
+          }
         }
-      }      
+        fs.delete(storePath, false);
+      } catch {
+        /* ignore errors cleaning up */
+        case ex : IOException => ()
+      }
     }
   }
 
