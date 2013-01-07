@@ -301,11 +301,6 @@
       <id>repo.codahale.com</id>
       <url>http://repo.codahale.com</url>
     </repository>
-    <repository>
-      <name>"Guardian Github Releases</name>
-      <id>guardian.github.com</id>
-      <url>http://guardian.github.com/maven/repo-releases</url>
-    </repository>
   </repositories>
 
   <pluginRepositories>
