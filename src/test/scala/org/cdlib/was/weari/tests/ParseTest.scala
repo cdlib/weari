@@ -2,9 +2,14 @@
 
 package org.cdlib.was.weari.tests;
 
+import java.net.URI;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.{ FileSystem, Path };
+
 import org.cdlib.was.weari._;
 
-import org.scalatest.{ FeatureSpec, GivenWhenThen };
+import org.scalatest.{ FeatureSpec, GivenWhenThen, Ignore };
 
 import com.typesafe.config.ConfigFactory;
 
@@ -45,6 +50,13 @@ class ParseTest extends FeatureSpec {
       assert (w.isArcParsed(emptyarcname));
       val recs = w.pigUtil.readJson(w.pigUtil.getPath(emptyarcname));
       assert (recs.size === 0);
+    }
+    
+    scenario ("cleans up after itself") {
+      val hadoopConfig = new Configuration();
+      val fs = FileSystem.get(new URI("file:///"), hadoopConfig);
+      val tmpDir = new Path("%s/tmp".format(config.jsonBaseDir));
+      assert (fs.listStatus(tmpDir).size === 0);
     }
   }
 }
