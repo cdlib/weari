@@ -117,6 +117,7 @@
                multiValued="true"/>
         <field name="urlfp" type="long" stored="true" indexed="true" omitNorms="true"/>
 
+        <field name="_version_" type="long" indexed="true" stored="true"/>
     </fields>
     <uniqueKey>id</uniqueKey>
     <defaultSearchField>content</defaultSearchField>
