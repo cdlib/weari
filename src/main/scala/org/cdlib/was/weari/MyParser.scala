@@ -81,6 +81,10 @@ class MyParser extends Logging {
             error("Caught exception parsing %s in arc %s: {}".format(rec.getUrl, rec.getFilename), ex);
             None;
           }
+          case ex : java.lang.StackOverflowError => {
+            error("Caught StackOverflowError parsing %s in arc %s.".format(rec.getUrl, rec.getFilename));
+            None;
+          }
         }
       }
       rec.close;
