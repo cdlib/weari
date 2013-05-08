@@ -53,7 +53,7 @@ extends Iterable[SolrDocument] {
       val lastVal = fieldVals(scala.math.min(nextUrlPos + atOnce, fieldVals.length));
       val q = new SolrQuery().
         setQuery("%s:[%s TO %s]".format(field, fieldVals(nextUrlPos), lastVal))
-        .setSortField(field, SolrQuery.ORDER.asc).setRows(rowsAtOnce);
+        .setSort(new SolrQuery.SortClause("field", SolrQuery.ORDER.asc)).setRows(rowsAtOnce);
       for (d <- new SolrDocumentCollection(server, q)) {
         cache += d;
       }
