@@ -55,7 +55,7 @@ class SolrTermIterable(server : SolrServer, field : String, queryString : String
 
     def fillCache {
       val q = new SolrQuery(queryString).setTerms(true).setTermsSortString("index").
-        addTermsField(field).setTermsLimit(100000).setQueryType("/terms").
+        addTermsField(field).setTermsLimit(100000).setRequestHandler("/terms").
         setTermsLower(lowerLimit);
       val results = server.query(q).getTermsResponse.getTerms(field);
       for (i <- new Range(0, results.size, 1)) {
