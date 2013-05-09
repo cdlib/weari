@@ -199,7 +199,7 @@ class ArchiveURLParserLoader extends LoadFunc with Logging {
     }
     for (value <- Seq(rec.getFilename,                   // 0
                       rec.getUrl,                        // 1
-                      rec.getDigestStr.getOrElse(""),    // 2
+                      rec.getDigest.getOrElse(""),       // 2
                       date2string(rec.getDate),          // 3
                       rec.getLength,                     // 4
                       rec.content.getOrElse(""),         // 5

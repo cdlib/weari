@@ -160,7 +160,7 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String)
 
   val SHA1_RE = new Regex("""^sha1:([a-zA-Z0-9]+)$""");
 
-  lazy val getDigestStr : Option[String] = {
+  lazy val getDigest : Option[String] = {
     if (!ready) cueUp;
     rec match {
       case arc : ARCRecord => {

@@ -70,7 +70,7 @@ class PigUtil (config : Config) {
     if (path.toString.endsWith("gz")) {
       in = new GZIPInputStream(in);
     }
-    return ParsedArchiveRecord.readJson(arcname, in);
+    return ParsedArchiveRecordSeq.deserializeJson(in);
   }
 
   def writeArcList (arcs : Seq[String], os : DataOutputStream) {

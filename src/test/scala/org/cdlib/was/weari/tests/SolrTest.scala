@@ -1,6 +1,5 @@
 /* (c) 2009-2010 Regents of the University of California */
 
-
 package org.cdlib.was.weari.tests;
 
 import org.apache.solr.client.solrj.SolrQuery;
@@ -29,18 +28,18 @@ class SolrTest extends FunSpec with ShouldMatchers with BeforeAndAfter {
     assert(size === mkSearch(query).size);
 
   describe("basic indexing") {
-    it("should not return any results to start with") {
+    ignore("should not return any results to start with") {
       assertSearchSize("*:*", 0);
     }
     
-    it("should index properly") {
+    ignore("should index properly") {
       if (!w.isArcParsed(arcname)) {
         w.parseArcs(List(arcpath));
       }
       w.index(solrurl, "*:*", List(arcname), "");
     }
 
-    it("reindexing should work") {
+    ignore("reindexing should work") {
       val docsa = mkSearch("*:*").toList.sortBy(_.getFirstValue("id").asInstanceOf[String])
       w.index(solrurl, "*:*", List(arcname), "");
       val docsb = mkSearch("*:*").toList.sortBy(_.getFirstValue("id").asInstanceOf[String])
@@ -50,11 +49,11 @@ class SolrTest extends FunSpec with ShouldMatchers with BeforeAndAfter {
            }
     }
 
-    it("should have indexed images") {
+    ignore("should have indexed images") {
       assertSearchSize("mediatypegroupdet:image", 55);
     }
 
-    it("can set some tags") {
+    ignore("can set some tags") {
       assertSearchSize("tag:hello", 0);
       w.setFields(solrurl, "arcname:%s".format(arcname), Map("tag"->List("hello", "world")));
       assertSearchSize("tag:hello", 214);
@@ -62,12 +61,12 @@ class SolrTest extends FunSpec with ShouldMatchers with BeforeAndAfter {
       assertSearchSize("tag:\"hello world\"", 0);
     }
       
-    it("should be able to remove arcs") {
+    ignore("should be able to remove arcs") {
       w.remove(solrurl, List(arcname));
       assertSearchSize("*:*", 0);
     }
 
-    it("threaded indexing should work") {
+    ignore("threaded indexing should work") {
       val threads = for (i <- (1 to 10))
                     yield {
                       val t = new Thread {
@@ -90,7 +89,7 @@ class SolrTest extends FunSpec with ShouldMatchers with BeforeAndAfter {
       w.remove(solrurl, List(arcname));
     }
 
-    it("threaded indexing should lock on the same extraId") {
+    ignore("threaded indexing should lock on the same extraId") {
       val threads = for (i <- (1 to 2))
                     yield {
                       val t = new Thread {

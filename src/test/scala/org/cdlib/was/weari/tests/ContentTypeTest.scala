@@ -2,8 +2,6 @@
 
 package org.cdlib.was.weari.tests;
 
-import com.codahale.jerkson.Json;
-
 import org.scalatest.{FeatureSpec,GivenWhenThen};
 import org.scalatest.junit.JUnitRunner;
 
@@ -29,23 +27,6 @@ class ContentTypeSpec extends FeatureSpec {
 
     scenario ("bad line") {
       assert (ContentType.parse("xxx").isEmpty);
-    }
-  }
-  
-  feature ("We can serialize to JSON") {
-    scenario ("round trip text/plain") {
-      val ct = ContentType("text", "plain", None);
-      assert (Json.parse[ContentType](Json.generate(ct)) == ct);
-    }
-
-    scenario ("round trip text/plain with charset") {
-      val ct = ContentType("text", "plain", Some("utf-8"));
-      assert (Json.parse[ContentType](Json.generate(ct)) == ct);
-    }
-
-    scenario ("round trip application/pdf") {
-      val ct = ContentType("application", "pdf", None);
-      assert (Json.parse[ContentType](Json.generate(ct)) == ct);
     }
   }
   

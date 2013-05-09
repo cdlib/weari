@@ -33,34 +33,37 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.cdlib.was.weari;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
-import com.codahale.jerkson.{Json, ParsingException};
-
 import java.io.InputStream;
 
 import java.util.Date;
+
+import com.fasterxml.jackson.annotation._;
+import com.fasterxml.jackson.core.`type`.TypeReference;
 
 import grizzled.slf4j.Logging;
 
 /**
  * A class representing a WASArchiveRecord that has been parsed.
  */
+@JsonIgnoreProperties(Array("canonicalUrl", "urlFingerprint", "canonicalHost"))
 case class ParsedArchiveRecord (
   /* being a case class makes this easy to serialize as JSON */
-  val filename : String,
-  val digest : Option[String],
-  val url : String,
-  val date : Date,
+  private val filename : String,
+  private val digest : Option[String],
+  private val url : String,
+  private val date : Date,
   val title : Option[String],
-  val length : Long,
+  private val length : Long,
   val content : Option[String],
   val suppliedContentType : ContentType,
   val detectedContentType : Option[ContentType],
   val isRevisit : Option[Boolean],
-  val outlinks : Seq[Long]) extends WASArchiveRecord {
+  val outlinks : Seq[Long]) extends WASArchiveRecord with JsonSerializer {
+
+//  override val jsonType = new TypeReference[ParsedArchiveRecord] { }
 
   def getFilename = filename;
-  def getDigestStr = digest;
+  def getDigest = digest;
   def getUrl = url;
   def getDate = date;
   def getLength = length;
@@ -68,15 +71,14 @@ case class ParsedArchiveRecord (
   def isHttpResponse = true;
   def getContentType = suppliedContentType;
 
-  @JsonIgnore
   lazy val canonicalUrl = UriUtils.canonicalize(url);
-  @JsonIgnore
   lazy val urlFingerprint = UriUtils.fingerprint(this.canonicalUrl);
-  @JsonIgnore
   lazy val canonicalHost = UriUtils.string2handyUrl(canonicalUrl).getHost;
 }
 
-object ParsedArchiveRecord extends Logging {
+object ParsedArchiveRecord extends JsonDeserializer[ParsedArchiveRecord] with Logging {
+  override val jsonType = new TypeReference[ParsedArchiveRecord] { }
+
   def apply(rec : WASArchiveRecord) : ParsedArchiveRecord =
     apply(rec, None, None, None, Seq[Long]());
 
@@ -87,7 +89,7 @@ object ParsedArchiveRecord extends Logging {
             outlinks : Seq[Long]) = {
     val suppliedContentType = rec.getContentType;
     new ParsedArchiveRecord(filename = rec.getFilename,
-                            digest = rec.getDigestStr,
+                            digest = rec.getDigest,
                             url = rec.getUrl,
                             date = rec.getDate,
                             title = title,
@@ -98,21 +100,8 @@ object ParsedArchiveRecord extends Logging {
                             detectedContentType = detectedContentType,
                             outlinks = outlinks);
   }
+}
 
-  def readJson(arcname : String, in : InputStream) : Seq[ParsedArchiveRecord] = {
-    try {
-      return Json.parse[List[ParsedArchiveRecord]](in);
-    } catch {
-      case ex : ParsingException => {
-        error("Bad JSON: %s".format(arcname));
-        throw new thrift.BadJSONException(ex.toString, arcname);
-      }
-      case ex : java.io.EOFException => {
-        error("Bad JSON: %s".format(arcname));
-        throw new thrift.BadJSONException(ex.toString, arcname);
-      }
-    } finally {
-      if (in != null) in.close;
-    }
-  }
+object ParsedArchiveRecordSeq extends JsonDeserializer[Seq[ParsedArchiveRecord]] with Logging {
+  override val jsonType = new TypeReference[Seq[ParsedArchiveRecord]] { }
 }

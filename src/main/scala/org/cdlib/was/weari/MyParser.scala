@@ -88,7 +88,7 @@ class MyParser extends Logging {
         }
       }
       rec.close;
-      if (rec.getDigestStr.isEmpty) {
+      if (rec.getDigest.isEmpty) {
         /* need to check now because the ARC needs to be closed before we can get it */
         throw new Exception("No digest string found.");
       } else {

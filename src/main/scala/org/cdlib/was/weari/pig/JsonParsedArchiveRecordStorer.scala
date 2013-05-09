@@ -36,7 +36,8 @@ package org.cdlib.was.weari.pig;
 import java.io.{FilterOutputStream,IOException,OutputStream,OutputStreamWriter};
 import java.util.Date;
 
-import com.codahale.jerkson.Json;
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.scala.DefaultScalaModule
 
 import org.apache.hadoop.fs.{Path};
 import org.apache.hadoop.io.{compress,Text};
@@ -79,7 +80,9 @@ class JsonParsedArchiveRecordStorer extends StoreFunc {
   class LineRecordWriter (job : TaskAttemptContext, 
                           var path : Path)
   extends RecordWriter[Text,ParsedArchiveRecord] {
-    
+    val mapper = new ObjectMapper()
+    mapper.registerModule(DefaultScalaModule)
+
     val conf = job.getConfiguration;
     val codec : Option[compress.CompressionCodec] = 
       if (FileOutputFormat.getCompressOutput(job)) {
@@ -107,7 +110,7 @@ class JsonParsedArchiveRecordStorer extends StoreFunc {
         } else {
           w.write(",\n");
         }
-        w.write(Json.generate(value));
+        mapper.writeValue(w, value);
       }
     }
 

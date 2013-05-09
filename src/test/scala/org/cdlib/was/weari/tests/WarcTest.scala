@@ -2,8 +2,6 @@
 
 package org.cdlib.was.weari.tests;
 
-import com.codahale.jerkson.Json;
-
 import java.io.{File,FileInputStream,FileOutputStream,InputStreamReader};
 
 import org.apache.solr.common.SolrInputDocument;
@@ -31,21 +29,21 @@ class WarcSpec extends FeatureSpec {
       for (rec <- ArchiveReaderFactoryWrapper.get(warcName, cl.getResourceAsStream(warcName))) {
         if (rec.isHttpResponse) {
           parser.safeParse(rec).map { res =>
-            warcData += (rec.getUrl -> Json.generate(res));
+            warcData += (rec.getUrl -> res.toJsonString);
           }
         }
       }
       for (rec <- ArchiveReaderFactoryWrapper.get(arcName, cl.getResourceAsStream(arcName))) {
         parser.safeParse(rec).map { res =>
-          arcData += (rec.getUrl -> Json.generate(res))
+          arcData += (rec.getUrl -> res.toJsonString)
         }
       }
       for ((k,v) <- arcData) {
-        val j1 = Json.parse[ParsedArchiveRecord](v);
-        val j2 = Json.parse[ParsedArchiveRecord](warcData.get(k).get);
-        assert(j1.digest == j2.digest);
-        assert(j1.url == j2.url);
-        assert(j1.date == j2.date);
+        val j1 = ParsedArchiveRecord.deserializeJson(v);
+        val j2 = ParsedArchiveRecord.deserializeJson(warcData.get(k).get);
+        assert(j1.getDigest == j2.getDigest);
+        assert(j1.getUrl == j2.getUrl);
+        assert(j1.getDate == j2.getDate);
         assert(j1.title == j2.title);
         assert(j1.content == j2.content);
         assert(j1.canonicalUrl == j2.canonicalUrl);
@@ -57,7 +55,7 @@ class WarcSpec extends FeatureSpec {
     scenario ("We can round trip JSON.") {
       for (rec <- ArchiveReaderFactoryWrapper.get (arcName, cl.getResourceAsStream(arcName))) {
         parser.safeParse(rec).map { res =>
-          assert (Json.parse[ParsedArchiveRecord](Json.generate(res)) == res);
+          assert (ParsedArchiveRecord.deserializeJson(res.toJsonString) == res);
         }
       }
     }

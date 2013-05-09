@@ -48,7 +48,7 @@ trait WASArchiveRecord {
   
   def getDate : Date;
 
-  def getDigestStr : Option[String];
+  def getDigest : Option[String];
     
   def getLength : Long;
   

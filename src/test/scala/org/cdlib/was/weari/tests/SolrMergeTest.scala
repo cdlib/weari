@@ -26,7 +26,7 @@ class SolrMergeTest extends FunSpec with ShouldMatchers with BeforeAndAfter {
   var mergearcpath3 = cl.getResource(mergearc3).toString;
 
   def mkSearch(query : String) = 
-      new SolrDocumentCollection(server, new SolrQuery(query));
+    new SolrDocumentCollection(server, new SolrQuery(query));
 
   def assertSearchSize(query : String, size : Int) =
     assert(size === mkSearch(query).size);
@@ -59,7 +59,7 @@ class SolrMergeTest extends FunSpec with ShouldMatchers with BeforeAndAfter {
   }
 
   describe("merging") {
-    it("should work") {
+    ignore("should work") {
       assertSearchSize("*:*", 0);
       w.index(solrurl, "*:*", List(mergearc1), "XXX");
       testResults("*:*", 3,
@@ -75,7 +75,7 @@ class SolrMergeTest extends FunSpec with ShouldMatchers with BeforeAndAfter {
             "http://gales.cdlib.org/b-traven3.jpeg.ZKCMBC3DSMM3RYW4KFRJCQJZFR6G3C4J.XXX" -> 2))
     }
     
-    it("should work with de-duplicated arcs") {
+    ignore("should work with de-duplicated arcs") {
       assertSearchSize("*:*", 0);
       w.index(solrurl, "*:*", List(mergearc1, mergearc2, mergearc3), "XXX");
       testResults("*:*", 4,
@@ -85,7 +85,7 @@ class SolrMergeTest extends FunSpec with ShouldMatchers with BeforeAndAfter {
             "http://gales.cdlib.org/b-traven3.jpeg.ZKCMBC3DSMM3RYW4KFRJCQJZFR6G3C4J.XXX" -> 3))
     }
 
-    it("should unmerge successfully") {
+    ignore("should unmerge successfully") {
       w.index(solrurl, "*:*", List(mergearc1, mergearc2, mergearc3), "XXX");
       w.remove(solrurl, List(mergearc3));
       testResults("*:*", 4,
@@ -102,7 +102,7 @@ class SolrMergeTest extends FunSpec with ShouldMatchers with BeforeAndAfter {
       assertSearchSize("*:*", 0);
     }
     
-    it("should do threaded merge properly") {
+    ignore("should do threaded merge properly") {
       val threads = 
         for (i <- (1 to 10))
         yield {

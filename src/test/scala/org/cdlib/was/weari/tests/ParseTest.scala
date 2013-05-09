@@ -31,7 +31,7 @@ class ParseTest extends FeatureSpec {
       w.parseArcs(List(arcpath))
       assert (w.isArcParsed(arcname));
       val recs = w.pigUtil.readJson(w.pigUtil.getPath(arcname));
-      assert (recs(0).url === "http://www.archive.org/robots.txt");
+      assert (recs(0).getUrl === "http://www.archive.org/robots.txt");
       assert (recs(0).detectedContentType === Some(ContentType("text", "plain", None)));
     }
 
@@ -40,7 +40,7 @@ class ParseTest extends FeatureSpec {
       w.parseArcs(List(warcpath));
       assert (w.isArcParsed(warcname));
       val recs = w.pigUtil.readJson(w.pigUtil.getPath(arcname));
-      assert (recs(0).url === "http://www.archive.org/robots.txt");
+      assert (recs(0).getUrl === "http://www.archive.org/robots.txt");
       assert (recs(0).detectedContentType === Some(ContentType("text", "plain", None)));
     }
     
