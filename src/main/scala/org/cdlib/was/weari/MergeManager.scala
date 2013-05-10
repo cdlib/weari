@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.cdlib.was.weari;
 
-import grizzled.slf4j.Logging;
+import com.typesafe.scalalogging.slf4j.Logging;
 
 import java.util.{Collection=>JCollection}
 
@@ -89,7 +89,7 @@ class MergeManager (config : Config, candidatesQuery : String, server : SolrServ
     bf = new BloomFilter64bit(expectedSize, 12);
     /* initialize */
     if (server != null) {
-      debug("Loading document ids into MergeManager.");
+      logger.debug("Loading document ids into MergeManager.");
       val newq = new SolrQuery(candidatesQuery).setParam("fl", ID_FIELD).setRows(config.numDocIdsPerRequest);
       val docs = new SolrDocumentCollection(server, newq);
       for (doc <- docs) {

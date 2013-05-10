@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.cdlib.was.weari;
 
-import grizzled.slf4j.Logging;
+import com.typesafe.scalalogging.slf4j.Logging;
 
 import java.io.{ File, FileOutputStream, InputStream, OutputStream };
 
@@ -84,8 +84,7 @@ class Weari(config: Config)
     } catch {
       case ex : Exception => {
         server.rollback; 
-        error("Rolled back!");
-        error(ex);
+        logger.error("Rolled back!");
         throw ex;
       }
     }
@@ -123,9 +122,9 @@ class Weari(config: Config)
   def withLock[T] (lockId : String) (f : => T) : T = {
     val lock = locks.getOrElseUpdate(lockId, new Lock);
     try {
-      info("Trying to acquire lock on %s".format(lockId));
+      logger.info("Trying to acquire lock on %s".format(lockId));
       lock.acquire;
-      info("Acquired lock on %s".format(lockId));
+      logger.info("Acquired lock on %s".format(lockId));
       val retval = f;
       return retval;
     } finally {
@@ -194,7 +193,7 @@ class Weari(config: Config)
             }
           }
           if (manager.trackedCount > config.trackCommitThreshold) {
-            info("Merge manager threshold reached: committing.");
+            logger.info("Merge manager threshold reached: committing.");
             tryCommit(server);
             manager.reset;
           }
@@ -238,7 +237,7 @@ class Weari(config: Config)
                   deleteBuffer += SolrFields.getId(doc);
                 }
                 
-                info("Move threshold reached: committing.");
+                logger.info("Move threshold reached: committing.");
                 if (!deleteBuffer.isEmpty) { from.deleteById(deleteBuffer); }
                 to.commit;
                 from.commit;

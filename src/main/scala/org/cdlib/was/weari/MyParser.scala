@@ -47,7 +47,7 @@ import org.cdlib.was.weari.webgraph.WebGraphContentHandler;
 
 import org.xml.sax.ContentHandler;
 
-import grizzled.slf4j.Logging;
+import com.typesafe.scalalogging.slf4j.Logging;
 
 /**
  * Used for parsing archive records.
@@ -78,11 +78,11 @@ class MyParser extends Logging {
           Some(parse(rec));
         } catch {
           case ex : TikaException => {
-            warn("Caught exception parsing %s in arc %s: {}".format(rec.getUrl, rec.getFilename), ex);
+            logger.warn("Caught exception parsing %s in arc %s: {}".format(rec.getUrl, rec.getFilename), ex);
             None;
           }
           case ex : java.lang.StackOverflowError => {
-            warn("Caught StackOverflowError parsing %s in arc %s.".format(rec.getUrl, rec.getFilename));
+            logger.warn("Caught StackOverflowError parsing %s in arc %s.".format(rec.getUrl, rec.getFilename));
             None;
           }
         }

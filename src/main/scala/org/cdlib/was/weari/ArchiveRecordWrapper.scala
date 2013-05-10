@@ -58,7 +58,7 @@ import org.cdlib.was.weari.Utility.{dumpStream,string2date};
 
 import scala.util.matching.Regex;
 
-import grizzled.slf4j.Logging;
+import com.typesafe.scalalogging.slf4j.Logging;
 
 /**
  * A wrapper for ArchiveRecord objects to provide a more consistent

@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.cdlib.was.weari;
 
-import grizzled.slf4j.Logging;
+import com.typesafe.scalalogging.slf4j.Logging;
 
 import java.util.Date;
 

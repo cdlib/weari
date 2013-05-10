@@ -53,7 +53,7 @@ import org.apache.pig.data.{BagFactory,Tuple,TupleFactory};
 import org.cdlib.was.weari._;
 import org.cdlib.was.weari.Utility.{date2string,flushStream,null2option,withFileOutputStream,readStreamIntoFile};
 
-import grizzled.slf4j.Logging;
+import com.typesafe.scalalogging.slf4j.Logging;
 
 class ArchiveURLParserLoader extends LoadFunc with Logging {
   val tupleFactory = TupleFactory.getInstance();
@@ -121,7 +121,7 @@ class ArchiveURLParserLoader extends LoadFunc with Logging {
             } catch {
               case ex : EOFException => {
                 /* probably a completely empty file */
-                error("Could not open arc: %s".format(this.arcName));
+                logger.error("Could not open arc: %s".format(this.arcName));
               }
             }
           }
@@ -149,7 +149,7 @@ class ArchiveURLParserLoader extends LoadFunc with Logging {
         throw ex;
       } else {
         /* it is a bad gzip */
-        error("Bad GZIP file: %s".format(this.arcName));
+        logger.error("Bad GZIP file: %s".format(this.arcName));
         reset;
       }
     }
@@ -168,7 +168,7 @@ class ArchiveURLParserLoader extends LoadFunc with Logging {
     } catch {
       case ex : Exception => {
         /* log the exception before we rethrow it, so we know what arc was being read */
-        error("Caught exception READING %s: {}".format(this.arcName.getOrElse("")), ex);
+        logger.error("Caught exception READING %s: {}".format(this.arcName.getOrElse("")), ex);
         checkGzip(ex);
         /* set to null so we don't try to close it later & throw ANOTHER exception */
         rec = null;
@@ -181,7 +181,7 @@ class ArchiveURLParserLoader extends LoadFunc with Logging {
       } catch {
         case ex : Exception => {
           /* log the exception before we rethrow it, so we know what arc was being closed */
-          error("Caught exception CLOSING %s: {}".format(this.arcName.getOrElse("")), ex);
+          logger.error("Caught exception CLOSING %s: {}".format(this.arcName.getOrElse("")), ex);
           checkGzip(ex);
         }
       }

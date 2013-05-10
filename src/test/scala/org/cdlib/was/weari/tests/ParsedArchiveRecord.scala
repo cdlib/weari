@@ -8,13 +8,13 @@ import org.cdlib.was.weari._;
 
 import org.scalatest.{FeatureSpec,GivenWhenThen,Ignore};
 
-class JsonTest extends FeatureSpec {
+class ParsedArchiveRecordTest extends FeatureSpec {
   val cl = classOf[WarcSpec].getClassLoader;
   val config = new Config {};
   val jsonName = "test.warc.gz.json.gz";
   val weari = new Weari(config);
 
-  feature ("JSON") {
+  ignore ("ParsedArchiveRecord") {
     scenario ("we can parse a JSON file") {
       val records = ParsedArchiveRecordSeq.deserializeJson(new GZIPInputStream(cl.getResourceAsStream(jsonName)));
       assert(records.length === 1);

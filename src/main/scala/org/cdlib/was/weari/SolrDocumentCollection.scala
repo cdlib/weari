@@ -38,7 +38,7 @@ import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.{ SolrDocument, SolrException };
 import org.apache.solr.common.params.SolrParams;
 
-import grizzled.slf4j.Logging;
+import com.typesafe.scalalogging.slf4j.Logging;
 
 class SolrDocumentCollection(server : SolrServer, q : SolrQuery)
   extends Iterable[SolrDocument] with Logging {

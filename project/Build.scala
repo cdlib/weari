@@ -32,7 +32,7 @@ object MyBuild extends Build {
   val buildSettings = Defaults.defaultSettings ++ Seq(
     organization := "org.cdlib.was",
     version      := "0.1-DEV",
-    scalaVersion := "2.9.1",
+    scalaVersion := "2.10.0",
     exportJars   := true)
 
   val extraResolvers = 

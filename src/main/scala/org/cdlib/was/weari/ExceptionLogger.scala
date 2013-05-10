@@ -37,7 +37,7 @@ import java.io.{PrintWriter,StringWriter};
 
 import org.slf4j.LoggerFactory;
 
-import grizzled.slf4j.Logging;
+import com.typesafe.scalalogging.slf4j.Logging;
 
 trait ExceptionLogger { self : Logging => 
 
@@ -56,8 +56,8 @@ trait ExceptionLogger { self : Logging =>
       Some(f);
     } catch {
       case ex : Exception => {
-        error(formatStr, ex);
-        debug(getStackTrace(ex));
+        logger.error(String.format("%s: %s", formatStr, ex));
+        logger.debug(getStackTrace(ex));
       }
       None;
     }

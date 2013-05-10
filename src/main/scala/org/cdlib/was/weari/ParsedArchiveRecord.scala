@@ -40,7 +40,7 @@ import java.util.Date;
 import com.fasterxml.jackson.annotation._;
 import com.fasterxml.jackson.core.`type`.TypeReference;
 
-import grizzled.slf4j.Logging;
+import com.typesafe.scalalogging.slf4j.Logging;
 
 /**
  * A class representing a WASArchiveRecord that has been parsed.

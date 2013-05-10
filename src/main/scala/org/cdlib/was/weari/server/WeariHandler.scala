@@ -33,14 +33,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.cdlib.was.weari.server;
 
-import grizzled.slf4j.Logging;
-
 import java.util.{List => JList, Map => JMap, UUID};
 
 import org.cdlib.was.weari._;
 
 import scala.collection.JavaConversions;
-    
+
+import com.typesafe.scalalogging.slf4j.Logging
+
 class WeariHandler(config: Config)
   extends thrift.Server.Iface with Logging with ExceptionLogger {
 
