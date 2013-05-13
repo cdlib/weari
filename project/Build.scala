@@ -3,8 +3,6 @@ import sbt._;
 import Keys._;
 
 object MyBuild extends Build {
-  lazy val scalatraVersion = "2.0.1";
-
   lazy val distFiles = TaskKey[Seq[(File, String)]]("dist-files", "Files to include in the distribution zip")
   lazy val distPath = SettingKey[File]("dist-path", "Path to generate the distribution zip to")
   lazy val dist = TaskKey[File]("dist", "Generate distribution zip file")
@@ -58,7 +56,6 @@ object MyBuild extends Build {
                   distPath <<= (target) { (target) =>
                     target / "dist" / "artifacts.zip" 
                   },
-                  libraryDependencies += "com.codahale" %% "jerkson" % "0.5.0",
                   exportJars := true,
                   externalPom(baseDirectory(_ / "pom.xml")),
                   resolvers := extraResolvers));
