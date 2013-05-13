@@ -27,11 +27,7 @@ object MyBuild extends Build {
     dest;
   }
 
-  val buildSettings = Defaults.defaultSettings ++ Seq(
-    organization := "org.cdlib.was",
-    version      := "0.1-DEV",
-    scalaVersion := "2.10.0",
-    exportJars   := true)
+  val buildSettings = Defaults.defaultSettings
 
   val extraResolvers = 
     Seq("cdl-public" at "http://mvn.cdlib.org/content/repositories/public",
