@@ -16,7 +16,7 @@ import org.cdlib.was.weari.SolrUtils.makeDoc;
 
 import scala.collection.JavaConversions.mapAsScalaMap;
 
-class MergeManagerSpec extends FunSpec with BeforeAndAfter with ShouldMatchers {
+class MergeManagerSpec extends FunSpec with BeforeAndAfter {
   /**
    * Convert a SolrInputDocument into something that we can compare.
    */

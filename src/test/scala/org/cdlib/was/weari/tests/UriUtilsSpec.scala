@@ -13,7 +13,7 @@ import org.cdlib.was.weari._;
 import org.cdlib.was.weari.SolrFields._;
 import org.cdlib.was.weari.UriUtils.canonicalize;
 
-class UriUtilsSpec extends FunSpec with BeforeAndAfter with ShouldMatchers {
+class UriUtilsSpec extends FunSpec with BeforeAndAfter {
   describe ("URIUtils canonicalizer") {
     it("should remove www") {
       assert(canonicalize("http://www.example.org") === canonicalize("http://example.org"))

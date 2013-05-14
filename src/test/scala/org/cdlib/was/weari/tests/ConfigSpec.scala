@@ -9,7 +9,7 @@ import org.scalatest.matchers._;
 
 import org.cdlib.was.weari.Config;
 
-class ConfigSpec extends FunSpec with BeforeAndAfter with ShouldMatchers {
+class ConfigSpec extends FunSpec with BeforeAndAfter {
   describe("config system") {
     it("should load") {
       val config = new Config;

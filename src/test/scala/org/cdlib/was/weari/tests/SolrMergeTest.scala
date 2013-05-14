@@ -12,7 +12,7 @@ import org.cdlib.was.weari._;
 
 import com.typesafe.config.ConfigFactory;
 
-class SolrMergeTest extends FunSpec with ShouldMatchers with BeforeAndAfter {
+class SolrMergeTest extends FunSpec with BeforeAndAfter {
   val cl = classOf[ParseTest].getClassLoader;
   val config = new Config(ConfigFactory.load("test"));
   val w = new Weari(config);

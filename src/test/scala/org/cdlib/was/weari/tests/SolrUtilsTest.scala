@@ -15,7 +15,7 @@ import org.cdlib.was.weari.SolrUtils.{ makeDoc, record2inputDocument };
 
 //import scala.collection.JavaConversions.mapAsScalaMap;
 
-class SolrUtilsTest extends FunSpec with BeforeAndAfter with ShouldMatchers {
+class SolrUtilsTest extends FunSpec with BeforeAndAfter { 
   describe ("record2inputDocument") {
     it("should generate the right input document") {
       val rec = new ParsedArchiveRecord(filename = "ARC-A.arc.gz",
