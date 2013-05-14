@@ -27,8 +27,6 @@ object MyBuild extends Build {
     dest;
   }
 
-  val buildSettings = Defaults.defaultSettings
-
   val extraResolvers = 
     Seq("cdl-public" at "http://mvn.cdlib.org/content/repositories/public",
         "cdl-thirdparty" at "http://mvn.cdlib.org/content/repositories/thirdparty",
@@ -40,11 +38,12 @@ object MyBuild extends Build {
         "Guardian Github Releases" at "http://guardian.github.com/maven/repo-releases",
         "Local Maven Repository" at Path.userHome.asURL + "/.m2/repository");
 
+  override lazy val settings = super.settings
 
   lazy val root = 
     Project("root",
             file("."),
-            settings = buildSettings ++ 
+            settings = Project.defaultSettings ++ 
               Seq(distTask) ++ 
               Seq(name := "weari",
                   unmanagedClasspath in Test <+= (baseDirectory) map { bd => Attributed.blank(bd / ".." / "hadoop" / "conf") },
