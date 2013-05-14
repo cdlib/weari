@@ -4,6 +4,8 @@ version      := "0.1-DEV"
 
 scalaVersion := "2.10.1"
 
+sbtVersion   := "0.12.3"
+
 exportJars   := true
 
 externalPom()
