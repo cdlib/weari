@@ -9,7 +9,7 @@ import org.cdlib.was.weari._;
 import org.scalatest.{FeatureSpec,GivenWhenThen,Ignore};
 
 class ParsedArchiveRecordTest extends FeatureSpec {
-  val cl = classOf[WarcSpec].getClassLoader;
+  val cl = classOf[ParsedArchiveRecordTest].getClassLoader;
   val config = new Config {};
   val jsonName = "test.warc.gz.json.gz";
   val weari = new Weari(config);
