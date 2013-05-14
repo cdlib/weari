@@ -37,30 +37,28 @@ import java.io.InputStream;
 
 import java.util.Date;
 
-import com.fasterxml.jackson.annotation._;
-import com.fasterxml.jackson.core.`type`.TypeReference;
+import org.json4s.FieldSerializer;
+import org.json4s.jackson.Serialization;
+import org.json4s.NoTypeHints;
 
 import com.typesafe.scalalogging.slf4j.Logging;
 
 /**
  * A class representing a WASArchiveRecord that has been parsed.
  */
-@JsonIgnoreProperties(Array("canonicalUrl", "urlFingerprint", "canonicalHost"))
 case class ParsedArchiveRecord (
   /* being a case class makes this easy to serialize as JSON */
-  private val filename : String,
-  private val digest : Option[String],
-  private val url : String,
-  private val date : Date,
+  val filename : String,
+  val digest : Option[String],
+  val url : String,
+  val date : Date,
   val title : Option[String],
-  private val length : Long,
+  val length : Long,
   val content : Option[String],
   val suppliedContentType : ContentType,
   val detectedContentType : Option[ContentType],
   val isRevisit : Option[Boolean],
   val outlinks : Seq[Long]) extends WASArchiveRecord with JsonSerializer {
-
-//  override val jsonType = new TypeReference[ParsedArchiveRecord] { }
 
   def getFilename = filename;
   def getDigest = digest;
@@ -77,7 +75,8 @@ case class ParsedArchiveRecord (
 }
 
 object ParsedArchiveRecord extends JsonDeserializer[ParsedArchiveRecord] with Logging {
-  override val jsonType = new TypeReference[ParsedArchiveRecord] { }
+  /* necessary for JsonDeserializer trait due to type erasure */
+  override val jsonType = manifest[ParsedArchiveRecord];
 
   def apply(rec : WASArchiveRecord) : ParsedArchiveRecord =
     apply(rec, None, None, None, Seq[Long]());
@@ -103,5 +102,5 @@ object ParsedArchiveRecord extends JsonDeserializer[ParsedArchiveRecord] with Lo
 }
 
 object ParsedArchiveRecordSeq extends JsonDeserializer[Seq[ParsedArchiveRecord]] with Logging {
-  override val jsonType = new TypeReference[Seq[ParsedArchiveRecord]] { }
+  override val jsonType = manifest[Seq[ParsedArchiveRecord]];
 }

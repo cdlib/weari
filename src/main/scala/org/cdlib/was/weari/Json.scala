@@ -1,43 +1,32 @@
 package org.cdlib.was.weari;
 
-import com.fasterxml.jackson.annotation._;
-import com.fasterxml.jackson.core.`type`.TypeReference;
-import com.fasterxml.jackson.databind.{Module, ObjectMapper};
-import com.fasterxml.jackson.module.scala.DefaultScalaModule
-import java.lang.reflect.{Type, ParameterizedType}
+import org.json4s._;
+import org.json4s.jackson.JsonMethods.parse;
+import org.json4s.Extraction.extract;
+import org.json4s.jackson.Serialization;
+import org.json4s.jackson.Serialization.{read, write};
+
 import java.io.InputStream;
 
-trait JsonIO {
-  val objectMapper = new ObjectMapper()
-  objectMapper.registerModule(DefaultScalaModule)
-}
+trait JsonDeserializer[T] {
+  implicit val jsonType: Manifest[T];
 
-trait JsonDeserializer[T] extends JsonIO {
-  implicit val jsonType: TypeReference[T];
+  implicit val formats = Serialization.formats(NoTypeHints);
 
-  def deserializeJson(value: InputStream) : T = {
-    try {
-      objectMapper.readValue(value, jsonType);
-    } finally {
-      if (value != null) value.close;
-    }
-  }
+  def deserializeJson(value: InputStream) : T = 
+    extract(parse(value, false));
 
   def deserializeJson(value: String) : T = {
-    val is = new java.io.ByteArrayInputStream(value.getBytes());
-    objectMapper.readValue(is, jsonType);
+    read[T](value);
   }
 }
 
-trait JsonSerializer extends JsonIO {
-  def writeJson(writer : java.io.Writer, value : ParsedArchiveRecord) {
-    objectMapper.writeValue(writer, value);
+trait JsonSerializer {
+  implicit val formats = Serialization.formats(NoTypeHints);
+
+  def writeJson(writer : java.io.Writer) {
+    writer.write(this.toJsonString);
   }
 
-  def toJsonString: String = {
-    import java.io.StringWriter
-    val writer = new StringWriter()
-    objectMapper.writeValue(writer, this)
-    writer.toString
-  }
+  def toJsonString: String = write(this);
 }
