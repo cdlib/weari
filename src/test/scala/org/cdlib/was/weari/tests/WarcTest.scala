@@ -14,8 +14,8 @@ import org.scalatest.{FeatureSpec,GivenWhenThen,Ignore};
 
 import scala.collection.mutable.HashMap;
 
-class WarcSpec extends FeatureSpec {
-  val cl = classOf[WarcSpec].getClassLoader;
+class WarcTest extends FeatureSpec {
+  val cl = classOf[WarcTest].getClassLoader;
   val config = new Config {};
   val parser = new MyParser;
   val warcName = "IAH-20080430204825-00000-blackbook.warc.gz";
