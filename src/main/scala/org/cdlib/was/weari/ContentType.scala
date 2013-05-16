@@ -48,7 +48,7 @@ import scala.util.matching.Regex;
  */
 case class ContentType (val top     : String,
                         val sub     : String,
-                        val charset : Option[String]) {
+                        val charset : Option[String]) extends JsonSerializer {
 
   lazy val mediaType : String = "%s/%s".format(top, sub);
 

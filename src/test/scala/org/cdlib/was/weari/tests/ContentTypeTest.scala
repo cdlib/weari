@@ -41,4 +41,17 @@ class ContentTypeSpec extends FeatureSpec {
       assert(ContentType("application", "XXXX", None).mediaTypeGroup === None);
     }
   }
+
+  object ContentTypeDeserializer extends JsonDeserializer[ContentType] {
+    override val jsonType = manifest[ContentType];
+  }
+
+  feature ("JSON") {
+    scenario ("serialization works") {
+      assert(ContentType("text", "html", None).toJsonString === """{"top":"text","sub":"html"}""");
+    }
+    scenario ("deserialization works") {
+      assert(ContentTypeDeserializer.deserializeJson("""{"top":"text","sub":"html"}""") === ContentType("text", "html", None));
+    }
+  }
 }
