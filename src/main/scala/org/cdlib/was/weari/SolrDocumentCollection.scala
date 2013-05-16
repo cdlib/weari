@@ -70,7 +70,7 @@ class SolrDocumentCollection(server : SolrServer, q : SolrQuery)
         pos = (results.getStart.asInstanceOf[Int] + results.size.asInstanceOf[Int]);
       } catch {
         case ex : SolrException => {
-          error("Caught exception %s with query %s.".format(ex, q2));
+          logger.error("Caught exception %s with query %s.".format(ex, q2));
           throw ex;
         }
       }
