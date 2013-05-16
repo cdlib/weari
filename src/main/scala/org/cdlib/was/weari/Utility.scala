@@ -39,7 +39,7 @@ import java.util.zip.GZIPInputStream;
 
 import org.archive.util.ArchiveUtils;
 
-import org.joda.time.DateTime;
+import org.joda.time.{ DateTime, DateTimeZone };
 import org.joda.time.format.DateTimeFormat;
 
 import scala.util.matching.Regex;
@@ -138,15 +138,17 @@ object Utility {
   def dumpStream (in : InputStream) : Unit =
     readBytes(in) { (bytesRead, buffer) => () };
 
-  val dateFormatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
-//  dateFormatter.setTimeZone(java.util.TimeZone.getTimeZone("UTC"))
+  val dateFormatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").
+    withZone(DateTimeZone.UTC);
+  val dateFormatter14 = DateTimeFormat.forPattern("yyyyMMddHHmmss").
+    withZone(DateTimeZone.UTC);
   
   implicit def date2string (d : DateTime) : String =
     dateFormatter.print(d);
     
   implicit def string2date (s : String) : DateTime = s match {
     case ds : String if ds.length == 14 =>
-      new DateTime(ArchiveUtils.parse14DigitDate(s).getTime);
+      dateFormatter14.parseDateTime(s);
     case ds : String if ds.length == 20 =>
       dateFormatter.parseDateTime(s);
   }
