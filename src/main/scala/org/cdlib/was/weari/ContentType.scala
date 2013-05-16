@@ -33,8 +33,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.cdlib.was.weari;
 
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-
 import org.apache.http.{HeaderElement,NameValuePair};
 import org.apache.http.message.{BasicHeaderValueParser,ParserCursor};
 
@@ -48,7 +46,6 @@ import scala.util.matching.Regex;
  * Represents a content-type, including a media type and
  * encoding, as supplied by, e.g., the Content-Type header.
  */
-@JsonIgnoreProperties(Array("mediaType", "mediaTypeGroup"))
 case class ContentType (val top     : String,
                         val sub     : String,
                         val charset : Option[String]) {
