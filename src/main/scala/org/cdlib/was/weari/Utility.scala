@@ -34,10 +34,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.cdlib.was.weari;
 
 import java.io.{ BufferedInputStream, File, InputStream, IOException, FileInputStream, FileOutputStream, OutputStream};
-import java.util.{Collection=>JCollection,Date};
+import java.util.{Collection=>JCollection};
 import java.util.zip.GZIPInputStream;
 
 import org.archive.util.ArchiveUtils;
+
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
 
 import scala.util.matching.Regex;
 import scala.collection.JavaConversions.collectionAsScalaIterable;
@@ -135,17 +138,17 @@ object Utility {
   def dumpStream (in : InputStream) : Unit =
     readBytes(in) { (bytesRead, buffer) => () };
 
-  val dateFormatter = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-  dateFormatter.setTimeZone(java.util.TimeZone.getTimeZone("UTC"))
+  val dateFormatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
+//  dateFormatter.setTimeZone(java.util.TimeZone.getTimeZone("UTC"))
   
-  implicit def date2string (d : Date) : String =
-    dateFormatter.format(d);
+  implicit def date2string (d : DateTime) : String =
+    dateFormatter.print(d);
     
-  implicit def string2date (s : String) : Date = s match {
+  implicit def string2date (s : String) : DateTime = s match {
     case ds : String if ds.length == 14 =>
-      ArchiveUtils.parse14DigitDate(s);
+      new DateTime(ArchiveUtils.parse14DigitDate(s).getTime);
     case ds : String if ds.length == 20 =>
-      dateFormatter.parse(s);
+      dateFormatter.parseDateTime(s);
   }
   
   /**

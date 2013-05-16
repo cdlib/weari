@@ -56,6 +56,8 @@ import org.apache.http.message.BasicLineParser;
 
 import org.cdlib.was.weari.Utility.{dumpStream,string2date};
 
+import org.joda.time.DateTime;
+
 import scala.util.matching.Regex;
 
 import com.typesafe.scalalogging.slf4j.Logging;
@@ -156,7 +158,7 @@ class ArchiveRecordWrapper (rec : ArchiveRecord, filename : String)
 
   lazy val getLength = rec.getHeader.getLength;
 
-  lazy val getDate : java.util.Date = rec.getHeader.getDate;
+  lazy val getDate : DateTime = string2date(rec.getHeader.getDate);
 
   val SHA1_RE = new Regex("""^sha1:([a-zA-Z0-9]+)$""");
 

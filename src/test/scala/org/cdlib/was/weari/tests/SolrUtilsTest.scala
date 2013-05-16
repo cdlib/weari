@@ -2,7 +2,7 @@
 
 package org.cdlib.was.weari.tests;
 
-import java.util.{ Date, UUID };
+import java.util.UUID;
 
 import org.scalatest._;
 import org.scalatest.matchers._;
@@ -13,7 +13,7 @@ import org.cdlib.was.weari._;
 import org.cdlib.was.weari.SolrFields._;
 import org.cdlib.was.weari.SolrUtils.{ makeDoc, record2inputDocument };
 
-//import scala.collection.JavaConversions.mapAsScalaMap;
+import org.joda.time.DateTime;
 
 class SolrUtilsTest extends FunSpec with BeforeAndAfter { 
   describe ("record2inputDocument") {
@@ -21,7 +21,7 @@ class SolrUtilsTest extends FunSpec with BeforeAndAfter {
       val rec = new ParsedArchiveRecord(filename = "ARC-A.arc.gz",
                                         digest = Some("ABCDEFGH"),
                                         url = "http://example.org/",
-                                        date = new Date(),
+                                        date = new DateTime(),
                                         title = Some("title"),
                                           length = 10,
                                         content = Some("hello world"),

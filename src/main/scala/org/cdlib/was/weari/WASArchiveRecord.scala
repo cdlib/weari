@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.cdlib.was.weari;
 
-import java.util.Date;
+import org.joda.time.DateTime;
 
 /**
  * Represents an ArchiveRecord (that is, one record in a (W)ARC file.
@@ -46,7 +46,7 @@ trait WASArchiveRecord {
 
   def getUrl : String;
   
-  def getDate : Date;
+  def getDate : DateTime;
 
   def getDigest : Option[String];
     

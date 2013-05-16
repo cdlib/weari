@@ -34,7 +34,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.cdlib.was.weari.pig;
 
 import java.io.{FilterOutputStream,IOException,OutputStream,OutputStreamWriter};
-import java.util.Date;
 
 import org.apache.hadoop.fs.{Path};
 import org.apache.hadoop.io.{compress,Text};
@@ -140,7 +139,7 @@ class JsonParsedArchiveRecordStorer extends StoreFunc {
     return ParsedArchiveRecord(filename            = f.get(0).asInstanceOf[String],
                                url                 = f.get(1).asInstanceOf[String],
                                digest              = Some(f.get(2).asInstanceOf[String]),
-                               date                = f.get(3).asInstanceOf[String],
+                               date                = string2date(f.get(3).asInstanceOf[String]),
                                length              = f.get(4).asInstanceOf[Long],
                                content             = Some(f.get(5).asInstanceOf[String]),
                                detectedContentType = 

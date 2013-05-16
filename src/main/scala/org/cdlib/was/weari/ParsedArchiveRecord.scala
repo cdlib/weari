@@ -35,7 +35,7 @@ package org.cdlib.was.weari;
 
 import java.io.InputStream;
 
-import java.util.Date;
+import org.joda.time.DateTime;
 
 import org.json4s.FieldSerializer;
 import org.json4s.jackson.Serialization;
@@ -51,7 +51,7 @@ case class ParsedArchiveRecord (
   val filename : String,
   val digest : Option[String],
   val url : String,
-  val date : Date,
+  val date : DateTime,
   val title : Option[String],
   val length : Long,
   val content : Option[String],

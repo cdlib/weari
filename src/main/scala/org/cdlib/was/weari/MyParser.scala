@@ -34,7 +34,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.cdlib.was.weari;
 
 import java.io.{ByteArrayInputStream,InputStream};
-import java.util.Date;
 import java.util.regex.Pattern
 
 import org.apache.tika.config.TikaConfig;

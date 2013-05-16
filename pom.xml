@@ -85,6 +85,11 @@
       <version>3.2.2</version>
     </dependency>
     <dependency>
+      <groupId>org.json4s</groupId>
+      <artifactId>json4s-ext_2.10</artifactId>
+      <version>3.2.2</version>
+    </dependency>
+    <dependency>
       <groupId>org.archive</groupId>
       <artifactId>archive-commons</artifactId>
       <version>0.0.1-SNAPSHOT</version>
@@ -232,6 +237,16 @@
           <artifactId>org.restlet</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>joda-time</groupId>
+      <artifactId>joda-time</artifactId>
+      <version>2.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.joda</groupId>
+      <artifactId>joda-convert</artifactId>
+      <version>1.2</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>

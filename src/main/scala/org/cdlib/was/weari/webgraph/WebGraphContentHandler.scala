@@ -34,7 +34,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.cdlib.was.weari.webgraph;
 
 import java.io.StringWriter;
-import java.util.Date;
+
+import org.joda.time.DateTime;
 
 import org.archive.util.ArchiveUtils;
 
@@ -42,7 +43,7 @@ import org.xml.sax.{Attributes,ContentHandler,Locator};
 
 import scala.collection.mutable.ArrayBuffer;
 
-class WebGraphContentHandler (url : String, date : Date)
+class WebGraphContentHandler (url : String, date : DateTime)
   extends ContentHandler {
     
   var outlinks = new ArrayBuffer[Outlink]();

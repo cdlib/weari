@@ -33,9 +33,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.cdlib.was.weari.webgraph;
 
-import java.util.Date;
+import org.joda.time.DateTime;
 
 class Outlink (val from : String,
                val to : String,
-               val date : Date,
+               val date : DateTime,
                val text : String) {}
