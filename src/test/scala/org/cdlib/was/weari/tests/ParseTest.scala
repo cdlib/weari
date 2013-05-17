@@ -9,7 +9,7 @@ import org.apache.hadoop.fs.{ FileSystem, Path };
 
 import org.cdlib.was.weari._;
 
-import org.scalatest.{ FeatureSpec, GivenWhenThen, Ignore };
+import org.scalatest.FeatureSpec;
 
 import com.typesafe.config.ConfigFactory;
 

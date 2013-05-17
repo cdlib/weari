@@ -7,7 +7,7 @@ import org.cdlib.was.weari._;
 import org.joda.time._;
 import org.json4s._;
 
-import org.scalatest.{FeatureSpec,GivenWhenThen,Ignore};
+import org.scalatest.FeatureSpec;
 
 case class ValTestCaseClass(val intVal: Int, val strVal: String)
   extends JsonSerializer;

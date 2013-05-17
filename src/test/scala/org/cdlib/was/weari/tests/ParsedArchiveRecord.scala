@@ -6,7 +6,7 @@ import java.util.zip.GZIPInputStream;
 
 import org.cdlib.was.weari._;
 
-import org.scalatest.{FeatureSpec,GivenWhenThen,Ignore};
+import org.scalatest.FeatureSpec;
 
 class ParsedArchiveRecordTest extends FeatureSpec {
   val cl = classOf[ParsedArchiveRecordTest].getClassLoader;
