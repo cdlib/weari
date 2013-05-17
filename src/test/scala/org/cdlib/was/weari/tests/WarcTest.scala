@@ -55,7 +55,7 @@ class WarcTest extends FeatureSpec {
     scenario ("We can round trip JSON.") {
       for (rec <- ArchiveReaderFactoryWrapper.get (arcName, cl.getResourceAsStream(arcName))) {
         parser.safeParse(rec).map { res =>
-          assert (ParsedArchiveRecord.deserializeJson(res.toJsonString) == res);
+          assert (ParsedArchiveRecord.deserializeJson(res.toJsonString) === res);
         }
       }
     }
