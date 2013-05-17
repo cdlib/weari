@@ -15,8 +15,8 @@ import org.joda.time.DateTime;
   */
 case object TimestampSerializer extends CustomSerializer[DateTime](format => (
   {
-    case JInt(i) => new DateTime(i.toLong);
-    case JNull   => null;
+    case JInt(i) => new DateTime(i.longValue);
+    case JNull => null;
   },
   { 
     case d : DateTime => JInt(d.getMillis);
@@ -37,7 +37,7 @@ trait JsonDeserializer[T] {
 }
 
 trait JsonSerializer {
-  implicit val formats = Serialization.formats(NoTypeHints);
+  implicit val formats = DefaultFormats + TimestampSerializer
 
   def writeJson(writer : java.io.Writer) {
     writer.write(this.toJsonString);
