@@ -41,7 +41,7 @@ class JsonTest extends FeatureSpec {
     }
 
     scenario("de/serialize joda to json") {
-      val o = DateCaseClass(new DateTime(1368771502525L));
+      val o = DateCaseClass(new DateTime(1368771502525L, DateTimeZone.UTC));
       assert(o.toJsonString === """{"date":1368771502525}""");
       assert(o === DateCaseClassJson.deserializeJson(o.toJsonString));
     }
