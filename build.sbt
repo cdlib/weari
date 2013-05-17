@@ -2,7 +2,7 @@ organization := "org.cdlib.was"
 
 version      := "0.1-DEV"
 
-scalaVersion := "2.10.1"
+scalaVersion := "2.10.0"
 
 sbtVersion   := "0.12.3"
 
