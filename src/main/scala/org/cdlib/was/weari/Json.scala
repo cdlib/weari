@@ -8,14 +8,14 @@ import org.json4s.jackson.Serialization.{read, write};
 
 import java.io.InputStream;
 
-import org.joda.time.DateTime;
+import org.joda.time.{ DateTime, DateTimeZone };
 
 /**
   * Serialize dates to integers.
   */
 case object TimestampSerializer extends CustomSerializer[DateTime](format => (
   {
-    case JInt(i) => new DateTime(i.longValue);
+    case JInt(i) => new DateTime(i.longValue, DateTimeZone.UTC);
     case JNull => null;
   },
   { 
