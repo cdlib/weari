@@ -76,4 +76,6 @@ class Config (confRoot : TSConfig) {
   val useHadoop = conf.getBoolean("useHadoop");
 
   val useRealTimeGet = conf.getBoolean("useRealTimeGet");
+
+  val useAtomicUpdates = conf.getBoolean("useAtomicUpdates");
 }

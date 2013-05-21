@@ -35,3 +35,6 @@
 
 # use hadoop to parse (W)ARCs
 #weari.useHadoop=false
+
+# use atomic updates
+#weari.useAtomicUpdates=true
