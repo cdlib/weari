@@ -82,7 +82,7 @@
         <copyField source="url" dest="urlt"/>
 
         <!-- from parse -->
-        <field name="content" type="text" stored="true" indexed="true" compressed="true"/>
+        <field name="content" type="text" stored="true" indexed="true" />
         <field name="title" type="text" stored="true" indexed="true"/>
 
         <!-- detected media type -->
