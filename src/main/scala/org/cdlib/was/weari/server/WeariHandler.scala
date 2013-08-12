@@ -59,7 +59,7 @@ class WeariHandler(config: Config)
       case ex : thrift.ParseException    => throw ex;
       case ex : thrift.IndexException    => throw ex;
       case ex : Exception => {
-        error(getStackTrace(ex));
+        logger.error(getStackTrace(ex));
         throw new thrift.IndexException(ex.toString);
       }
     }
