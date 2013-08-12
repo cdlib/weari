@@ -82,12 +82,12 @@
     <dependency>
       <groupId>org.json4s</groupId>
       <artifactId>json4s-jackson_2.10</artifactId>
-      <version>3.2.2</version>
+      <version>3.2.5</version>
     </dependency>
     <dependency>
       <groupId>org.json4s</groupId>
       <artifactId>json4s-ext_2.10</artifactId>
-      <version>3.2.2</version>
+      <version>3.2.5</version>
     </dependency>
     <dependency>
       <groupId>org.archive</groupId>
