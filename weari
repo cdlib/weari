@@ -10,10 +10,7 @@ if [ `expr "$BASEDIR" : '[^/]'` != '0' ] ; then
     BASEDIR="`pwd`/$BASEDIR"
 fi
 
-CLASSPATH=$BASEDIR:$BASEDIR/../hadoop/conf
-for x in `ls -1 $BASEDIR/lib` ; do
-    CLASSPATH=$CLASSPATH:$BASEDIR/lib/$x
-done
+CLASSPATH="$BASEDIR:$BASEDIR/../hadoop/conf:$BASEDIR/lib/*"
 
 COMMAND="/cdlcommon/products/java6/bin/java -Xmx3500m -cp $CLASSPATH org.cdlib.was.weari.server.Server"
 LOG_FILE=$BASEDIR/weari.log

@@ -1,6 +1,6 @@
 package org.cdlib.was.weari.pig;
 
-import java.io.{ DataOutputStream, IOException, InputStream, OutputStream };
+import java.io.{ DataOutputStream, File, IOException, InputStream, OutputStream };
 
 import java.net.URI;
 
@@ -20,7 +20,9 @@ import org.cdlib.was.weari.Utility.{ extractArcname, null2option };
 
 import scala.util.matching.Regex;
 
-class PigUtil (config : Config) {
+import com.typesafe.scalalogging.slf4j.Logging;
+
+class PigUtil (config : Config) extends Logging {
   val execType = if (config.useHadoop) {
     ExecType.MAPREDUCE;
   } else {
@@ -137,9 +139,18 @@ class PigUtil (config : Config) {
       val pigServer = new PigServer(pigContext);
       
       /* add jars in classpath to registered jars in pig */
-      val cp = System.getProperty("java.class.path").split(System.getProperty("path.separator"));
+      val cp = System.getProperty("java.class.path").split(File.pathSeparator);
       for (entry <- cp if entry.endsWith("jar")) {
         pigServer.registerJar(entry);
+      }
+      /* handle * classpath entries */
+      for (starred <- cp if starred.endsWith("/*")) {
+        val dirname = starred.substring(0, starred.length - 2);
+        val dir = new File(dirname);
+        for (f <- dir.list()) {
+          val entry = new File(dir, f).toString;
+          pigServer.registerJar(entry);
+        }
       }
       pigServer.registerQuery("""
         Data = LOAD '%s' 
