@@ -53,12 +53,19 @@
       <artifactId>pig</artifactId>
       <version>0.11.1</version>
     </dependency>
+
     <!-- needed by pig, but not included -->
     <dependency>
       <groupId>org.antlr</groupId>
       <artifactId>antlr</artifactId>
       <version>3.2</version>
     </dependency>
+    <dependency>
+      <groupId>dk.brics.automaton</groupId>
+      <artifactId>automaton</artifactId>
+      <version>1.11-8</version>
+    </dependency>
+
     <dependency>
       <groupId>commons-codec</groupId>
       <artifactId>commons-codec</artifactId>
