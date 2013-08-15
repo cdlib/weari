@@ -10,8 +10,8 @@
   <artifactId>weari</artifactId>
   <version>0.1-SNAPSHOT</version>
 
-  <!-- try to make maven quiet -->
   <properties>
+  <!-- try to make maven quiet -->
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <scala.version>2.10.2</scala.version>
   </properties>
@@ -24,6 +24,23 @@
       <version>2.5</version>
     </dependency>
 
+    <!-- needed by pig, but not included -->
+    <dependency>
+      <groupId>dk.brics.automaton</groupId>
+      <artifactId>automaton</artifactId>
+      <version>1.11-8</version>
+    </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.17</version>
+    </dependency>
+    <dependency>
+      <groupId>org.antlr</groupId>
+      <artifactId>antlr</artifactId>
+      <version>3.2</version>
+    </dependency>
+
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-core</artifactId>
@@ -34,28 +51,10 @@
       <artifactId>pig</artifactId>
       <version>0.11.1</version>
     </dependency>
-
-    <!-- needed by pig, but not included -->
-    <dependency>
-      <groupId>org.antlr</groupId>
-      <artifactId>antlr</artifactId>
-      <version>3.2</version>
-    </dependency>
-    <dependency>
-      <groupId>dk.brics.automaton</groupId>
-      <artifactId>automaton</artifactId>
-      <version>1.11-8</version>
-    </dependency>
-
    <dependency>
       <groupId>org.cdlib</groupId>
       <artifactId>rabinpoly</artifactId>
       <version>0.1-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-      <groupId>com.martiansoftware</groupId>
-      <artifactId>jsap</artifactId>
-      <version>2.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
@@ -76,41 +75,36 @@
       <groupId>org.archive</groupId>
       <artifactId>archive-commons</artifactId>
       <version>0.0.1-SNAPSHOT</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.commons</groupId>
-          <artifactId>commons-io</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.archive.heritrix</groupId>
       <artifactId>heritrix-commons</artifactId>
       <version>3.1.1</version>
-      <exclusions>
-        <exclusion>
-          <groupId>poi</groupId>
-          <artifactId>poi</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>fastutil</groupId>
-          <artifactId>fastutil</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>poi</groupId>
-          <artifactId>poi-scratchpad</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>commons-logging</groupId>
-          <artifactId>commons-logging-api</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
-    <dependency>
-      <groupId>it.unimi.dsi</groupId>
-      <artifactId>fastutil5</artifactId>
-      <version>5.1.5</version>
-    </dependency>
+    <!--   <exclusions> -->
+    <!--     <exclusion> -->
+    <!--       <groupId>poi</groupId> -->
+    <!--       <artifactId>poi</artifactId> -->
+    <!--     </exclusion> -->
+    <!--     <exclusion> -->
+    <!--       <groupId>fastutil</groupId> -->
+    <!--       <artifactId>fastutil</artifactId> -->
+    <!--     </exclusion> -->
+    <!--     <exclusion> -->
+    <!--       <groupId>poi</groupId> -->
+    <!--       <artifactId>poi-scratchpad</artifactId> -->
+    <!--     </exclusion> -->
+    <!--     <exclusion> -->
+    <!--       <groupId>commons-logging</groupId> -->
+    <!--       <artifactId>commons-logging-api</artifactId> -->
+    <!--     </exclusion> -->
+    <!--   </exclusions> -->
+    <!-- </dependency> -->
+    <!-- <dependency> -->
+    <!--   <groupId>it.unimi.dsi</groupId> -->
+    <!--   <artifactId>fastutil5</artifactId> -->
+    <!--   <version>5.1.5</version> -->
+    <!-- </dependency> -->
     <dependency>
       <groupId>org.apache.tika</groupId>
       <artifactId>tika-parsers</artifactId>
@@ -120,41 +114,24 @@
       <groupId>org.apache.solr</groupId>
       <artifactId>solr-solrj</artifactId>
       <version>4.4.0</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-api</artifactId>
-        </exclusion>
-        <!-- geronimo stax used elsewhere -->
-        <exclusion>
-          <groupId>stax</groupId>
-          <artifactId>stax-api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>log4j</groupId>
-          <artifactId>log4j</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>javax.servlet</groupId>
-          <artifactId>servlet-api</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.solr</groupId>
-      <artifactId>solr</artifactId>
-      <version>4.3.0</version>
-      <type>war</type>
-      <exclusions>
-        <exclusion>
-          <groupId>org.restlet.jee</groupId>
-          <artifactId>org.restlet.ext.servlet</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.restlet.jee</groupId>
-          <artifactId>org.restlet</artifactId>
-        </exclusion>
-      </exclusions>
+      <!-- <exclusions> -->
+      <!--   <exclusion> -->
+      <!--     <groupId>org.slf4j</groupId> -->
+      <!--     <artifactId>slf4j-api</artifactId> -->
+      <!--   </exclusion> -->
+      <!--   <exclusion> -->
+      <!--     <groupId>stax</groupId> -->
+      <!--     <artifactId>stax-api</artifactId> -->
+      <!--   </exclusion> -->
+      <!--   <exclusion> -->
+      <!--     <groupId>log4j</groupId> -->
+      <!--     <artifactId>log4j</artifactId> -->
+      <!--   </exclusion> -->
+      <!--   <exclusion> -->
+      <!--     <groupId>javax.servlet</groupId> -->
+      <!--     <artifactId>servlet-api</artifactId> -->
+      <!--   </exclusion> -->
+      <!-- </exclusions> -->
     </dependency>
     <dependency>
       <groupId>joda-time</groupId>
@@ -162,14 +139,15 @@
       <version>2.2</version>
     </dependency>
     <dependency>
-      <groupId>org.joda</groupId>
-      <artifactId>joda-convert</artifactId>
-      <version>1.2</version>
+      <groupId>org.apache.thrift</groupId>
+      <artifactId>libthrift</artifactId>
+      <version>0.8.0</version>
     </dependency>
+
     <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-jdk14</artifactId>
-      <version>1.7.2</version>
+      <groupId>com.typesafe</groupId>
+      <artifactId>scalalogging-slf4j_2.10</artifactId>
+      <version>1.0.1</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -177,10 +155,18 @@
       <version>1.7.2</version>
     </dependency>
     <dependency>
-      <groupId>org.gnu.inet</groupId>
-      <artifactId>libidn</artifactId>
-      <version>1.15</version>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-jdk14</artifactId>
+      <version>1.7.2</version>
     </dependency>
+
+    <dependency>
+      <groupId>com.typesafe</groupId>
+      <artifactId>config</artifactId>
+      <version>1.0.2</version>
+    </dependency>
+
+    <!-- for testing -->
     <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest_2.10</artifactId>
@@ -192,21 +178,6 @@
       <artifactId>mockito-core</artifactId>  
       <version>1.9.0</version> 
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.thrift</groupId>
-      <artifactId>libthrift</artifactId>
-      <version>0.8.0</version>
-    </dependency>
-    <dependency>
-      <groupId>com.typesafe</groupId>
-      <artifactId>scalalogging-slf4j_2.10</artifactId>
-      <version>1.0.1</version>
-    </dependency>
-    <dependency>
-      <groupId>com.typesafe</groupId>
-      <artifactId>config</artifactId>
-      <version>1.0.2</version>
     </dependency>
   </dependencies>
 
