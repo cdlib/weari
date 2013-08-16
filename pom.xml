@@ -80,6 +80,12 @@
       <groupId>org.archive.heritrix</groupId>
       <artifactId>heritrix-commons</artifactId>
       <version>3.1.1</version>
+      <exclusions>
+        <exclusion>
+          <groupId>poi</groupId>
+          <artifactId>poi</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.tika</groupId>
