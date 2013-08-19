@@ -34,10 +34,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.cdlib.was.weari;
 
 import java.io.{File,InputStream};
+import java.net.URI;
 
 import org.archive.io.{ArchiveReader}
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.arc.ARCReader;
+
+import org.cdlib.was.weari.Utility.readStreamIntoFile;
+
+import dispatch._, Defaults._
 
 /**
  * Wrapper for an ArchiveReader.
@@ -69,6 +74,32 @@ class ArchiveReaderWrapper (wrapped : ArchiveReader)
 object ArchiveReaderFactoryWrapper {
   def get (f : File) =
     new ArchiveReaderWrapper (ArchiveReaderFactory.get(f));
+
+  /**
+    * Get from a URI. Either returns an error string or a Pair[File,
+    * ArchiveReaderWrapper] containing the contents.
+    */
+  def get (arcname : String, uri : URI, tmpdir : File) : Either[Throwable, Pair[File,ArchiveReaderWrapper]] = {
+    val tmpfile = new File(tmpdir, arcname);
+    if (uri.getScheme == "jar") {
+      /* for testing only */
+      val url = new java.net.URL(uri.toString);
+      val in = url.openStream;
+      try {
+        readStreamIntoFile(tmpfile, in);
+      } finally {
+        in.close;
+      }
+      Right(tmpfile, ArchiveReaderFactoryWrapper.get(tmpfile));
+    } else {
+      /* download to a temp file with the arc name */
+      val resp = Http(url(uri.toString) > as.Response(_.getResponseBodyAsStream));
+      resp.either.right.map(stream=>{
+        readStreamIntoFile(tmpfile, stream);
+        Pair(tmpfile, ArchiveReaderFactoryWrapper.get(tmpfile));
+      }).apply;
+    }
+  }
 
   def get (id : String, is : InputStream, atFirstRecord : Boolean) =
     new ArchiveReaderWrapper (ArchiveReaderFactory.get(id, is, atFirstRecord));
