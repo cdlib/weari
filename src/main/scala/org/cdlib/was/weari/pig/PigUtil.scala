@@ -144,16 +144,20 @@ class PigUtil (config : Config) extends Logging {
     }
   }
 
+  def mkPigServer : PigServer = {
+    val properties = PropertiesUtil.loadDefaultProperties();
+    properties.setProperty("pig.splitCombination", "false");
+    val pigContext = new PigContext(execType, properties);
+    return new PigServer(pigContext);
+  }
+
   def parseArcs(arcs : Seq[String]) {
     val arcListPath = mkArcList(arcs.toSeq);
     val storePath = mkStorePath;
 
     fs.delete(storePath, false);
     try {
-      val properties = PropertiesUtil.loadDefaultProperties();
-      properties.setProperty("pig.splitCombination", "false");
-      val pigContext = new PigContext(execType, properties);
-      val pigServer = new PigServer(pigContext);
+      val pigServer = mkPigServer;
       setupClasspath(pigServer);
       pigServer.registerQuery("""
         Data = LOAD '%s' 
