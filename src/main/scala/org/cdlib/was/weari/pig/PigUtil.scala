@@ -127,6 +127,23 @@ class PigUtil (config : Config) extends Logging {
     } 
   }
 
+  def setupClasspath (pigServer : PigServer) {
+    /* add jars in classpath to registered jars in pig */
+    val cp = System.getProperty("java.class.path").split(File.pathSeparator);
+    for (entry <- cp if entry.endsWith("jar")) {
+      pigServer.registerJar(entry);
+    }
+    /* handle * classpath entries */
+    for (starred <- cp if starred.endsWith("/*")) {
+      val dirname = starred.substring(0, starred.length - 2);
+      val dir = new File(dirname);
+      for (f <- dir.list()) {
+        val entry = new File(dir, f).toString;
+        pigServer.registerJar(entry);
+      }
+    }
+  }
+
   def parseArcs(arcs : Seq[String]) {
     val arcListPath = mkArcList(arcs.toSeq);
     val storePath = mkStorePath;
@@ -137,21 +154,7 @@ class PigUtil (config : Config) extends Logging {
       properties.setProperty("pig.splitCombination", "false");
       val pigContext = new PigContext(execType, properties);
       val pigServer = new PigServer(pigContext);
-      
-      /* add jars in classpath to registered jars in pig */
-      val cp = System.getProperty("java.class.path").split(File.pathSeparator);
-      for (entry <- cp if entry.endsWith("jar")) {
-        pigServer.registerJar(entry);
-      }
-      /* handle * classpath entries */
-      for (starred <- cp if starred.endsWith("/*")) {
-        val dirname = starred.substring(0, starred.length - 2);
-        val dir = new File(dirname);
-        for (f <- dir.list()) {
-          val entry = new File(dir, f).toString;
-          pigServer.registerJar(entry);
-        }
-      }
+      setupClasspath(pigServer);
       pigServer.registerQuery("""
         Data = LOAD '%s' 
         USING org.cdlib.was.weari.pig.ArchiveURLParserLoader()
