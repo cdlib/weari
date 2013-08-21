@@ -12,7 +12,7 @@ fi
 
 CLASSPATH="$BASEDIR:$BASEDIR/../hadoop/conf:$BASEDIR/lib/*"
 
-COMMAND="/cdlcommon/products/java6/bin/java -Xmx3500m -cp $CLASSPATH org.cdlib.was.weari.server.Server"
+COMMAND="java -Xmx3500m -cp $CLASSPATH org.cdlib.was.weari.server.Server"
 LOG_FILE=$BASEDIR/weari.log
 PID_FILE=$BASEDIR/weari.pid
 
