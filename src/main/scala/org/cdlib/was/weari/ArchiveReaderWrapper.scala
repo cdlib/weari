@@ -93,7 +93,7 @@ object ArchiveReaderFactoryWrapper {
       Right(tmpfile, ArchiveReaderFactoryWrapper.get(tmpfile));
     } else {
       /* download to a temp file with the arc name */
-      val resp = Http(url(uri.toString) > as.Response(_.getResponseBodyAsStream));
+      val resp = Http(url(uri.toString) OK (_.getResponseBodyAsStream));
       resp.either.right.map(stream=>{
         readStreamIntoFile(tmpfile, stream);
         Pair(tmpfile, ArchiveReaderFactoryWrapper.get(tmpfile));
