@@ -75,6 +75,19 @@ class PigUtil (config : Config) extends Logging {
     return ParsedArchiveRecordSeq.deserializeJson(in);
   }
 
+  def writeInputStreamToTempFile (is : InputStream) : Path = {
+    val name = mkUUID;
+    val path = new Path(tmpDir, name);
+    val os = fs.create(path);
+    try {
+      Utility.flushStream(is, os);
+    } finally {
+      is.close;
+      os.close;
+    }
+    return path;
+  }
+
   def writeArcList (arcs : Seq[String], os : DataOutputStream) {
     try {
       for (arcname <- arcs) {
@@ -164,8 +177,9 @@ class PigUtil (config : Config) extends Logging {
         USING org.cdlib.was.weari.pig.ArchiveURLParserLoader()
         AS (filename:chararray, url:chararray, digest:chararray, date:chararray, length:long, content:chararray, detectedMediaType:chararray, suppliedM5A5A5A5AediaType:chararray, title:chararray, isRevisit, outlinks);""".
         format(arcListPath.toString));
+
       val job = pigServer.store("Data", storePath.toString,
-    		                "org.cdlib.was.weari.pig.JsonParsedArchiveRecordStorer");
+        "org.cdlib.was.weari.pig.JsonParsedArchiveRecordStorer");
       
       while (!job.hasCompleted) {
         Thread.sleep(100);
