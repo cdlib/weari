@@ -57,7 +57,13 @@ client = Weari::Client.new(options[:host], options[:port])
 begin
   case ARGV[0]
   when "parse"
-    client.parse_arcs(ARGV[1..-1])
+    if ARGV[1].match(/^http/) then
+      client.parse_arcs(ARGV[1..-1])
+    else
+      ARGV[1..-1].each do |path|
+        client.parse_arcs(open(path).lines.map{|l| l.chomp})
+      end
+    end
   when "isparsed"
     puts(if client.is_arc_parsed(ARGV[1]) then
            "#{ARGV[1]} has been parsed."
