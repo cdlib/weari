@@ -73,7 +73,12 @@ begin
   when "deleteparse"
     client.delete_parse(ARGV[1])
   when "index"
-    client.index(options[:solrserver], options[:query], ARGV[1..-1], options[:extraid], options[:extrafields])
+    arcs = if File.exists?(ARGV[1]) then
+             ARGV[1..-1].map { |path| open(path).lines.map{|l| l.chomp} }.flatten
+           else
+             ARGV[1..-1]
+           end
+    client.index(options[:solrserver], options[:query], arcs, options[:extraid], options[:extrafields])
   when "set-fields"
     fields = {}
     ARGV[2..-1].each do |raw|
