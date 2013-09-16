@@ -78,4 +78,6 @@ class Config (confRoot : TSConfig) {
   val useRealTimeGet = conf.getBoolean("useRealTimeGet");
 
   val useAtomicUpdates = conf.getBoolean("useAtomicUpdates");
+
+  val batchArcParseSize = conf.getInt("batchArcParseSize");
 }

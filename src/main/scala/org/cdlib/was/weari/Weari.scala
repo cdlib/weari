@@ -324,7 +324,9 @@ class Weari(config: Config)
    * Parse ARC files.
    */
   def parseArcs (arcs : Seq[String]) {
-    pigUtil.parseArcs(arcs);
+    for (arcGroup <- arcs.grouped(config.batchArcParseSize)) {
+      pigUtil.parseArcs(arcGroup);
+    }
   }
 
   def deleteParse (arc : String) {

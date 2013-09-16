@@ -38,3 +38,5 @@
 
 # use atomic updates
 #weari.useAtomicUpdates=true
+
+#weari.batchArcParseSize=500
