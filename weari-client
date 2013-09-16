@@ -78,7 +78,11 @@ begin
            else
              ARGV[1..-1]
            end
-    client.index(options[:solrserver], options[:query], arcs, options[:extraid], options[:extrafields])
+    begin
+      client.index(options[:solrserver], options[:query], arcs, options[:extraid], options[:extrafields])
+    rescue Weari::Thrift::UnparsedException=>ex
+      puts "#{ex.arcname} is unparsed."
+    end
   when "set-fields"
     fields = {}
     ARGV[2..-1].each do |raw|
