@@ -60,6 +60,20 @@ class WarcTest extends FeatureSpec {
       }
     }
 
+    scenario ("WARC revist records should work") {
+      val warcData = new HashMap[String, String];
+
+      for (rec <- ArchiveReaderFactoryWrapper.get("dedup-test-3.warc.gz" , cl.getResourceAsStream("dedup-test-3.warc.gz"))) {
+        if (rec.isHttpResponse) {
+          parser.safeParse(rec).map { res =>
+            warcData += (rec.getUrl -> res.toJsonString);
+            println (res.toJsonString);
+          }
+        }
+      }
+      assert (warcData.size === 2);
+    }
+
     // scenario ("can serialize an arc to JSON") {
     //   val tmpfile = File.createTempFile("ng-indexer", ".json.gz");
     //   indexer.arc2json(cl.getResourceAsStream(arcName), arcName, tmpfile);
