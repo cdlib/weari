@@ -7,3 +7,5 @@ syntax: re
 ^project/project/target/
 ^.ensime_lucene/
 ^was-solr/target/
+^ruby/.*gem$
+^\.ensime$
