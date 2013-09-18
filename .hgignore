@@ -6,3 +6,4 @@ syntax: re
 ^project/target/
 ^project/project/target/
 ^.ensime_lucene/
+^was-solr/target/
