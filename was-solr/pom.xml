@@ -8,6 +8,17 @@
   <name>was-solr Maven Webapp</name>
   <url>http://maven.apache.org</url>
 
+<distributionManagement>
+  <repository>
+    <id>cdl-releases</id>
+    <url>http://mvn.cdlib.org/content/repositories/cdl-releases/</url>
+  </repository>
+  <snapshotRepository>
+    <id>cdl-snapshots</id>
+    <url>http://mvn.cdlib.org/content/repositories/cdl-snapshots/</url>
+  </snapshotRepository>
+</distributionManagement>
+
   <dependencies>
     <dependency>
       <groupId>org.apache.solr</groupId>
