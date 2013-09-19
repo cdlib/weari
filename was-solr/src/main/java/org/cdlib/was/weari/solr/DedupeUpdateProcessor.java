@@ -42,7 +42,7 @@ class DedupeUpdateProcessor extends UpdateRequestProcessor {
 
     private static final Map REQ_ARGS = new HashMap(){{
         put("rows", new String[]{ "1" });
-        put("fl", new String[]{ DATE_FIELD, JOB_FIELD, ARCNAME_FIELD });
+        put("fl", new String[]{ CONTENT_FIELD, DATE_FIELD, JOB_FIELD, ARCNAME_FIELD });
     }};
 
     public DedupeUpdateProcessor(UpdateRequestProcessor next) {
@@ -67,7 +67,7 @@ class DedupeUpdateProcessor extends UpdateRequestProcessor {
         qRsp.setResponse(BinaryResponseWriter.getParsedResponse(newReq, rsp));
         if (qRsp.getResults().size() > 0) {
             SolrDocument existingDoc = qRsp.getResults().get(0);
-                
+            String existingContent = (String) existingDoc.getFieldValue(CONTENT_FIELD);
             Collection existingArcnames = existingDoc.getFieldValues(ARCNAME_FIELD);
 
             if (existingArcnames.contains((String)updateDoc.getFieldValue(ARCNAME_FIELD))) {
@@ -95,11 +95,13 @@ class DedupeUpdateProcessor extends UpdateRequestProcessor {
                     updateDoc.setField(f, new HashMap(){{ put("add", val); }});
                 }
 
-                /* in case we had empty content */
-                String oldContent = (String) existingDoc.getFieldValue(CONTENT_FIELD);
-                if (oldContent == null || oldContent == "") {
+                /* in case we had empty content before */
+                if (existingContent == null || existingContent == "") {
                     final String updateDocContent = (String) updateDoc.getFieldValue(CONTENT_FIELD);
                     updateDoc.setField(CONTENT_FIELD, new HashMap(){{ put("set", updateDocContent); }});
+                } else {
+                    /* otherwise just keep the old content */
+                    updateDoc.removeField(CONTENT_FIELD);
                 }
             }
         }
