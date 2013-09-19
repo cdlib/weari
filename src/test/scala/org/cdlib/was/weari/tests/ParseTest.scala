@@ -20,6 +20,8 @@ class ParseTest extends FeatureSpec {
   val arcpath = cl.getResource(arcname).toString;
   val warcname = "IAH-20080430204825-00000-blackbook.warc.gz";
   val warcpath = cl.getResource(warcname).toString;
+  val warcrevisitname = "dedup-test-3.warc.gz";
+  val warcrevisitpath = cl.getResource(warcrevisitname).toString;
   val emptyarcname = "CDL-20121105000015-00000-oriole.ucop.edu-00343531.arc.gz";
   val emptyarcpath = cl.getResource(emptyarcname).toString;
 
@@ -50,6 +52,14 @@ class ParseTest extends FeatureSpec {
       assert (w.isArcParsed(emptyarcname));
       val recs = w.pigUtil.readJson(w.pigUtil.getPath(emptyarcname));
       assert (recs.size === 0);
+    }
+
+    scenario ("parses WARC records with revisit") {
+      w.deleteParse(warcrevisitname);
+      w.parseArcs(List(warcrevisitpath));
+      assert (w.isArcParsed(warcrevisitname));
+      val recs = w.pigUtil.readJson(w.pigUtil.getPath(warcrevisitname));
+      assert (recs.size === 2);
     }
     
     scenario ("cleans up after itself") {
