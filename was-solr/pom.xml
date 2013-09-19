@@ -2,7 +2,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.cdlib.was.weari</groupId>
-  <artifactId>was-solr</artifactId>
+  <artifactId>solr</artifactId>
   <packaging>war</packaging>
   <version>4.4.0</version>
   <name>was-solr Maven Webapp</name>
@@ -23,7 +23,7 @@
   </dependencies>
 
   <build>
-    <finalName>was-solr</finalName>
+    <finalName>solr</finalName>
     <plugins>  
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
