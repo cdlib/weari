@@ -67,7 +67,6 @@ class WarcTest extends FeatureSpec {
         if (rec.isHttpResponse) {
           parser.safeParse(rec).map { res =>
             warcData += (rec.getUrl -> res.toJsonString);
-            println (res.toJsonString);
           }
         }
       }
