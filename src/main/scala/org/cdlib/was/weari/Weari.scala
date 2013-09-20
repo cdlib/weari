@@ -52,7 +52,7 @@ import org.cdlib.was.weari.Utility.{extractArcname, null2option};
 import org.apache.hadoop.fs.Path;
 
 import scala.collection.mutable;
-import scala.collection.JavaConversions.seqAsJavaList;
+import scala.collection.JavaConversions.{ seqAsJavaList, mapAsJavaMap };
 import scala.concurrent.Lock;
 import scala.util.control.Breaks._;
 
@@ -269,11 +269,15 @@ class Weari(config: Config)
                 fields : Map[String, Seq[String]]) {
     withLockedSolrServer(solr) { writeServer =>
       commitOrRollback(writeServer) {
-        for (doc <- getInputDocs(solr, queryString)) {
+        val newq = new SolrQuery(queryString).setParam("fl", SolrFields.ID_FIELD).setRows(config.numDocIdsPerRequest);
+        val docs = new SolrDocumentCollection(writeServer, newq);
+        for (doc <- docs) {
+          val updateDoc = new SolrInputDocument();
+          updateDoc.setField(SolrFields.ID_FIELD, SolrFields.getId(doc));
           for ((name, value) <- fields) {
-            doc.put(name, mkInputField(name, value))
+            updateDoc.setField(name, mapAsJavaMap(Map("set"->seqAsJavaList(value))));
           }
-          writeServer.add(doc);
+          writeServer.add(updateDoc);
         }
       }
     }
