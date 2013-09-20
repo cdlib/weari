@@ -176,11 +176,8 @@ class Weari(config: Config)
     index (arcs, extraId, Map[String, Seq[String]]());
   }
 
-  def getDocs (server : SolrServer, query : String) : Iterable[SolrDocument] = 
-    new SolrDocumentCollection(server, new SolrQuery(query).setRows(config.numDocsPerRequest));
-
-  def getDocs (url : String, query : String) : Iterable[SolrDocument] = 
-    getDocs(new HttpSolrServer(url), query);
+  def getDocs (query : String) : Iterable[SolrDocument] = 
+    new SolrDocumentCollection(new HttpSolrServer(config.solrServer), new SolrQuery(query).setRows(config.numDocsPerRequest));
   
   /**
    * Set fields unconditionally on a group of documents retrieved by a query string.
@@ -215,7 +212,7 @@ class Weari(config: Config)
           // will either a) delete it, if it is the last arc file to
           // contain that doc, or b) remove the column of merged
           // values corresponding to that arc from the document
-          for (doc <- getDocs(config.solrServer, "arcname:%s".format(arcname))) {
+          for (doc <- getDocs("arcname:%s".format(arcname))) {
             removeMerge(SolrFields.ARCNAME_FIELD, arcname, doc) match {
               case None => 
                 deletes += SolrFields.getId(doc);
