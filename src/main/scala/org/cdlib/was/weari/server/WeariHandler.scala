@@ -85,7 +85,7 @@ class WeariHandler(config: Config)
             extraId : String,
             extraFields : JMap[String, JList[String]]) {
     throwThriftException {
-      weari.index(solr, filterQuery, iterableAsScalaIterable(arcs).toSeq, extraId, convertMap(extraFields));
+      weari.index(solr, iterableAsScalaIterable(arcs).toSeq, extraId, convertMap(extraFields));
     }
   }
 

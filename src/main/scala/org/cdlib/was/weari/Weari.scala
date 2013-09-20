@@ -159,56 +159,29 @@ class Weari(config: Config)
   }
 
   def tryCommit (s : SolrServer) { tryCommit(s, 0); }
-      
+
   /**
    * Index a set of ARCs on a solr server.
    *
    * @param solr The URI of the solr server to index on.
-   * @param filterQuery A solr query string to return candidates for
-   *   documents to be possibly merged with.
    * @param arcs A list of ARC names to index
    * @param extraId String to append to solr document IDs.
    * @param extraFields Map of extra fields to append to solr documents.
    */
-  def index(solr : String,
-            filterQuery : String,
-            arcs : Seq[String],
-            extraId : String,
-            extraFields : Map[String, Seq[String]]) {
-    val arcPaths = arcs.map(pigUtil.getPath(_));
+  def index (solr : String, arcs : Seq[String], extraId : String,
+    extraFields : Map[String, Seq[String]]) {
     withLock (extraId) {
       withSolrServer(solr) { (server) => {
-        val manager = getMergeManager(solr, extraId, filterQuery);
+        val arcPaths = arcs.map(pigUtil.getPath(_));
         for ((arcname, path) <- arcs.zip(arcPaths)) {
           val records : Seq[ParsedArchiveRecord] = pigUtil.readJson(path);
-          manager.loadDocs(new SolrQuery("arcname:\"%s\"".format(arcname)));
-          val docs = for (rec <- records)
-                     yield record2inputDocument(rec, extraFields, extraId);
-          /* group documents for batch merge */
-          /* this will ensure that we don't build up a lot of merges before hitting the */
-          /* trackCommitThreshold */
-          for (group <- docs.grouped(config.batchMergeGroupSize)) {
-            for (merged <- manager.batchMerge(group)) {
-              server.add(merged); 
-            }
-          }
-          if (manager.trackedCount > config.trackCommitThreshold) {
-            logger.info("Merge manager threshold reached: committing.");
-            tryCommit(server);
-            manager.reset;
+          for (rec <- records) {
+            server.add(record2inputDocument(rec, extraFields, extraId));
           }
         }
         tryCommit(server);
-        manager.reset;
       }}
     }
-  }
-
-  def index(solr : String,
-            filterQuery : String,
-            arcs : Seq[String],
-            extraId : String) {
-    index(solr, filterQuery, arcs, extraId, Map[String, Seq[String]]());
   }
 
   def move(query : String,
