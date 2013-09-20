@@ -183,45 +183,6 @@ class Weari(config: Config)
       }}
     }
   }
-
-  def move(query : String,
-           fromUrl : String,
-           toUrl : String) {
-    withLockedSolrServer(fromUrl) { from =>
-      withLockedSolrServer(toUrl) { to =>
-        commitOrRollback(from) {
-          commitOrRollback(to) {
-            breakable {
-              var docs : SolrDocumentCollection = null;
-
-              /* we have to group the docs here (see take(...) below) 
-               * because we delete docs while we are iterating over 
-               * them */
-
-              while (true) {
-                docs = new SolrDocumentCollection(from, new SolrQuery(query).setRows(config.numDocsPerRequest));
-
-                if (docs.isEmpty) { break; }
-
-                var deleteBuffer = mutable.Buffer[String]();
-                
-                for (doc <- docs.take(config.commitThreshold)) {
-                  to.add(toSolrInputDocument(doc));
-                  deleteBuffer += SolrFields.getId(doc);
-                }
-                
-                logger.info("Move threshold reached: committing.");
-                if (!deleteBuffer.isEmpty) { from.deleteById(deleteBuffer); }
-                to.commit;
-                from.commit;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
   def getDocs (server : SolrServer, query : String) : Iterable[SolrDocument] = 
     new SolrDocumentCollection(server, new SolrQuery(query).setRows(config.numDocsPerRequest));
 

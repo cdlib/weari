@@ -41,10 +41,6 @@ service Server {
   
   void deleteParse(1: string arc);
 
-  void move(1: string query,
-            2: string from,
-            3: string to);
-
   void setFields(1: string solr,
                  2: string query,
                  3: map<string,list<string>> fieldList);
