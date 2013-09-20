@@ -80,4 +80,6 @@ class Config (confRoot : TSConfig) {
   val useAtomicUpdates = conf.getBoolean("useAtomicUpdates");
 
   val batchArcParseSize = conf.getInt("batchArcParseSize");
+
+  val solrServer = conf.getString("solrServer");
 }

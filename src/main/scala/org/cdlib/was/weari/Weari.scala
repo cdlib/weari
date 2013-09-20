@@ -63,13 +63,14 @@ class Weari(config: Config)
 
   var mergeManagerCache = new mutable.HashMap[String,MergeManager];
 
-  var locks : mutable.Map[String,Lock] = new mutable.HashMap[String,Lock]
-    with mutable.SynchronizedMap[String,Lock];
+  var lock = new Lock;
 
   var clients : mutable.Map[String,HttpClient] = new mutable.HashMap[String,HttpClient]
     with mutable.SynchronizedMap[String,HttpClient];
 
   val pigUtil = new PigUtil(config);
+
+  def isLocked = !lock.available;
 
   /**
    * Perform f, and either commit at the end if there were no exceptions,
@@ -105,7 +106,8 @@ class Weari(config: Config)
     return HttpClientUtil.createClient(params);
   }
 
-  def withSolrServer[T] (solrUrl : String) (f: (SolrServer)=>T) : T = {
+  def withSolrServer[T] (f: (SolrServer)=>T) : T = {
+    val solrUrl = config.solrServer;
     val client = clients.getOrElseUpdate(solrUrl, mkHttpClient(solrUrl));
     val server = new ConcurrentUpdateSolrServer(solrUrl,
                                                 client,
@@ -115,33 +117,28 @@ class Weari(config: Config)
     server.blockUntilFinished;
     return retval;
   }
-    
+
   /**
    * Synchronize around a unique string.
    */
-  def withLock[T] (lockId : String) (f : => T) : T = {
-    val lock = locks.getOrElseUpdate(lockId, new Lock);
+  def withLock[T] (f : => T) : T = {
     try {
-      logger.info("Trying to acquire lock on %s".format(lockId));
+      logger.info("Trying to acquire lock");
       lock.acquire;
-      logger.info("Acquired lock on %s".format(lockId));
+      logger.info("Acquired lock.");
       val retval = f;
       return retval;
     } finally {
       lock.release;
+      logger.info("Released lock.");
     }
   }
 
-  def isLocked (lockId : String) : Boolean = 
-    !locks.getOrElseUpdate(lockId, new Lock).available;
-
   /**
    * Synchronize around a solr server url, and call a function with the solr server.
-   */
-  def withLockedSolrServer[T] (solrUrl : String) (f: (SolrServer)=>T) : T = {
-    withLock(solrUrl) {
-      withSolrServer[T](solrUrl)(f);
-    }
+   */ 
+  def withLockedSolrServer[T] (f: (SolrServer)=>T) : T = {
+    withLock { withSolrServer[T](f); }
   }
 
   def tryCommit (s : SolrServer, times : Int) {
@@ -163,26 +160,28 @@ class Weari(config: Config)
   /**
    * Index a set of ARCs on a solr server.
    *
-   * @param solr The URI of the solr server to index on.
    * @param arcs A list of ARC names to index
    * @param extraId String to append to solr document IDs.
    * @param extraFields Map of extra fields to append to solr documents.
    */
-  def index (solr : String, arcs : Seq[String], extraId : String,
+  def index (arcs : Seq[String], extraId : String,
     extraFields : Map[String, Seq[String]]) {
-    withLock (extraId) {
-      withSolrServer(solr) { (server) => {
-        val arcPaths = arcs.map(pigUtil.getPath(_));
-        for ((arcname, path) <- arcs.zip(arcPaths)) {
-          val records : Seq[ParsedArchiveRecord] = pigUtil.readJson(path);
-          for (rec <- records) {
-            server.add(record2inputDocument(rec, extraFields, extraId));
-          }
+    withLockedSolrServer { (server) => {
+      val arcPaths = arcs.map(pigUtil.getPath(_));
+      for ((arcname, path) <- arcs.zip(arcPaths)) {
+        val records : Seq[ParsedArchiveRecord] = pigUtil.readJson(path);
+        for (rec <- records) {
+          server.add(record2inputDocument(rec, extraFields, extraId));
         }
-        tryCommit(server);
-      }}
-    }
+      }
+      tryCommit(server);
+    }}
   }
+
+  def index (arcs : Seq[String], extraId : String) {
+    index (arcs, extraId, Map[String, Seq[String]]());
+  }
+
   def getDocs (server : SolrServer, query : String) : Iterable[SolrDocument] = 
     new SolrDocumentCollection(server, new SolrQuery(query).setRows(config.numDocsPerRequest));
 
@@ -198,10 +197,9 @@ class Weari(config: Config)
   /**
    * Set fields unconditionally on a group of documents retrieved by a query string.
    */
-  def setFields(solr : String,
-                queryString : String,
+  def setFields(queryString : String,
                 fields : Map[String, Seq[String]]) {
-    withLockedSolrServer(solr) { writeServer =>
+    withLockedSolrServer { writeServer =>
       commitOrRollback(writeServer) {
         val newq = new SolrQuery(queryString).setParam("fl", SolrFields.ID_FIELD).setRows(config.numDocIdsPerRequest);
         val docs = new SolrDocumentCollection(writeServer, newq);
@@ -220,9 +218,8 @@ class Weari(config: Config)
   /**
    * Remove index entries for these ARC files from the solr server.
    */
-  def remove(solr : String,
-             arcs : Seq[String]) {
-    withLockedSolrServer(solr) { writeServer =>
+  def remove(arcs : Seq[String]) {
+    withLockedSolrServer { writeServer =>
       commitOrRollback(writeServer) {
         for (arcname <- arcs) {
           var deletes = mutable.ArrayBuffer[String]()
@@ -230,7 +227,7 @@ class Weari(config: Config)
           // will either a) delete it, if it is the last arc file to
           // contain that doc, or b) remove the column of merged
           // values corresponding to that arc from the document
-          for (doc <- getDocs(solr, "arcname:%s".format(arcname))) {
+          for (doc <- getDocs(config.solrServer, "arcname:%s".format(arcname))) {
             removeMerge(SolrFields.ARCNAME_FIELD, arcname, doc) match {
               case None => 
                 deletes += SolrFields.getId(doc);

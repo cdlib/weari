@@ -72,41 +72,34 @@ class WeariHandler(config: Config)
   /**
    * Index a set of ARCs on a solr server.
    *
-   * @param solr The URI of the solr server to index on.
-   * @param filterQuery A solr query string to return candidates for
-   *   documents to be possibly merged with.
    * @param arcs A list of ARC names to index
    * @param extraId String to append to solr document IDs.
    * @param extraFields Map of extra fields to append to solr documents.
    */
-  def index(solr : String,
-            filterQuery : String,
-            arcs : JList[String],
+  def index(arcs : JList[String],
             extraId : String,
             extraFields : JMap[String, JList[String]]) {
     throwThriftException {
-      weari.index(solr, iterableAsScalaIterable(arcs).toSeq, extraId, convertMap(extraFields));
+      weari.index(iterableAsScalaIterable(arcs).toSeq, extraId, convertMap(extraFields));
     }
   }
 
   /**
    * Set fields unconditionally on a group of documents retrieved by a query string.
    */
-  def setFields(solr : String,
-                queryString : String,
+  def setFields(queryString : String,
                 fields : JMap[String, JList[String]]) {
     throwThriftException {
-      weari.setFields(solr, queryString, convertMap(fields));
+      weari.setFields(queryString, convertMap(fields));
     }
   }
                
   /**
    * Remove index entries for these ARC files from the solr server.
    */
-  def remove(solr : String,
-             arcs : JList[String]) {
+  def remove(arcs : JList[String]) {
     throwThriftException {
-      weari.remove(solr, iterableAsScalaIterable(arcs).toSeq);
+      weari.remove(iterableAsScalaIterable(arcs).toSeq);
     }
   }
 

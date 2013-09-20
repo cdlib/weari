@@ -13,13 +13,13 @@ module Weari
       class Client
         include ::Thrift::Client
 
-        def index(solr, filter, arcs, extraId, extraFields)
-          send_index(solr, filter, arcs, extraId, extraFields)
+        def index(arcs, extraId, extraFields)
+          send_index(arcs, extraId, extraFields)
           recv_index()
         end
 
-        def send_index(solr, filter, arcs, extraId, extraFields)
-          send_message('index', Index_args, :solr => solr, :filter => filter, :arcs => arcs, :extraId => extraId, :extraFields => extraFields)
+        def send_index(arcs, extraId, extraFields)
+          send_message('index', Index_args, :arcs => arcs, :extraId => extraId, :extraFields => extraFields)
         end
 
         def recv_index()
@@ -44,13 +44,13 @@ module Weari
           return
         end
 
-        def remove(solr, arcs)
-          send_remove(solr, arcs)
+        def remove(arcs)
+          send_remove(arcs)
           recv_remove()
         end
 
-        def send_remove(solr, arcs)
-          send_message('remove', Remove_args, :solr => solr, :arcs => arcs)
+        def send_remove(arcs)
+          send_message('remove', Remove_args, :arcs => arcs)
         end
 
         def recv_remove()
@@ -103,13 +103,13 @@ module Weari
           return
         end
 
-        def setFields(solr, query, fieldList)
-          send_setFields(solr, query, fieldList)
+        def setFields(query, fieldList)
+          send_setFields(query, fieldList)
           recv_setFields()
         end
 
-        def send_setFields(solr, query, fieldList)
-          send_message('setFields', SetFields_args, :solr => solr, :query => query, :fieldList => fieldList)
+        def send_setFields(query, fieldList)
+          send_message('setFields', SetFields_args, :query => query, :fieldList => fieldList)
         end
 
         def recv_setFields()
@@ -126,7 +126,7 @@ module Weari
           args = read_args(iprot, Index_args)
           result = Index_result.new()
           begin
-            @handler.index(args.solr, args.filter, args.arcs, args.extraId, args.extraFields)
+            @handler.index(args.arcs, args.extraId, args.extraFields)
           rescue ::Weari::Thrift::IndexException => ex1
             result.ex1 = ex1
           rescue ::Weari::Thrift::UnparsedException => ex2
@@ -148,7 +148,7 @@ module Weari
           args = read_args(iprot, Remove_args)
           result = Remove_result.new()
           begin
-            @handler.remove(args.solr, args.arcs)
+            @handler.remove(args.arcs)
           rescue ::Weari::Thrift::IndexException => ex1
             result.ex1 = ex1
           end
@@ -183,7 +183,7 @@ module Weari
         def process_setFields(seqid, iprot, oprot)
           args = read_args(iprot, SetFields_args)
           result = SetFields_result.new()
-          @handler.setFields(args.solr, args.query, args.fieldList)
+          @handler.setFields(args.query, args.fieldList)
           write_result(result, oprot, 'setFields', seqid)
         end
 
@@ -193,15 +193,11 @@ module Weari
 
       class Index_args
         include ::Thrift::Struct, ::Thrift::Struct_Union
-        SOLR = 1
-        FILTER = 2
-        ARCS = 3
-        EXTRAID = 4
-        EXTRAFIELDS = 5
+        ARCS = 1
+        EXTRAID = 2
+        EXTRAFIELDS = 3
 
         FIELDS = {
-          SOLR => {:type => ::Thrift::Types::STRING, :name => 'solr'},
-          FILTER => {:type => ::Thrift::Types::STRING, :name => 'filter'},
           ARCS => {:type => ::Thrift::Types::LIST, :name => 'arcs', :element => {:type => ::Thrift::Types::STRING}},
           EXTRAID => {:type => ::Thrift::Types::STRING, :name => 'extraId'},
           EXTRAFIELDS => {:type => ::Thrift::Types::MAP, :name => 'extraFields', :key => {:type => ::Thrift::Types::STRING}, :value => {:type => ::Thrift::Types::LIST, :element => {:type => ::Thrift::Types::STRING}}}
@@ -268,11 +264,9 @@ module Weari
 
       class Remove_args
         include ::Thrift::Struct, ::Thrift::Struct_Union
-        SOLR = 1
-        ARCS = 2
+        ARCS = 1
 
         FIELDS = {
-          SOLR => {:type => ::Thrift::Types::STRING, :name => 'solr'},
           ARCS => {:type => ::Thrift::Types::LIST, :name => 'arcs', :element => {:type => ::Thrift::Types::STRING}}
         }
 
@@ -397,12 +391,10 @@ module Weari
 
       class SetFields_args
         include ::Thrift::Struct, ::Thrift::Struct_Union
-        SOLR = 1
-        QUERY = 2
-        FIELDLIST = 3
+        QUERY = 1
+        FIELDLIST = 2
 
         FIELDS = {
-          SOLR => {:type => ::Thrift::Types::STRING, :name => 'solr'},
           QUERY => {:type => ::Thrift::Types::STRING, :name => 'query'},
           FIELDLIST => {:type => ::Thrift::Types::MAP, :name => 'fieldList', :key => {:type => ::Thrift::Types::STRING}, :value => {:type => ::Thrift::Types::LIST, :element => {:type => ::Thrift::Types::STRING}}}
         }

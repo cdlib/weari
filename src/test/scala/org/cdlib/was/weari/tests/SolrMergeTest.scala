@@ -51,22 +51,22 @@ class SolrMergeTest extends FunSpec with BeforeAndAfter {
     if (!w.isArcParsed(mergearc3)) {
       w.parseArcs(List(mergearcpath3));
     }
-    w.remove(solrurl, List(mergearc1, mergearc2, mergearc3));
+    w.remove(List(mergearc1, mergearc2, mergearc3));
   }
   
   after {
-    w.remove(solrurl, List(mergearc1, mergearc2, mergearc3));
+    w.remove(List(mergearc1, mergearc2, mergearc3));
   }
 
   describe("merging") {
     ignore("should work") {
       assertSearchSize("*:*", 0);
-      w.index(solrurl, "*:*", List(mergearc1), "XXX");
+      w.index(List(mergearc1), "XXX");
       testResults("*:*", 3,
         Map("http://gales.cdlib.org/robots.txt.MNSXZO35OCDMK2YM2TS4NGM3W2BWMSDI.XXX" -> 1,
             "http://gales.cdlib.org/.GNQD4SRUO7VSBGHTDQUO4AIWDG2PJ74M.XXX"-> 1,          
             "http://gales.cdlib.org/b-traven3.jpeg.ZKCMBC3DSMM3RYW4KFRJCQJZFR6G3C4J.XXX" -> 1))
-      w.index(solrurl, "*:*", List(mergearc2), "XXX");
+      w.index(List(mergearc2), "XXX");
       /* one changed file, one file the same as before, one file (robots) missing */
       testResults("*:*", 4,
         Map("http://gales.cdlib.org/robots.txt.MNSXZO35OCDMK2YM2TS4NGM3W2BWMSDI.XXX" -> 1,
@@ -77,7 +77,7 @@ class SolrMergeTest extends FunSpec with BeforeAndAfter {
     
     ignore("should work with de-duplicated arcs") {
       assertSearchSize("*:*", 0);
-      w.index(solrurl, "*:*", List(mergearc1, mergearc2, mergearc3), "XXX");
+      w.index(List(mergearc1, mergearc2, mergearc3), "XXX");
       testResults("*:*", 4,
         Map("http://gales.cdlib.org/robots.txt.MNSXZO35OCDMK2YM2TS4NGM3W2BWMSDI.XXX" -> 1,
             "http://gales.cdlib.org/.GNQD4SRUO7VSBGHTDQUO4AIWDG2PJ74M.XXX"-> 1,          
@@ -86,19 +86,19 @@ class SolrMergeTest extends FunSpec with BeforeAndAfter {
     }
 
     ignore("should unmerge successfully") {
-      w.index(solrurl, "*:*", List(mergearc1, mergearc2, mergearc3), "XXX");
-      w.remove(solrurl, List(mergearc3));
+      w.index(List(mergearc1, mergearc2, mergearc3), "XXX");
+      w.remove(List(mergearc3));
       testResults("*:*", 4,
         Map("http://gales.cdlib.org/robots.txt.MNSXZO35OCDMK2YM2TS4NGM3W2BWMSDI.XXX" -> 1,
             "http://gales.cdlib.org/.GNQD4SRUO7VSBGHTDQUO4AIWDG2PJ74M.XXX"-> 1,          
             "http://gales.cdlib.org/.R4OI4U63VX5OM5NYDZPUECTERBGWOCLD.XXX" -> 1,
             "http://gales.cdlib.org/b-traven3.jpeg.ZKCMBC3DSMM3RYW4KFRJCQJZFR6G3C4J.XXX" -> 2))
-      w.remove(solrurl, List(mergearc2));
+      w.remove(List(mergearc2));
       testResults("*:*", 3,
         Map("http://gales.cdlib.org/robots.txt.MNSXZO35OCDMK2YM2TS4NGM3W2BWMSDI.XXX" -> 1,
             "http://gales.cdlib.org/.GNQD4SRUO7VSBGHTDQUO4AIWDG2PJ74M.XXX"-> 1,          
             "http://gales.cdlib.org/b-traven3.jpeg.ZKCMBC3DSMM3RYW4KFRJCQJZFR6G3C4J.XXX" -> 1))
-      w.remove(solrurl, List(mergearc1));
+      w.remove(List(mergearc1));
       assertSearchSize("*:*", 0);
     }
     
@@ -109,9 +109,9 @@ class SolrMergeTest extends FunSpec with BeforeAndAfter {
           new Thread {
             val is = i.toString;
             override def run {
-              w.index(solrurl, "job:%s".format(is), List(mergearc1), is, Map("job"->List(is)));
-              w.index(solrurl, "job:%s".format(is), List(mergearc2), is, Map("job"->List(is)));
-              w.index(solrurl, "job:%s".format(is), List(mergearc3), is, Map("job"->List(is)));
+              w.index(List(mergearc1), is, Map("job"->List(is)));
+              w.index(List(mergearc2), is, Map("job"->List(is)));
+              w.index(List(mergearc3), is, Map("job"->List(is)));
             }
           }
         }

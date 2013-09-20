@@ -21,17 +21,14 @@ exception ParseException {
 }
 
 service Server {
-  void index(1: string solr,
-             2: string filter,
-             3: list<string> arcs,
-             4: string extraId,
-             5: map<string,list<string>> extraFields)
+  void index(1: list<string> arcs,
+             2: string extraId,
+             3: map<string,list<string>> extraFields)
     throws (1: IndexException ex1, 2: UnparsedException ex2, 3: BadJSONException ex3);
 
   void clearMergeManager(1: string managerId);
 
-  void remove (1: string solr,
-               2: list<string> arcs)
+  void remove (1: list<string> arcs)
     throws (1: IndexException ex1);
 
   void parseArcs(1: list<string> arcs)
@@ -41,7 +38,6 @@ service Server {
   
   void deleteParse(1: string arc);
 
-  void setFields(1: string solr,
-                 2: string query,
-                 3: map<string,list<string>> fieldList);
+  void setFields(1: string query,
+                 2: map<string,list<string>> fieldList);
 }

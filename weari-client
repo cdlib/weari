@@ -34,9 +34,6 @@ opt_parser = OptionParser.new do |opt|
   opt.on("-h","--host HOST","hostname for the weari server") do |host|
     options[:host] = host
   end
-  opt.on("-s","--solr SOLRSERVER","URL for the solr server, default http://localhost:8890/solr/") do |solrserver|
-    options[:solrserver] = solrserver
-  end
   opt.on("-i","--extraid EXTRA","append the following to the ID") do |extraid|
     options[:extraid] = extraid
   end
@@ -78,7 +75,7 @@ begin
              ARGV[1..-1]
            end
     begin
-      client.index(options[:solrserver], options[:query], arcs, options[:extraid], options[:extrafields])
+      client.index(arcs, options[:extraid], options[:extrafields])
     rescue Weari::Thrift::UnparsedException=>ex
       puts "#{ex.arcname} is unparsed."
     end
@@ -88,9 +85,9 @@ begin
       (key, value) = parse_field(raw)
       fields[key] = value
     end
-    client.set_fields(options[:solrserver], ARGV[1], fields)
+    client.set_fields(ARGV[1], fields)
   when "remove"
-    client.remove(options[:solrserver], ARGV[1..-1])
+    client.remove(ARGV[1..-1])
   else
     puts opt_parser
   end

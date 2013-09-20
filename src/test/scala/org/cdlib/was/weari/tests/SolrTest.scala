@@ -36,12 +36,12 @@ class SolrTest extends FunSpec with ShouldMatchers {
       if (!w.isArcParsed(arcname)) {
         w.parseArcs(List(arcpath));
       }
-      w.index(solrurl, "*:*", List(arcname), "");
+      w.index(List(arcname), "");
     }
 
     ignore("reindexing should work") {
       val docsa = mkSearch("*:*").toList.sortBy(_.getFirstValue("id").asInstanceOf[String])
-      w.index(solrurl, "*:*", List(arcname), "");
+      w.index(List(arcname), "");
       val docsb = mkSearch("*:*").toList.sortBy(_.getFirstValue("id").asInstanceOf[String])
       for ((a, b) <- docsa.zip(docsb);
            field <- List("id", "date", "content", "url", "canonicalurl", "title", "mediatypedet", "mediatypesup")) {
@@ -55,14 +55,14 @@ class SolrTest extends FunSpec with ShouldMatchers {
 
     ignore("can set some tags") {
       assertSearchSize("tag:hello", 0);
-      w.setFields(solrurl, "arcname:%s".format(arcname), Map("tag"->List("hello", "world")));
+      w.setFields("arcname:%s".format(arcname), Map("tag"->List("hello", "world")));
       assertSearchSize("tag:hello", 214);
       assertSearchSize("tag:world", 214);
       assertSearchSize("tag:\"hello world\"", 0);
     }
       
     ignore("should be able to remove arcs") {
-      w.remove(solrurl, List(arcname));
+      w.remove(List(arcname));
       assertSearchSize("*:*", 0);
     }
 
@@ -70,11 +70,11 @@ class SolrTest extends FunSpec with ShouldMatchers {
       val threads = for (i <- (1 to 10))
                     yield {
                       val t = new Thread {
-                        val is = i.toString;
                         override def run {
-                          assert(w.isLocked(is) === false);
-                          w.index(solrurl, "job:%s".format(is), List(arcname), is, Map("job"->List(is)));
-                          assert(w.isLocked(is) === false);
+                          val is = i.toString;
+                          assert(w.isLocked === false);
+                          w.index(List(arcname), is, Map("job"->List(is)));
+                          assert(w.isLocked === false);
                         }
                       }
                       t.start;
@@ -86,7 +86,7 @@ class SolrTest extends FunSpec with ShouldMatchers {
         assertSearchSize("job:%s".format(i.toString), 214);
       }
       assertSearchSize("*:*", 214 * 10);
-      w.remove(solrurl, List(arcname));
+      w.remove(List(arcname));
     }
 
     ignore("threaded indexing should lock on the same extraId") {
@@ -95,18 +95,18 @@ class SolrTest extends FunSpec with ShouldMatchers {
                       val t = new Thread {
                         val is = i.toString;
                         override def run {
-                          w.index(solrurl, "job:%s".format(is), List(arcname), "XXX");
+                          w.index(List(arcname), "XXX");
                         }
                       }
                       t;
                     }
-      assert(w.isLocked("XXX") === false);
+      assert(w.isLocked === false);
       threads.map(_.start);
       /* this depends on the threads not being finished, which should be true */
-      assert(w.isLocked("XXX") === true);
+      assert(w.isLocked === true);
       threads.map(_.join);
-      assert(w.isLocked("XXX") === false);
-      w.remove(solrurl, List(arcname));
+      assert(w.isLocked === false);
+      w.remove(List(arcname));
     }
   }
 }
