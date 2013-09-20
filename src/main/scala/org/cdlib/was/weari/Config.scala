@@ -82,4 +82,6 @@ class Config (confRoot : TSConfig) {
   val batchArcParseSize = conf.getInt("batchArcParseSize");
 
   val solrServer = conf.getString("solrServer");
+
+  val zkHost = conf.getString("zkHost");
 }

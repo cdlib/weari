@@ -37,10 +37,8 @@ import com.typesafe.scalalogging.slf4j.Logging;
 
 import java.io.{ File, FileOutputStream, InputStream, OutputStream };
 
-import org.apache.http.client.HttpClient;
-
 import org.apache.solr.client.solrj.{SolrQuery, SolrServer};
-import org.apache.solr.client.solrj.impl.{ConcurrentUpdateSolrServer, HttpClientUtil, HttpSolrServer};
+import org.apache.solr.client.solrj.impl.{ConcurrentUpdateSolrServer, CloudSolrServer, HttpClientUtil, HttpSolrServer};
 import org.apache.solr.common.{SolrDocument, SolrInputDocument, SolrInputField};
 import org.apache.solr.common.params.ModifiableSolrParams;
 
@@ -65,9 +63,6 @@ class Weari(config: Config)
 
   var lock = new Lock;
 
-  var clients : mutable.Map[String,HttpClient] = new mutable.HashMap[String,HttpClient]
-    with mutable.SynchronizedMap[String,HttpClient];
-
   val pigUtil = new PigUtil(config);
 
   def isLocked = !lock.available;
@@ -91,24 +86,18 @@ class Weari(config: Config)
     }
   }
 
-  def mkHttpClient(solrUrl : String) : HttpClient = {
-    val params = new ModifiableSolrParams();
-    params.set(HttpClientUtil.PROP_MAX_CONNECTIONS, 16);
-    params.set(HttpClientUtil.PROP_MAX_CONNECTIONS_PER_HOST, 16);
-    params.set(HttpClientUtil.PROP_FOLLOW_REDIRECTS, false);
-    params.set(HttpClientUtil.PROP_SO_TIMEOUT, 0);
-    return HttpClientUtil.createClient(params);
-  }
-
   def withSolrServer[T] (f: (SolrServer)=>T) : T = {
-    val solrUrl = config.solrServer;
-    val client = clients.getOrElseUpdate(solrUrl, mkHttpClient(solrUrl));
-    val server = new ConcurrentUpdateSolrServer(solrUrl,
-                                                client,
-                                                config.queueSize,
-                                                config.threadCount);
+    val server = {
+      if (config.zkHost != "") {
+        new CloudSolrServer(config.zkHost);
+      } else {
+        new ConcurrentUpdateSolrServer(config.solrServer, config.queueSize, config.threadCount);
+      }
+    }
     val retval = f(server);
-    server.blockUntilFinished;
+    server match {
+      case s : ConcurrentUpdateSolrServer => s.blockUntilFinished;
+    }
     return retval;
   }
 
