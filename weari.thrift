@@ -26,8 +26,6 @@ service Server {
              3: map<string,list<string>> extraFields)
     throws (1: IndexException ex1, 2: UnparsedException ex2, 3: BadJSONException ex3);
 
-  void clearMergeManager(1: string managerId);
-
   void remove (1: list<string> arcs)
     throws (1: IndexException ex1);
 

@@ -91,12 +91,6 @@ class Weari(config: Config)
     }
   }
 
-  def getMergeManager (solr : String, extraId : String, filterQuery : String) =
-    /* no need to lock, this is always called within a lock. */
-    mergeManagerCache.getOrElseUpdate(extraId, 
-                                      new MergeManager(config, filterQuery, 
-                                                       new HttpSolrServer(solr)));
-
   def mkHttpClient(solrUrl : String) : HttpClient = {
     val params = new ModifiableSolrParams();
     params.set(HttpClientUtil.PROP_MAX_CONNECTIONS, 16);
@@ -243,10 +237,6 @@ class Weari(config: Config)
         }
       }
     }
-  }
-
-  def clearMergeManager(managerId : String) {
-    mergeManagerCache.remove(managerId);
   }
 
   /**

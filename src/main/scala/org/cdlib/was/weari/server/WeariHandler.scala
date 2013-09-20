@@ -103,12 +103,6 @@ class WeariHandler(config: Config)
     }
   }
 
-  def clearMergeManager(managerId : String) {
-    throwThriftException {
-      weari.clearMergeManager(managerId);
-    }
-  }
-
   /**
    * Check to see if a given ARC file has been parsed.
    */

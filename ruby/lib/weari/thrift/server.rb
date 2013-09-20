@@ -30,20 +30,6 @@ module Weari
           return
         end
 
-        def clearMergeManager(managerId)
-          send_clearMergeManager(managerId)
-          recv_clearMergeManager()
-        end
-
-        def send_clearMergeManager(managerId)
-          send_message('clearMergeManager', ClearMergeManager_args, :managerId => managerId)
-        end
-
-        def recv_clearMergeManager()
-          result = receive_message(ClearMergeManager_result)
-          return
-        end
-
         def remove(arcs)
           send_remove(arcs)
           recv_remove()
@@ -137,13 +123,6 @@ module Weari
           write_result(result, oprot, 'index', seqid)
         end
 
-        def process_clearMergeManager(seqid, iprot, oprot)
-          args = read_args(iprot, ClearMergeManager_args)
-          result = ClearMergeManager_result.new()
-          @handler.clearMergeManager(args.managerId)
-          write_result(result, oprot, 'clearMergeManager', seqid)
-        end
-
         def process_remove(seqid, iprot, oprot)
           args = read_args(iprot, Remove_args)
           result = Remove_result.new()
@@ -221,37 +200,6 @@ module Weari
           EX1 => {:type => ::Thrift::Types::STRUCT, :name => 'ex1', :class => ::Weari::Thrift::IndexException},
           EX2 => {:type => ::Thrift::Types::STRUCT, :name => 'ex2', :class => ::Weari::Thrift::UnparsedException},
           EX3 => {:type => ::Thrift::Types::STRUCT, :name => 'ex3', :class => ::Weari::Thrift::BadJSONException}
-        }
-
-        def struct_fields; FIELDS; end
-
-        def validate
-        end
-
-        ::Thrift::Struct.generate_accessors self
-      end
-
-      class ClearMergeManager_args
-        include ::Thrift::Struct, ::Thrift::Struct_Union
-        MANAGERID = 1
-
-        FIELDS = {
-          MANAGERID => {:type => ::Thrift::Types::STRING, :name => 'managerId'}
-        }
-
-        def struct_fields; FIELDS; end
-
-        def validate
-        end
-
-        ::Thrift::Struct.generate_accessors self
-      end
-
-      class ClearMergeManager_result
-        include ::Thrift::Struct, ::Thrift::Struct_Union
-
-        FIELDS = {
-
         }
 
         def struct_fields; FIELDS; end
