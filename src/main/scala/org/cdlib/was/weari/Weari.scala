@@ -182,12 +182,6 @@ class Weari(config: Config)
   def getDocs (url : String, query : String) : Iterable[SolrDocument] = 
     getDocs(new HttpSolrServer(url), query);
   
-  def getInputDocs (server : SolrServer, query : String) : Iterable[SolrInputDocument] =
-    getDocs(server, query).map(toSolrInputDocument(_));
-
-  def getInputDocs (url : String, query : String) : Iterable[SolrInputDocument] = 
-    getInputDocs(new HttpSolrServer(url), query);
-    
   /**
    * Set fields unconditionally on a group of documents retrieved by a query string.
    */
