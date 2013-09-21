@@ -158,8 +158,8 @@ class Weari(config: Config)
         for (rec <- records) {
           server.add(record2inputDocument(rec, extraFields, extraId));
         }
+        tryCommit(server);
       }
-      tryCommit(server);
     }}
   }
 
