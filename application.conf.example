@@ -40,3 +40,10 @@
 #weari.useAtomicUpdates=true
 
 #weari.batchArcParseSize=500
+
+# solr server to use
+#weari.solrServer="http://localhost:8983/solr/"
+
+# or you can specify the zkHosts for solr cloud
+#weari.solrZkHost=""
+#weari.solrCollection="collection1"

@@ -83,5 +83,7 @@ class Config (confRoot : TSConfig) {
 
   val solrServer = conf.getString("solrServer");
 
-  val zkHost = conf.getString("zkHost");
+  val solrZkHost = conf.getString("solrZkHost");
+
+  val solrCollection = conf.getString("solrCollection");
 }

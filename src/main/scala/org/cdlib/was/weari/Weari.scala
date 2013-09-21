@@ -88,8 +88,10 @@ class Weari(config: Config)
 
   def withSolrServer[T] (f: (SolrServer)=>T) : T = {
     val server = {
-      if (config.zkHost != "") {
-        new CloudSolrServer(config.zkHost);
+      if (config.solrZkHost != "") {
+        val s = new CloudSolrServer(config.solrZkHost);
+        s.setDefaultCollection(config.solrCollection);
+        s;
       } else {
         new ConcurrentUpdateSolrServer(config.solrServer, config.queueSize, config.threadCount);
       }
