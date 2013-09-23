@@ -41,4 +41,26 @@ class SolrUtilsTest extends FunSpec with BeforeAndAfter {
       assert (newdoc.getFieldValue("fielda") === "vala");
     }
   }
+  describe("removeMerge") {
+    val a = makeDoc(ID_FIELD -> "abc",
+                    ARCNAME_FIELD -> "ARC-A.arc.gz",
+                    JOB_FIELD -> List("A"),
+                    CONTENT_FIELD -> "hello world");
+    val b = makeDoc(ID_FIELD -> "abc",
+                    ARCNAME_FIELD -> "ARC-B.arc.gz",
+                    JOB_FIELD -> List("B"),
+                    CONTENT_FIELD -> "hello world");
+    val m = makeDoc(ID_FIELD -> "abc",
+                    ARCNAME_FIELD -> List("ARC-A.arc.gz", "ARC-B.arc.gz"),
+                    JOB_FIELD -> List("A", "B"),
+                    CONTENT_FIELD -> "hello world");
+    it("should work") {
+      assertDocsEqual(SolrUtils.removeMerge(ARCNAME_FIELD, "ARC-A.arc.gz", toSolrDocument(m)).get, b);
+    }
+
+    it("should return None when the last doc is removed") {
+      val tmp = SolrUtil.removeMerge(ARCNAME_FIELD, "ARC-A.arc.gz", toSolrDocument(merged)).get;
+      assert(SolrUtil.removeMerge(ARCNAME_FIELD, "ARC-B.arc.gz", toSolrDocument(tmp)) === None);
+    }
+  }
 }

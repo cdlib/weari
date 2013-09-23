@@ -43,8 +43,7 @@ import org.apache.solr.common.{SolrDocument, SolrInputDocument, SolrInputField};
 import org.apache.solr.common.params.ModifiableSolrParams;
 
 import org.cdlib.was.weari._;
-import org.cdlib.was.weari.MergeManager.removeMerge;
-import org.cdlib.was.weari.SolrUtils.{addFields, mkInputField, record2inputDocument, toSolrInputDocument};
+import org.cdlib.was.weari.SolrUtils.{addFields, mkInputField, removeMerge, record2inputDocument, toSolrInputDocument};
 import org.cdlib.was.weari.Utility.{extractArcname, null2option};
 
 import org.apache.hadoop.fs.Path;
@@ -58,8 +57,6 @@ import org.cdlib.was.weari.pig.PigUtil;
     
 class Weari(config: Config)
   extends Logging with ExceptionLogger {
-
-  var mergeManagerCache = new mutable.HashMap[String,MergeManager];
 
   var lock = new Lock;
 
