@@ -107,29 +107,4 @@ object SolrUtils {
       retval.removeField(fieldname);
     return retval;
   }
-
-  /**
-   * Removes a merge from the document. A merge is basically a column of values.
-   * Removes the column where fieldname = value.
-   */
-  def removeMerge(fieldname : String, value : String, doc : SolrDocument) : Option[SolrInputDocument] = {
-    val s = doc.getFieldValues(fieldname).toSeq;
-    if (s.size == 1) {
-      return None;
-    } else {
-      val retval = toSolrInputDocument(doc);
-      val position = s.indexOf(value);
-      for (fieldname <- MULTI_VALUED_MERGE_FIELDS) {
-        for (oldvalues <- null2option(retval.getFieldValues(fieldname))) {
-          retval.removeField(fieldname);
-          val newvalues = oldvalues.toBuffer;
-          newvalues.remove(position);
-          for (value <- newvalues) {
-            retval.addField(fieldname, value);
-          }
-        }
-      }
-      return Some(retval);
-    }
-  }
 }

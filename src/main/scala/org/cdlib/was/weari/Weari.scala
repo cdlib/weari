@@ -43,13 +43,14 @@ import org.apache.solr.common.{SolrDocument, SolrInputDocument, SolrInputField};
 import org.apache.solr.common.params.ModifiableSolrParams;
 
 import org.cdlib.was.weari._;
-import org.cdlib.was.weari.SolrUtils.{addFields, mkInputField, removeMerge, record2inputDocument, toSolrInputDocument};
+import org.cdlib.was.weari.SolrUtils.{addFields, mkInputField, record2inputDocument, toSolrInputDocument};
 import org.cdlib.was.weari.Utility.{extractArcname, null2option};
 
 import org.apache.hadoop.fs.Path;
 
 import scala.collection.mutable;
-import scala.collection.JavaConversions.{ seqAsJavaList, mapAsJavaMap };
+import scala.collection.JavaConversions.{ collectionAsScalaIterable, seqAsJavaList, mapAsJavaMap };
+
 import scala.concurrent.Lock;
 import scala.util.control.Breaks._;
 
@@ -204,17 +205,22 @@ class Weari(config: Config)
           // contain that doc, or b) remove the column of merged
           // values corresponding to that arc from the document
           for (doc <- getDocs("arcname:%s".format(arcname))) {
-            removeMerge(SolrFields.ARCNAME_FIELD, arcname, doc) match {
-              case None => 
-                deletes += SolrFields.getId(doc);
-              case Some(inputDoc) =>
-                writeServer.add(inputDoc);
+            val s = doc.getFieldValues(SolrFields.ARCNAME_FIELD).toSeq;
+            if (s.size == 1) {
+              deletes += SolrFields.getId(doc);
+            } else {
+              val inputDoc = new SolrInputDocument();
+              val position = s.indexOf(arcname);
+              for (fieldname <- SolrFields.MULTI_VALUED_MERGE_FIELDS) {
+                val newvalues = doc.getFieldValues(fieldname).toBuffer;
+                newvalues.remove(position);
+                inputDoc.setField(fieldname, mapAsJavaMap(Map("set"->seqAsJavaList(newvalues))));
+              }
+              writeServer.add(inputDoc);
             }
           }
-            if (deletes.length > 0) 
-              writeServer.deleteById(deletes);
-          // commit between arcs to ensure that if our next arc to
-          // remove has any of the same docs they will get removed too
+          if (deletes.length > 0)
+            writeServer.deleteById(deletes);
           writeServer.commit;
         }
       }
