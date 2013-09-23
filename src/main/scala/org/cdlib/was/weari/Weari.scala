@@ -164,8 +164,11 @@ class Weari(config: Config)
     index (arcs, extraId, Map[String, Seq[String]]());
   }
 
-  def getDocs (query : String) : Iterable[SolrDocument] = 
-    new SolrDocumentCollection(new HttpSolrServer(config.solrServer), new SolrQuery(query).setRows(config.numDocsPerRequest));
+  def getDocs (query : String) : Iterable[SolrDocument] = {
+    val server = new HttpSolrServer(config.solrServer);
+    val q = new SolrQuery(query).setRows(config.numDocsPerRequest);
+    return new SolrDocumentCollection(server, q);
+  }
   
   /**
    * Set fields unconditionally on a group of documents retrieved by a query string.
