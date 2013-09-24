@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.homepage    = ""
   s.summary     = %q{WEb ARchive Indexer}
 
-  s.add_dependency "rsolr", ">=1.0.6"
+  s.add_dependency "thrift", ">=0.9.1"
 
   s.rubyforge_project = "weari"
 
