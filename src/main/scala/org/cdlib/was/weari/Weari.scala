@@ -152,9 +152,16 @@ class Weari(config: Config)
     withLockedSolrServer { (server) => {
       val arcPaths = arcs.map(pigUtil.getPath(_));
       for ((arcname, path) <- arcs.zip(arcPaths)) {
+        val ids : mutable.Set[String] = new mutable.HashSet[String]();
         val records : Seq[ParsedArchiveRecord] = pigUtil.readJson(path);
         for (rec <- records) {
-          server.add(record2inputDocument(rec, extraFields, extraId));
+          val doc = record2inputDocument(rec, extraFields, extraId);
+          val id = SolrFields.getId(doc);
+          /* deduping before we add */
+          if (!ids.contains(id)) {
+            ids += id;
+            server.add(doc);
+          }
         }
         tryCommit(server);
       }
