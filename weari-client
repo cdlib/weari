@@ -51,32 +51,30 @@ opt_parser.parse!
 
 client = Weari::Client.new(options[:host], options[:port])
 
+def read_file_or_args()
+  args = if File.exists?(ARGV[1]) then
+           ARGV[1..-1].map { |path| open(path).lines.map{|l| l.chomp} }.flatten
+         else
+           ARGV[1..-1]
+         end
+  return args
+end
+
 begin
   case ARGV[0]
   when "parse"
-    if ARGV[1].match(/^http/) then
-      client.parse_arcs(ARGV[1..-1])
-    else
-      ARGV[1..-1].each do |path|
-        client.parse_arcs(open(path).lines.map{|l| l.chomp})
-      end
-    end
+    client.parse_arcs(read_file_or_args)
   when "isparsed"
-    puts(if client.is_arc_parsed(ARGV[1]) then
-           "#{ARGV[1]} has been parsed."
-         else 
-           "#{ARGV[1]} has NOT been parsed."
-         end)
+    if client.is_arc_parsed(ARGV[1]) then
+      puts "#{ARGV[1]} has been parsed."
+    else 
+      puts "#{ARGV[1]} has NOT been parsed."
+    end
   when "deleteparse"
     client.delete_parse(ARGV[1])
   when "index"
-    arcs = if File.exists?(ARGV[1]) then
-             ARGV[1..-1].map { |path| open(path).lines.map{|l| l.chomp} }.flatten
-           else
-             ARGV[1..-1]
-           end
     begin
-      client.index(arcs, options[:extraid], options[:extrafields])
+      client.index(read_file_or_args(), options[:extraid], options[:extrafields])
     rescue Weari::Thrift::UnparsedException=>ex
       puts "#{ex.arcname} is unparsed."
     end
@@ -88,7 +86,7 @@ begin
     end
     client.set_fields(ARGV[1], fields)
   when "remove"
-    client.remove(ARGV[1..-1])
+    client.remove(read_file_or_args())
   else
     puts opt_parser
   end
