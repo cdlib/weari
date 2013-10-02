@@ -37,7 +37,7 @@ import org.apache.solr.common.SolrInputDocument;
 
 import org.cdlib.was.weari.MediaTypeGroup.groupWrapper;
 import org.cdlib.was.weari.SolrFields._;
-import org.cdlib.was.weari.SolrUtils.addFields;
+import org.cdlib.was.weari.SolrUtils.addField;
 
 object ParsedArchiveRecordSolrizer {
   
@@ -68,26 +68,23 @@ object ParsedArchiveRecordSolrizer {
     val detected = rec.detectedContentType;
     val supplied = rec.suppliedContentType;
     val boost = 1.0f;
-
-    addFields(doc,
-              BOOST_FIELD                -> boost,
-              ARCNAME_FIELD              -> rec.getFilename,
-              ID_FIELD                   -> "%s.%s".format(rec.canonicalUrl,
-                                                           rec.getDigest.getOrElse("-")),
-              HOST_FIELD                 -> rec.canonicalHost,
-              CANONICALURL_FIELD         -> rec.canonicalUrl,
-              URL_FIELD                  -> rec.getUrl,
-              URLFP_FIELD                -> rec.urlFingerprint,
-              DIGEST_FIELD               -> rec.getDigest,
-              DATE_FIELD                 -> rec.getDate,
-              TITLE_FIELD                -> rec.title,
-              CONTENT_LENGTH_FIELD       -> rec.getLength,
-              CONTENT_FIELD              -> getContent(rec),
-              MEDIA_TYPE_GROUP_DET_FIELD -> detected.flatMap(_.mediaTypeGroup),
-              MEDIA_TYPE_SUP_FIELD       -> supplied.mediaType,
-              CHARSET_SUP_FIELD          -> supplied.charset,
-              MEDIA_TYPE_DET_FIELD       -> detected.map(_.mediaType),
-              CHARSET_DET_FIELD          -> detected.flatMap(_.charset));
+    addField(doc, BOOST_FIELD, boost);
+    addField(doc, ARCNAME_FIELD, rec.getFilename);
+    addField(doc, ID_FIELD, "%s.%s".format(rec.canonicalUrl, rec.getDigest.getOrElse("-")));
+    addField(doc, HOST_FIELD, rec.canonicalHost);
+    addField(doc, CANONICALURL_FIELD, rec.canonicalUrl);
+    addField(doc, URL_FIELD, rec.getUrl);
+    addField(doc, URLFP_FIELD, rec.urlFingerprint);
+    addField(doc, DIGEST_FIELD, rec.getDigest);
+    addField(doc, DATE_FIELD, rec.getDate);
+    addField(doc, TITLE_FIELD, rec.title);
+    addField(doc, CONTENT_LENGTH_FIELD, rec.getLength);
+    addField(doc, CONTENT_FIELD, getContent(rec));
+    addField(doc, MEDIA_TYPE_GROUP_DET_FIELD, detected.flatMap(_.mediaTypeGroup));
+    addField(doc, MEDIA_TYPE_SUP_FIELD, supplied.mediaType);
+    addField(doc, CHARSET_SUP_FIELD, supplied.charset);
+    addField(doc, MEDIA_TYPE_DET_FIELD, detected.map(_.mediaType));
+    addField(doc, CHARSET_DET_FIELD, detected.flatMap(_.charset));
     doc.setDocumentBoost(boost);
     return doc;
   }

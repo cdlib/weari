@@ -57,21 +57,27 @@ object SolrUtils {
 
   /**
    * Add a set of fields to a SolrInputDocument.
+   */
+  def addFields(doc : SolrInputDocument, fields : Pair[String, Any]*) {
+    for (field <- fields) {
+      addField(doc, field._1, field._2);
+    }
+  }
+
+  /**
+   * Add a field to a SolrInputDocument.
    * If field value is None or null, do not add.
    * If field value is Some(x), add x.
    * If field value is Traversable[Any], add each value.
    * Otherwise just add it.
    */
-  def addFields(doc : SolrInputDocument,
-                   fields : Pair[String, Any]*) {
-    for (field <- fields) {
-      field._2 match {
-        case null | None    => ();
-        case Some(s)        => doc.addField(field._1, s);
-        case seq : Traversable[Any] =>
-          for (v <- seq) doc.addField(field._1, v);
-        case s              => doc.addField(field._1, s);
-      }
+  def addField(doc : SolrInputDocument, name : String, value : Any) {
+    value match {
+      case null | None    => ();
+      case Some(s)        => doc.addField(name, s);
+      case seq : Traversable[Any] =>
+        for (v <- seq) doc.addField(name, v);
+      case s              => doc.addField(name, s);
     }
   }
 
