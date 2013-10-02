@@ -76,7 +76,7 @@ object ParsedArchiveRecordSolrizer {
     addField(doc, URL_FIELD, rec.getUrl);
     addField(doc, URLFP_FIELD, rec.urlFingerprint);
     addField(doc, DIGEST_FIELD, rec.getDigest);
-    addField(doc, DATE_FIELD, rec.getDate);
+    addField(doc, DATE_FIELD, rec.getDate.toDate);
     addField(doc, TITLE_FIELD, rec.title);
     addField(doc, CONTENT_LENGTH_FIELD, rec.getLength);
     addField(doc, CONTENT_FIELD, getContent(rec));

@@ -37,14 +37,14 @@ import com.typesafe.scalalogging.slf4j.Logging;
 
 import java.io.{ File, FileOutputStream, InputStream, OutputStream };
 
-import org.apache.solr.client.solrj.{SolrQuery, SolrServer};
-import org.apache.solr.client.solrj.impl.{ConcurrentUpdateSolrServer, CloudSolrServer, HttpClientUtil, HttpSolrServer};
-import org.apache.solr.common.{SolrDocument, SolrInputDocument, SolrInputField};
+import org.apache.solr.client.solrj.{ SolrQuery, SolrServer };
+import org.apache.solr.client.solrj.impl.{ BinaryRequestWriter, ConcurrentUpdateSolrServer, CloudSolrServer, HttpClientUtil, HttpSolrServer };
+import org.apache.solr.common.{ SolrDocument, SolrInputDocument, SolrInputField };
 import org.apache.solr.common.params.ModifiableSolrParams;
 
 import org.cdlib.was.weari._;
-import org.cdlib.was.weari.SolrUtils.{addFields, mkInputField, record2inputDocument, toSolrInputDocument};
-import org.cdlib.was.weari.Utility.{extractArcname, null2option};
+import org.cdlib.was.weari.SolrUtils.{ addFields, mkInputField, record2inputDocument, toSolrInputDocument };
+import org.cdlib.was.weari.Utility.{ extractArcname, null2option };
 
 import org.apache.hadoop.fs.Path;
 
@@ -91,7 +91,9 @@ class Weari(config: Config)
         s.setDefaultCollection(config.solrCollection);
         s;
       } else {
-        new ConcurrentUpdateSolrServer(config.solrServer, config.queueSize, config.threadCount);
+        val s = new ConcurrentUpdateSolrServer(config.solrServer, config.queueSize, config.threadCount);
+        s.setRequestWriter(new BinaryRequestWriter());
+        s;
       }
     }
     val retval = f(server);
