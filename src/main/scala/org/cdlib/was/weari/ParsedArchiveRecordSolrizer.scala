@@ -68,7 +68,6 @@ object ParsedArchiveRecordSolrizer {
     val detected = rec.detectedContentType;
     val supplied = rec.suppliedContentType;
     val boost = 1.0f;
-    addField(doc, BOOST_FIELD, boost);
     addField(doc, ARCNAME_FIELD, rec.getFilename);
     addField(doc, ID_FIELD, "%s.%s".format(rec.canonicalUrl, rec.getDigest.getOrElse("-")));
     addField(doc, HOST_FIELD, rec.canonicalHost);
